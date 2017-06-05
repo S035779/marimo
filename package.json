@@ -1,0 +1,22 @@
+{
+  "name": "marimo",
+  "version": "1.0.0",
+  "description": "Yahoo! auctions WebAPI project.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/S035779/marimo.git"
+  },
+  "keywords": [
+    "webapi"
+  ],
+  "author": "Mamoru Hashimoto",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/S035779/marimo/issues"
+  },
+  "homepage": "https://github.com/S035779/marimo#readme"
+}
