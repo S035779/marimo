@@ -1,0 +1,40 @@
+.NoteHeader {
+  position: relative;
+  border-bottom: 1px solid #CCC;
+  padding: 15px 5px;
+}
+
+.NoteHeader-title {
+  margin: 0;
+  padding: 0;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.NoteHeader-meta {
+  font-size: 15px;
+  margin-top: 10px;
+}
+
+.NoteHeader-author {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.NoteHeader-author > img {
+  vertical-align: middle;
+}
+
+.NoteHeader-updated {
+  color: #666;
+}
+
+.NoteHeader-buttons {
+  position: absolute;
+  right: 0;
+  top: 25px;
+}
+
+.NoteHeader-buttons > span {
+  margin: 0 5px;
+}

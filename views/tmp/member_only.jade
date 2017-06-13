@@ -1,0 +1,7 @@
+extends layout
+
+block content
+  h1 It's member only page!!
+  p Welcome, #{user.username}
+  p You are currently logged in as #{user.username}
+  a(href="/logout") Logout

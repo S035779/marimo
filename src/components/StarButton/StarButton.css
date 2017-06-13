@@ -1,0 +1,10 @@
+.StarButton-star,
+.StarButton-unstar {
+  display: inline-block;
+  margin-left: 2px;
+  color: #333;
+}
+
+.StarButton-unstar {
+  color: #FFD76E;
+}
