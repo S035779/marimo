@@ -1,0 +1,21 @@
+.page-Dashboard {
+  display: flex;
+}
+
+.page-Dashboard-list {
+  width: 260px;
+  height: calc(100vh - 45px);
+  border-right: 1px solid #CCC;
+  overflow: auto;
+}
+
+.page-Dashboard-listHeader {
+  padding: 10px;
+  height: 49px;
+  box-sizing: border-box;
+}
+
+.page-Dashboard-main {
+  flex: 1;
+  width: 0;
+}

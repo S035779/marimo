@@ -1,0 +1,17 @@
+extends layout
+
+block content
+  if (!user)
+    script(src='logout.js')
+    a(href="login") Login
+    br
+    a(href="register") Register
+    br
+    a(href="/") Member Only Page
+  if (user)
+    script(src='login.js')
+    p You are currently logged in as #{user.username}
+    p(hidden,id='username') #{user.username}
+    a(href="/") Member Only Page
+    br
+    a(href="logout") Logout

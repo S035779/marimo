@@ -1,0 +1,39 @@
+.NoteBody pre {
+  border: 1px solid #CCC;
+  padding: 10px;
+  background: #FAFAFA;
+  margin: 10px 0;
+}
+
+.NoteBody blockquote {
+  border-left: 5px solid #CCC;
+  padding: 10px 10px 10px 20px;
+}
+
+.NoteBody blockquote > *:first-child {
+  margin-top: 0;
+}
+
+.NoteBody blockquote > *:last-child {
+  margin-bottom: 0;
+}
+
+.NoteBody ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid #CCC;
+}
+
+.NoteBody li {
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid #CCC;
+}
+
+.NoteBody-text {
+  display: block;
+  font-size: 11px;
+  margin-top: 10px;
+  color: #999;
+}

@@ -1,0 +1,55 @@
+{
+  "name": "marimo",
+  "version": "1.0.0",
+  "description": "Yahoo! auctions WebAPI project.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "batch": "node tasks/main.js",
+    "devel": "webpack-dev-server",
+    "build": "webpack",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/S035779/marimo.git"
+  },
+  "keywords": [
+    "webapi"
+  ],
+  "author": "Mamoru Hashimoto",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/S035779/marimo/issues"
+  },
+  "homepage": "https://github.com/S035779/marimo#readme",
+  "dependencies": {
+    "classnames": "^2.2.5",
+    "express": "^4.15.3",
+    "express-session": "^1.15.3",
+    "flux": "^3.1.2",
+    "jade": "^1.11.0",
+    "marked": "^0.3.6",
+    "mongoose": "^4.10.6",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
+    "passport-local-mongoose": "^4.0.0",
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1",
+    "react-router": "^3.0.0",
+    "serve-favicon": "^2.4.3",
+    "xml2js": "^0.4.17"
+  },
+  "devDependencies": {
+    "babel-core": "^6.25.0",
+    "babel-loader": "^7.0.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "css-loader": "^0.28.4",
+    "extract-text-webpack-plugin": "^2.1.2",
+    "postcss-easy-import": "^2.1.0",
+    "postcss-loader": "^2.0.6",
+    "webpack": "^2.6.1",
+    "webpack-dev-server": "^2.4.5"
+  }
+}
