@@ -1,5 +1,0 @@
-in:
-  type: file
-  path_prefix: "./json/Search_"
-out:
-  type: stdout

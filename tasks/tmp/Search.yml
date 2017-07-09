@@ -1,8 +1,0 @@
-in:
-  type: file
-  path_prefix: ./json/Search_
-  parser: {type: json, charset: UTF-8, newline: LF}
-out:
-  type: mongodb
-  collection: "search"
-  uri: mongodb://test:test@localhost:27017/testing_populateAdInfinitum?authSource=testing_populateAdInfinitum
