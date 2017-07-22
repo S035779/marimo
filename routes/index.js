@@ -195,7 +195,7 @@ router.get('/api/note', function(request, response){
         });
       });
       response.json(newNotes); 
-      console.log('all done.');
+      console.log(`%s [INFO] all done.`, std.getTimeStamp());
     });
   });
 });
@@ -215,7 +215,7 @@ router.post('/api/note', function(request, response){
           }
           //console.log(user);
           var userId = ObjectId(user._id);
-          console.log('find user object done.');
+          console.log(`%s [INFO] find user object done.`, std.getTimeStamp());
           callback(null, userId);
         });
       }, function(userId, callback) {
@@ -241,11 +241,11 @@ router.post('/api/note', function(request, response){
             console.error(err.message);
             throw err;
           }
-          console.log('update note done.');
+          console.log(`%s [INFO] update note done.`, std.getTimeStamp());
           if(callback) callback(null, userId);
         });
       }, function(userId, callback) {
-        console.log(`findNotes : userid=%s`, userId);
+        console.log(`%s [INFO] findNotes : userid=%s`, std.getTimeStamp(), userId);
         Note.find({userid: userId}).populate('historyid').exec(function (err, docs) {
           if (err) {
             console.error(err.message);
@@ -266,13 +266,13 @@ router.post('/api/note', function(request, response){
             });
           });
           response.json(newNotes); 
-          console.log('find notes done.');
+          console.log(`%s [INFO] find notes done.`, std.getTimeStamp());
           if(callback) callback(null);
         });
       }
     ], function(err, result) {
       if (err) response.status(404).send(err.message);
-      console.log('all done.');
+      console.log(`%s [INFO] all done.`, std.getTimeStamp());
     }
   );
 });
@@ -293,7 +293,7 @@ router.post('/api/note/search', function(request, response){
           }
           //console.log(user);
           var userId = ObjectId(user._id);
-          console.log('find user object done.')
+          console.log(`%s [INFO] find user object done.`, std.getTimeStamp())
           callback(null, userId);
         });
       },function(userId, callback) {
@@ -304,25 +304,25 @@ router.post('/api/note/search', function(request, response){
             throw err;
           }
           //console.log(note);
-          console.log('find note object done.')
+          console.log(`%s [INFO] find note object done.`, std.getTimeStamp())
           if(callback) callback(null, note, userId);
         });
       },function(note, userId, callback) {
         app.YHsearch({ appid: appid, query: query, sort: 'bids', order: 'a' },
-         function(err, ids, obj, str, opt){
+         function(err, ids, obj, str){
           if (err) {
             console.error(err.message);
             throw err;
           }
           var pages=[];
-          var page = Math.ceil(opt.resAvailable / opt.resReturned);
-          //var page = 1;
+          //var page = Math.ceil(opt.resAvailable / opt.resReturned);
+          var page = 1;
           for(var i=0; i<page; i++){
             pages[i]=i+1;
           }
-          console.log(`Number of pages : %s`, pages.length);
-          console.log(`Avail: %s, Return: %s, position: %s`, opt.resAvailable, opt.resReturned, opt.resPosition)
-          console.log('get getResultSet done.')
+          console.log(`%s [INFO] Number of pages : %s`, std.getTimeStamp(), pages.length);
+          //console.log(`%s [INFO] Avail: %s, Return: %s, position: %s`, std.getTimeStamp(), opt.resAvailable, opt.resReturned, opt.resPosition)
+          console.log(`%s [INFO] get getResultSet done.`, std.getTimeStamp())
           if(callback) callback(null, pages, note, userId);
         });
       },function( pages, note, userId, callback) {
@@ -330,9 +330,9 @@ router.post('/api/note/search', function(request, response){
         var newIds=[];
         var Ids = [];
         async.forEachOf(pages, function(page, idx, cbk) {
-          console.log(`page: %s, idx: %s`, page, idx);
+          //console.log(`page: %s, idx: %s`, page, idx);
           app.YHsearch({ appid: appid, query: query, sort: 'bids', order: 'a', page: page },
-           function(err, ids, obj, str, opt){
+           function(err, ids, obj, str){
             if(err) {
               console.error(err.message);
               return cbk(err);
@@ -363,15 +363,15 @@ router.post('/api/note/search', function(request, response){
           delIds.forEach(function(id, idx, arr){
             Ids.push({ id: id, status: 2 });
           });
-          console.dir(Ids);
-          console.log('get NewIds done.')
+          //console.dir(Ids);
+          console.log(`%s [INFO] get NewIds done.`, std.getTimeStamp())
           if(callback) callback(null, Ids, note, userId);
         });
       },function(Ids, note, userId, callback) {
         var Items=[];
         async.forEachOf(Ids, function(item, idx, cbk) {
-          console.log(`id: %s, status: %s, idx: %s`, item.id, item.status, idx);
-          app.YHauctionItem({ appid: appid, auctionID: item.id }, function(err, obj, str, opt){
+          //console.log(`%s [INFO] id: %s, status: %s, idx: %s`, std.getTimeStamp(), item.id, item.status, idx);
+          app.YHauctionItem({ appid: appid, auctionID: item.id }, function(err, obj, str){
             if(err) {
               console.error(err.message);
               return cbk(err);
@@ -389,14 +389,14 @@ router.post('/api/note/search', function(request, response){
             throw err;
           }
           //console.dir(Items);
-          console.log('get AuctionItems done.')
+          console.log(`%s [INFO] get AuctionItems done.`, std.getTimeStamp())
           if(callback) callback(null, Items, Ids, note, userId);
         });
       },function(Items, Ids, note, userId, callback) {
         var Bids=[];
         async.forEachOf(Ids, function(bids,idx,cbk) {
-          console.log(`id: %s, status: %s, idx: %s`, bids.id, bids.status, idx);
-          app.YHbidHistory({ appid: appid, auctionID: bids.id}, function(err, obj, str, opt){
+          //console.log(`%s [INFO] id: %s, status: %s, idx: %s`, std.getTimeStamp(), bids.id, bids.status, idx);
+          app.YHbidHistory({ appid: appid, auctionID: bids.id}, function(err, obj, str){
             if(err) {
               console.error(err.message);
               return cbk(err);
@@ -414,7 +414,7 @@ router.post('/api/note/search', function(request, response){
             throw err;
           }
           //console.dir(Bids);
-          console.log('get BidsHistorys done.');
+          console.log(`%s [INFO] get BidsHistorys done.`, std.getTimeStamp());
           if(callback) callback(null, Bids, Items, Ids, note, userId);
         });
       },function(Bids, Items, Ids, note, userId, callback) {
@@ -481,7 +481,7 @@ router.post('/api/note/search', function(request, response){
             console.error(err.message);
             throw err;
           }
-          console.log('update history done.');
+          console.log(`%s [INFO] update history done.`, std.getTimeStamp());
           if(callback) callback(null, historyIds, Ids, note, userId);
         });
       },function( historyIds, Ids, note, userId, callback) {
@@ -494,9 +494,9 @@ router.post('/api/note/search', function(request, response){
         for(var i=0; i<Ids.length; i++) {
           items.push(Ids[i].id);
         }
-        console.log('================================');
-        console.dir(items);
-        console.log('================================');
+        //console.log('================================');
+        //console.dir(items);
+        //console.log('================================');
         if(request.body.starred)   starred=Boolean(1);
 
         where = { userid: userId, id: note.id };
@@ -515,7 +515,7 @@ router.post('/api/note/search', function(request, response){
             console.error(err.message);
             throw err;
           }
-          console.log('update note done');
+          console.log(`%s [INFO] update note done`, std.getTimeStamp());
           if(callback) callback(null, note, userId);
         });
       },function(note, userId, callback){
@@ -540,19 +540,19 @@ router.post('/api/note/search', function(request, response){
           });
           response.json(newNotes);
           //console.log(JSON.stringify(newNotes, null, 4));
-          console.log('find notes done.');
+          console.log(`%s [INFO] find notes done.`, std.getTimeStamp());
           if(callback) callback(null);
         });
       }
     ], function(err, results) {
       if (err) response.status(404).send(err.message);
-      console.log('all done.');
+      console.log(`%s [INFO] all done.`, std.getTimeStamp());
     }
   );
 });
 
 router.post('/api/note/delete', function(request, response){
-  console.log('%s [INFO] ===deleteNote===', std.getTimeStamp());
+  console.log(`%s [INFO] ===deleteNote===`, std.getTimeStamp());
   var username = request.body.user;
   var key = request.body.id;
   async.waterfall( // async start.
@@ -566,12 +566,12 @@ router.post('/api/note/delete', function(request, response){
           }
           //console.log(user);
           var userId = ObjectId(user._id);
-          console.log('find user object done.');
+          console.log(`%s [INFO] find user object done.`, std.getTimeStamp());
           if(callback) callback(null, userId);
         });
       }, function(userId, callback) {
-        console.log(`deleteNote : userid=%s`, userId);
-        console.log(`deleteId : id=%s`,key);
+        console.log(`%s [INFO] deleteNote : userid=%s`, std.getTimeStamp(), userId);
+        console.log(`%s [INFO] deleteId : id=%s`, std.getTimeStamp(), key);
         var note = { 
           userid: userId
           , id:   key
@@ -581,11 +581,11 @@ router.post('/api/note/delete', function(request, response){
             console.error(err.message);
             throw err;
           }
-          console.log('delete note done.');
+          console.log(`%s [INFO] delete note done.`, std.getTimeStamp());
           if(callback) callback(null, userId);
         });
       }, function(userId, callback) {
-        console.log(`findNotes : userid=%s`, userId);
+        console.log(`%s [INFO] findNotes : userid=%s`, std.getTimeStamp(), userId);
         Note.find({userid: userId}).populate('historyid').exec(function (err, notes) {
           if(err) {
             console.error(err.message);
@@ -607,13 +607,13 @@ router.post('/api/note/delete', function(request, response){
             });
           });
           response.json(newNotes); 
-          console.log('find note done.');
+          console.log(`%s [INFO] find note done.`, std.getTimeStamp());
           if(callback) callback(null);
         });
       }
     ], function(err, result) {
       if (err) response.status(404).send(err.message);
-      console.log('all done.');
+      console.log(`%s [INFO] all done.`, std.getTimeStamp());
     }
   ); // async end.
 });
@@ -635,10 +635,10 @@ router.post('/api/note/create', function(request, response) {
           var userId = ObjectId(user._id);
           callback(null, userId);
         });
-        console.log('find user object done.');
+        console.log(`%s [INFO] find user object done.`, std.getTimeStamp());
       },
       function(userId, callback) {
-        console.log(`createNotes : userid=%s`, userId);
+        console.log(`%s [INFO] createNotes : userid=%s`, std.getTimeStamp(), userId);
         var note = { 
           _id: new ObjectId
           , userid:    userId
@@ -689,10 +689,10 @@ router.post('/api/note/create', function(request, response) {
           }
           callback(null, userId);
         });
-        console.log('create note done.');
+        console.log(`%s [INFO] create note done.`, std.getTimeStamp());
       },
       function(userId, callback) {
-        console.log(`findNotes : userid=%s`, userId);
+        console.log(`%s [INFO] findNotes : userid=%s`, std.getTimeStamp(), userId);
         Note.find({userid: userId}).populate('historyid').exec(function (err, docs) {
           if(err) {
             console.error(err.message);
@@ -713,14 +713,14 @@ router.post('/api/note/create', function(request, response) {
             });
           });
           response.json(newNotes); 
-          console.log('find notes done.');
+          console.log(`%s [INFO] find notes done.`, std.getTimeStamp());
           callback(null);
         });
       }
     ],
     function(err, result) {
       if (err) response.status(404).send(err.message);
-      console.log('all done.');
+      console.log(`%s [INFO] all done.`, std.getTimeStamp());
     }
   ); // async end.
 });

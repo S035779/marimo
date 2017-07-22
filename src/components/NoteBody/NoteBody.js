@@ -4,16 +4,16 @@ import date from '../../../utils/stdutils';
 export default class NoteBody extends React.Component {
   // 子要素のレンダリング
   renderItem(item) {
-    const img = item.item.body.ResultSet.Result.Img.Image1.sub;
+    const img = item.item.body.ResultSet.Result.Img.Image1 ? item.item.body.ResultSet.Result.Img.Image1.sub : '';
     const title = item.item.body.ResultSet.Result.Title;
     const url = item.item.body.ResultSet.Result.AuctionItemUrl;
     const price = item.item.body.ResultSet.Result.Price;
-    const bids = item.item.body.ResultSet.Result.Bids;
     const status = item.item.body.ResultSet.Result.Status;
     const category = item.item.body.ResultSet.Result.CategoryPath;
     const seller = item.item.body.ResultSet.Result.Seller.Id;
     const startTime = date.getLocalTimeStamp(item.item.body.ResultSet.Result.StartTime);
     const endTime = date.getLocalTimeStamp(item.item.body.ResultSet.Result.EndTime);
+    const bids = item.item.body.ResultSet.Result.Bids;
 
     return <li className='NoteBody-item' key={item.auctionID}>
         <table width="100%">
@@ -50,11 +50,7 @@ export default class NoteBody extends React.Component {
   // itemsを親から受け取ってリストを返す
   render() {
     if(!this.props.items) return(null);
-    const array = this.props.items.filter(item => { 
-      if(item.item.body.ResultSet.Result.Bids > 0) return true; 
-      return false;
-    });
-    const items = array.map(item => { return this.renderItem(item)});
+    const items = this.props.items.map(item => { return this.renderItem(item)});
     return <div className="NoteBody">
         <ul>{items}</ul>
     </div>;

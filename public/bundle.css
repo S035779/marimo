@@ -58,7 +58,7 @@ body {
   position: relative;
   border-bottom: 1px solid #CCC;
   padding: 5px;
-  height: 50px;
+  height: 90px;
   box-sizing: border-box;
 }
 
@@ -236,6 +236,26 @@ body {
   margin-bottom: 0;
 }
 
+.NoteBody ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid #CCC;
+}
+
+.NoteBody li {
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid #CCC;
+}
+
+.NoteBody-text {
+  display: block;
+  font-size: 11px;
+  margin-top: 10px;
+  color: #999;
+}
+
 .NoteHeader {
   position: relative;
   border-bottom: 1px solid #CCC;
@@ -315,11 +335,22 @@ body {
   background-color: #2673E8;
 }
 
+.NoteList-category {
+  display: block;
+  font-size: 11px;
+  margin-top: 10px;
+  color: #999;
+}
+
 .NoteList-updated {
   display: block;
   font-size: 11px;
   margin-top: 10px;
   color: #999;
+}
+
+.NoteList li.is-selected > a .NoteList-category {
+  color: #FFF;
 }
 
 .NoteList li.is-selected > a .NoteList-updated {
