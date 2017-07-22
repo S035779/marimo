@@ -1,0 +1,28 @@
+version: "2"
+services:
+  proxy:
+    image: s035779/docker-nginx
+    ports:
+      - 80:8080
+    depends_on:
+      - web
+    stop_signal: SIGQUIT
+  web:
+    build: .
+    command: [node, start]
+    ports:
+      - 8081:8081
+    depends_on:
+      - db
+    links:
+      - db
+    env_file: .env
+    stop_signal: SIGQUIT
+    environment:
+      - DATABASE_URL=postgres://hello:world@db:5432/example
+  db:
+    restart: always
+    image: mongo
+    stop_signal: SIGTERM
+    volumes:
+      - /data/db:/data/db

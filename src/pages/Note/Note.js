@@ -32,7 +32,11 @@ class Note extends React.Component {
   }
 
   handleChangeSearch(search) {
-    
+    const items = this.state.note.items.filter(item => { 
+      if(bids > 0) return true; 
+      return false;
+    });
+    this.setState({ note });
   }
 
   render() {

@@ -50,7 +50,7 @@ export default class NoteHeader extends React.Component {
         <span className="NoteHeader-updated"> {updated} </span>
       </div>
       <div className="NoteHeader-search">
-        <span><input ref="search" value={this.state.search} type="text" placeholder="search string..." onChange={this.handleChangeSearch} /></span>
+        <span><input ref="search" value={this.state.search} type="text" placeholder="search strings..." onChange={this.handleChangeSearch} /></span>
       </div>
       <div className="NoteHeader-buttons">
         <Button hidden={!this.isOwn()} onClick={() => this.handleClickEdit()}>Edit</Button>
