@@ -8843,16 +8843,16 @@ var NoteBody = function (_React$Component) {
 
     // 子要素のレンダリング
     value: function renderItem(item) {
-      var img = item.item.body.ResultSet.Result.Img.Image1.sub;
+      var img = item.item.body.ResultSet.Result.Img.Image1 ? item.item.body.ResultSet.Result.Img.Image1.sub : '';
       var title = item.item.body.ResultSet.Result.Title;
       var url = item.item.body.ResultSet.Result.AuctionItemUrl;
       var price = item.item.body.ResultSet.Result.Price;
-      var bids = item.item.body.ResultSet.Result.Bids;
       var status = item.item.body.ResultSet.Result.Status;
       var category = item.item.body.ResultSet.Result.CategoryPath;
       var seller = item.item.body.ResultSet.Result.Seller.Id;
       var startTime = _stdutils2.default.getLocalTimeStamp(item.item.body.ResultSet.Result.StartTime);
       var endTime = _stdutils2.default.getLocalTimeStamp(item.item.body.ResultSet.Result.EndTime);
+      var bids = item.item.body.ResultSet.Result.Bids;
 
       return _react2.default.createElement(
         'li',
@@ -8951,11 +8951,7 @@ var NoteBody = function (_React$Component) {
       var _this2 = this;
 
       if (!this.props.items) return null;
-      var array = this.props.items.filter(function (item) {
-        if (item.item.body.ResultSet.Result.Bids > 0) return true;
-        return false;
-      });
-      var items = array.map(function (item) {
+      var items = this.props.items.map(function (item) {
         return _this2.renderItem(item);
       });
       return _react2.default.createElement(
@@ -15271,7 +15267,7 @@ var NoteHeader = function (_React$Component) {
           _react2.default.createElement(
             'span',
             null,
-            _react2.default.createElement('input', { ref: 'search', value: this.state.search, type: 'text', placeholder: 'search string...', onChange: this.handleChangeSearch })
+            _react2.default.createElement('input', { ref: 'search', value: this.state.search, type: 'text', placeholder: 'search strings...', onChange: this.handleChangeSearch })
           )
         ),
         _react2.default.createElement(
@@ -16053,7 +16049,13 @@ var Note = function (_React$Component) {
     }
   }, {
     key: 'handleChangeSearch',
-    value: function handleChangeSearch(search) {}
+    value: function handleChangeSearch(search) {
+      var items = this.state.note.items.filter(function (item) {
+        if (bids > 0) return true;
+        return false;
+      });
+      this.setState({ note: note });
+    }
   }, {
     key: 'render',
     value: function render() {

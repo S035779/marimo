@@ -16,6 +16,14 @@ var encodeFormData = function(data) {
     return pairs.join('&'); // Return joined pairs separated with &
 }
 
+/**
+ * get
+ *
+ * @param url
+ * @param data
+ * @param callback
+ * @returns {undefined}
+ */
 exports.get = function(url, data, callback) {
     var request = new XMLHttpRequest();         // Create new request
     request.open("GET", url +                     // GET the specified url

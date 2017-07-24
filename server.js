@@ -8,10 +8,20 @@ var strategy = require('passport-local').Strategy;
 var routes = require('./routes/index');
 var User = require('./models/models').User;
 
-mongoose.connect(process.env.mongodb);
+// DB Connection
+var options = {
+    useMongoClient: true
+}
+mongoose.connect(process.env.mongodb,options)
 var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() { console.log('MongoDB connected.');});
+db.on('error', function () {
+    console.error('connection error', arguments)
+});
+db.once('open', function() {
+    console.log('\n===========');
+    console.log('mongoose version: %s', mongoose.version);
+    console.log('========\n\n');
+});
 
 var app = new express();
 app.set('port', (process.env.PORT || 8081));
@@ -64,5 +74,7 @@ app.use(function(req, res, next){
 app.use(express.static('public'));
 
 app.listen(app.get('port'), function() {
+    console.log('\n===========');
     console.log('Server started: http://localhost:' + app.get('port') + '/');
+    console.log('========\n\n');
 });
