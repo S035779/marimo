@@ -7,7 +7,11 @@ import date from '../../../utils/stdutils';
 export default class NoteHeader extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { search: '' };
+    this.state = { 
+      search: '' 
+      , checked: true
+      , options: []
+    };
   }
 
   isOwn() {
@@ -26,11 +30,42 @@ export default class NoteHeader extends React.Component {
   }
 
   handleChangeSearch(e) {
-    var search = e.target.value;
-    this.setState({search: search});
-    if(search) {
-      this.props.onChangeSearch(search);
+    this.setState({search: e.target.value});
+    this.props.onChangeSearch(e.target.value);
+  }
+
+  handleChangeCheckbox(e) {
+    this.setState({ checked: e.target.checked });
+    this.props.onChangeCheckbox(e.target.checked);
+  }
+
+  handleChangeSelect(e) {
+    let checked = [];
+    let sel = e.target;
+    for(let i=0; i<sel.length; i++){
+      let option = sel.options[i];
+      if(option.selected) {
+        checked.push(option.value);
+      }
     }
+    this.setState({ options: checked })
+    this.props.onChangeSelect(checked);
+  }
+
+  handleSearch(e) {
+    e.preventDefault();
+  }
+
+  renderOptions() {
+    return this.props.note.items.map( function(item,i) {
+      const isResult = item.item.body.hasOwnProperty('ResultSet');
+      if(!isResult) return null;
+      const obj = item.item.body.ResultSet.Result;
+      return <option
+        key={"choice" + i}
+        value={item.item.body.ResultSet.Result.CategoryPath}
+        >{obj.CategoryPath}</option>
+    }, this);
   }
 
   render() {
@@ -50,11 +85,42 @@ export default class NoteHeader extends React.Component {
         <span className="NoteHeader-updated"> {updated} </span>
       </div>
       <div className="NoteHeader-search">
-        <span><input ref="search" value={this.state.search} type="text" placeholder="search strings..." onChange={this.handleChangeSearch} /></span>
+        <span>
+          <label htmlFor="search_string">search string: </label>
+          <input ref="search" 
+            value={this.state.search} 
+            type="text" 
+            placeholder="search string" 
+            onChange={this.handleChangeSearch.bind(this)} />
+        </span>
+        <span>
+          <br />
+          <label htmlFor="search_checks"> with bidding: </label>
+          <input type="checkbox" 
+            value="bids" 
+            checked={this.state.checked} 
+            onChange={this.handleChangeCheckbox.bind(this)} />
+        </span>
+        <span>
+          <br />
+          <label htmlFor="search_select">category selection: </label>
+          <select multiple="true" 
+            value={this.state.options}
+            onChange={this.handleChangeSelect.bind(this)}>
+            {this.renderOptions()}
+          </select>
+        </span>
       </div>
       <div className="NoteHeader-buttons">
-        <Button hidden={!this.isOwn()} onClick={() => this.handleClickEdit()}>Edit</Button>
-        <StarButton starred={note.starred} onChange={this.props.onChangeStar} />
+        <span><Button
+          onClick={this.handleSearch}>Search</Button> 
+        </span>
+        <span><Button hidden={!this.isOwn()}
+          onClick={() => this.handleClickEdit()}>Edit</Button>
+        </span>
+        <StarButton
+          starred={note.starred}
+          onChange={this.props.onChangeStar} />
       </div>
     </div>;
   }

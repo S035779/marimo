@@ -10,17 +10,18 @@ var User = require('./models/models').User;
 
 // DB Connection
 var options = {
-    useMongoClient: true
+  useMongoClient: true
+  , promiseLibrary: global.Promise
 }
 mongoose.connect(process.env.mongodb,options)
 var db = mongoose.connection;
 db.on('error', function () {
-    console.error('connection error', arguments)
+  console.error('connection error', arguments)
 });
 db.once('open', function() {
-    console.log('\n===========');
-    console.log('mongoose version: %s', mongoose.version);
-    console.log('========\n\n');
+  console.log('\n===========');
+  console.log('mongoose version: %s', mongoose.version);
+  console.log('========\n\n');
 });
 
 var app = new express();
@@ -31,9 +32,9 @@ app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 
 app.use(require('express-session')({
-    secret: 'keyboard cat',
-    resave: false,
-    saveUninitialized: false
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: false
 }));
 app.use(passport.initialize());
 app.use(passport.session()); 
@@ -43,27 +44,27 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 if (app.get('env') === 'development') {
-    app.use(function(err, req, res, next) {
-        res.status(err.status || 500);
-        res.render('error', {
-            message: err.message,
-            error: err
-        });
+  app.use(function(err, req, res, next) {
+    res.status(err.status || 500);
+    res.render('error', {
+      message: err.message,
+      error: err
     });
+  });
 }
 
 app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error', {
-    message: err.message,
-    error: {}
+  message: err.message,
+  error: {}
   });
 });
 
 app.use(function(req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 'no-cache');
-    next();
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'no-cache');
+  next();
 });
 
 app.use('/', routes);
@@ -74,7 +75,7 @@ app.use(function(req, res, next){
 app.use(express.static('public'));
 
 app.listen(app.get('port'), function() {
-    console.log('\n===========');
-    console.log('Server started: http://localhost:' + app.get('port') + '/');
-    console.log('========\n\n');
+  console.log('\n===========');
+  console.log('Server started: http://localhost:' + app.get('port') + '/');
+  console.log('========\n\n');
 });

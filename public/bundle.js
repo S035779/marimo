@@ -8843,16 +8843,19 @@ var NoteBody = function (_React$Component) {
 
     // 子要素のレンダリング
     value: function renderItem(item) {
-      var img = item.item.body.ResultSet.Result.Img.Image1 ? item.item.body.ResultSet.Result.Img.Image1.sub : '';
-      var title = item.item.body.ResultSet.Result.Title;
-      var url = item.item.body.ResultSet.Result.AuctionItemUrl;
-      var price = item.item.body.ResultSet.Result.Price;
-      var status = item.item.body.ResultSet.Result.Status;
-      var category = item.item.body.ResultSet.Result.CategoryPath;
-      var seller = item.item.body.ResultSet.Result.Seller.Id;
-      var startTime = _stdutils2.default.getLocalTimeStamp(item.item.body.ResultSet.Result.StartTime);
-      var endTime = _stdutils2.default.getLocalTimeStamp(item.item.body.ResultSet.Result.EndTime);
-      var bids = item.item.body.ResultSet.Result.Bids;
+      var isResult = item.item.body.hasOwnProperty('ResultSet');
+      if (!isResult) return null;
+      var obj = item.item.body.ResultSet.Result;
+      var img = obj.Img.Image1 ? obj.Img.Image1.sub : '';
+      var title = obj.Title;
+      var url = obj.AuctionItemUrl;
+      var price = obj.Price;
+      var status = obj.Status;
+      var category = obj.CategoryPath;
+      var seller = obj.Seller.Id;
+      var startTime = _stdutils2.default.getLocalTimeStamp(obj.StartTime);
+      var endTime = _stdutils2.default.getLocalTimeStamp(obj.EndTime);
+      var bids = obj.Bids;
 
       return _react2.default.createElement(
         'li',
@@ -8892,7 +8895,7 @@ var NoteBody = function (_React$Component) {
                   { className: 'NoteBody-text' },
                   'Time : ',
                   startTime,
-                  ' ~  ',
+                  ' ~ ',
                   endTime
                 ),
                 _react2.default.createElement(
@@ -15190,7 +15193,11 @@ var NoteHeader = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (NoteHeader.__proto__ || Object.getPrototypeOf(NoteHeader)).call(this, props));
 
-    _this.state = { search: '' };
+    _this.state = {
+      search: '',
+      checked: true,
+      options: []
+    };
     return _this;
   }
 
@@ -15215,11 +15222,50 @@ var NoteHeader = function (_React$Component) {
   }, {
     key: 'handleChangeSearch',
     value: function handleChangeSearch(e) {
-      var search = e.target.value;
-      this.setState({ search: search });
-      if (search) {
-        this.props.onChangeSearch(search);
+      this.setState({ search: e.target.value });
+      this.props.onChangeSearch(e.target.value);
+    }
+  }, {
+    key: 'handleChangeCheckbox',
+    value: function handleChangeCheckbox(e) {
+      this.setState({ checked: e.target.checked });
+      this.props.onChangeCheckbox(e.target.checked);
+    }
+  }, {
+    key: 'handleChangeSelect',
+    value: function handleChangeSelect(e) {
+      var checked = [];
+      var sel = e.target;
+      for (var i = 0; i < sel.length; i++) {
+        var option = sel.options[i];
+        if (option.selected) {
+          checked.push(option.value);
+        }
       }
+      this.setState({ options: checked });
+      this.props.onChangeSelect(checked);
+    }
+  }, {
+    key: 'handleSearch',
+    value: function handleSearch(e) {
+      e.preventDefault();
+    }
+  }, {
+    key: 'renderOptions',
+    value: function renderOptions() {
+      return this.props.note.items.map(function (item, i) {
+        var isResult = item.item.body.hasOwnProperty('ResultSet');
+        if (!isResult) return null;
+        var obj = item.item.body.ResultSet.Result;
+        return _react2.default.createElement(
+          'option',
+          {
+            key: "choice" + i,
+            value: item.item.body.ResultSet.Result.CategoryPath
+          },
+          obj.CategoryPath
+        );
+      }, this);
     }
   }, {
     key: 'render',
@@ -15267,20 +15313,77 @@ var NoteHeader = function (_React$Component) {
           _react2.default.createElement(
             'span',
             null,
-            _react2.default.createElement('input', { ref: 'search', value: this.state.search, type: 'text', placeholder: 'search strings...', onChange: this.handleChangeSearch })
+            _react2.default.createElement(
+              'label',
+              { htmlFor: 'search_string' },
+              'search string: '
+            ),
+            _react2.default.createElement('input', { ref: 'search',
+              value: this.state.search,
+              type: 'text',
+              placeholder: 'search string',
+              onChange: this.handleChangeSearch.bind(this) })
+          ),
+          _react2.default.createElement(
+            'span',
+            null,
+            _react2.default.createElement('br', null),
+            _react2.default.createElement(
+              'label',
+              { htmlFor: 'search_checks' },
+              ' with bidding: '
+            ),
+            _react2.default.createElement('input', { type: 'checkbox',
+              value: 'bids',
+              checked: this.state.checked,
+              onChange: this.handleChangeCheckbox.bind(this) })
+          ),
+          _react2.default.createElement(
+            'span',
+            null,
+            _react2.default.createElement('br', null),
+            _react2.default.createElement(
+              'label',
+              { htmlFor: 'search_select' },
+              'category selection: '
+            ),
+            _react2.default.createElement(
+              'select',
+              { multiple: 'true',
+                value: this.state.options,
+                onChange: this.handleChangeSelect.bind(this) },
+              this.renderOptions()
+            )
           )
         ),
         _react2.default.createElement(
           'div',
           { className: 'NoteHeader-buttons' },
           _react2.default.createElement(
-            _Button2.default,
-            { hidden: !this.isOwn(), onClick: function onClick() {
-                return _this2.handleClickEdit();
-              } },
-            'Edit'
+            'span',
+            null,
+            _react2.default.createElement(
+              _Button2.default,
+              {
+                onClick: this.handleSearch },
+              'Search'
+            )
           ),
-          _react2.default.createElement(_StarButton2.default, { starred: note.starred, onChange: this.props.onChangeStar })
+          _react2.default.createElement(
+            'span',
+            null,
+            _react2.default.createElement(
+              _Button2.default,
+              { hidden: !this.isOwn(),
+                onClick: function onClick() {
+                  return _this2.handleClickEdit();
+                } },
+              'Edit'
+            )
+          ),
+          _react2.default.createElement(_StarButton2.default, {
+            starred: note.starred,
+            onChange: this.props.onChangeStar })
         )
       );
     }
@@ -16050,10 +16153,43 @@ var Note = function (_React$Component) {
   }, {
     key: 'handleChangeSearch',
     value: function handleChangeSearch(search) {
-      var items = this.state.note.items.filter(function (item) {
-        if (bids > 0) return true;
+      var items = this.state.items.filter(function (item) {
+        var isResult = item.item.body.hasOwnProperty('ResultSet');
+        if (!isResult) return false;
+        var obj = item.item.body.ResultSet.Result;
+        if (obj.Title.match(search)) return true;
         return false;
       });
+      var note = search ? Object.assign({}, this.state.note, { items: items }) : Object.assign({}, this.state.note, this.state.items);
+      this.setState({ note: note });
+      //console.log(`search string.. : %s`,search);
+      //console.log('item length : %s / %s', this.state.note.items.length, this.state.items.length);
+    }
+  }, {
+    key: 'handleChangeCheckbox',
+    value: function handleChangeCheckbox(checked) {
+      var items = this.state.items.filter(function (item) {
+        var isResult = item.item.body.hasOwnProperty('ResultSet');
+        if (!isResult) return false;
+        var obj = item.item.body.ResultSet.Result;
+        if (Number(obj.Bids) > 0) return true;
+        return false;
+      });
+      var note = checked ? Object.assign({}, this.state.note, { items: items }) : Object.assign({}, this.state.note, this.state.items);
+      this.setState({ note: note });
+    }
+  }, {
+    key: 'handleChangeSelect',
+    value: function handleChangeSelect(checked) {
+      var items = this.state.items.filter(function (item) {
+        var isResult = item.item.body.hasOwnProperty('ResultSet');
+        if (!isResult) return false;
+        var obj = item.item.body.ResultSet.Result;
+        return checked.some(function (opt) {
+          return opt === obj.CategoryPath;
+        });
+      });
+      var note = checked ? Object.assign({}, this.state.note, { items: items }) : Object.assign({}, this.state.note, this.state.items);
       this.setState({ note: note });
     }
   }, {
@@ -16061,11 +16197,15 @@ var Note = function (_React$Component) {
     value: function render() {
       var note = this.state.note;
       if (!note || !note.id) return null;
-
       return _react2.default.createElement(
         'div',
         { className: 'page-Note' },
-        _react2.default.createElement(_NoteHeader2.default, { note: note, onChangeStar: this.handleChangeStar.bind(this), onChangeSearch: this.handleChangeSearch.bind(this) }),
+        _react2.default.createElement(_NoteHeader2.default, {
+          note: note,
+          onChangeStar: this.handleChangeStar.bind(this),
+          onChangeSearch: this.handleChangeSearch.bind(this),
+          onChangeCheckbox: this.handleChangeCheckbox.bind(this),
+          onChangeSelect: this.handleChangeSelect.bind(this) }),
         _react2.default.createElement(_NoteBody2.default, { items: note.items })
       );
     }
@@ -16367,25 +16507,25 @@ var NoteStore = function (_ReduceStore) {
   _createClass(NoteStore, [{
     key: 'getInitialState',
     value: function getInitialState() {
-      return { note: null };
+      return { note: null, items: null };
     }
   }, {
     key: 'reduce',
     value: function reduce(state, action) {
       switch (action.type) {
         case 'note/fetch/before':
-          return { note: null };
+          return { note: null, items: null };
         case 'note/fetch':
-          return { note: action.note };
+          return { note: action.note, items: action.note.items };
         case 'star/create':
           if (state.id === action.noteId) {
-            return { note: Object.assign({}, state.note, { starred: true }) };
+            return { note: Object.assign({}, state.note, { starred: true }), items: state.note.items };
           } else {
             return state;
           }
         case 'star/delete':
           if (state.id === action.noteId) {
-            return { note: Object.assign({}, state.note, { starred: false }) };
+            return { note: Object.assign({}, state.note, { starred: false }), items: state.note.items };
           } else {
             return state;
           }
@@ -16554,6 +16694,14 @@ var encodeFormData = function encodeFormData(data) {
     return pairs.join('&'); // Return joined pairs separated with &
 };
 
+/**
+ * get
+ *
+ * @param url
+ * @param data
+ * @param callback
+ * @returns {undefined}
+ */
 exports.get = function (url, data, callback) {
     var request = new XMLHttpRequest(); // Create new request
     request.open("GET", url + // GET the specified url

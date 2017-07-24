@@ -4,16 +4,19 @@ import date from '../../../utils/stdutils';
 export default class NoteBody extends React.Component {
   // 子要素のレンダリング
   renderItem(item) {
-    const img = item.item.body.ResultSet.Result.Img.Image1 ? item.item.body.ResultSet.Result.Img.Image1.sub : '';
-    const title = item.item.body.ResultSet.Result.Title;
-    const url = item.item.body.ResultSet.Result.AuctionItemUrl;
-    const price = item.item.body.ResultSet.Result.Price;
-    const status = item.item.body.ResultSet.Result.Status;
-    const category = item.item.body.ResultSet.Result.CategoryPath;
-    const seller = item.item.body.ResultSet.Result.Seller.Id;
-    const startTime = date.getLocalTimeStamp(item.item.body.ResultSet.Result.StartTime);
-    const endTime = date.getLocalTimeStamp(item.item.body.ResultSet.Result.EndTime);
-    const bids = item.item.body.ResultSet.Result.Bids;
+    const isResult = item.item.body.hasOwnProperty('ResultSet');
+    if(!isResult) return(null);
+    const obj       = item.item.body.ResultSet.Result;
+    const img       = obj.Img.Image1 ? obj.Img.Image1.sub : '';
+    const title     = obj.Title;
+    const url       = obj.AuctionItemUrl;
+    const price     = obj.Price;
+    const status    = obj.Status;
+    const category  = obj.CategoryPath;
+    const seller    = obj.Seller.Id;
+    const startTime = date.getLocalTimeStamp(obj.StartTime);
+    const endTime   = date.getLocalTimeStamp(obj.EndTime);
+    const bids      = obj.Bids;
 
     return <li className='NoteBody-item' key={item.auctionID}>
         <table width="100%">
@@ -28,7 +31,7 @@ export default class NoteBody extends React.Component {
             <span className='NoteBody-title'>
             <a href={url} target='_blank'>{title}</a>
             </span>
-            <span className='NoteBody-text'>Time : {startTime} ~  {endTime}</span>
+            <span className='NoteBody-text'>Time : {startTime} ~ {endTime}</span>
             <span className='NoteBody-text'>Seller : {seller}</span>
             <span className='NoteBody-text'>Category : {category}</span>
           </td>
