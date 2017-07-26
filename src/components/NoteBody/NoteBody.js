@@ -1,5 +1,5 @@
 import React from 'react';
-import date from '../../../utils/stdutils';
+import std from '../../../utils/stdutils';
 
 export default class NoteBody extends React.Component {
   // 子要素のレンダリング
@@ -14,8 +14,8 @@ export default class NoteBody extends React.Component {
     const status    = obj.Status;
     const category  = obj.CategoryPath;
     const seller    = obj.Seller.Id;
-    const startTime = date.getLocalTimeStamp(obj.StartTime);
-    const endTime   = date.getLocalTimeStamp(obj.EndTime);
+    const startTime = std.getLocalTimeStamp(obj.StartTime);
+    const endTime   = std.getLocalTimeStamp(obj.EndTime);
     const bids      = obj.Bids;
 
     return <li className='NoteBody-item' key={item.auctionID}>

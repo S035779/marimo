@@ -37,8 +37,8 @@ exports.YHsearch = function(options, callback) {
             //opt.resAvailable = obj.body.ResultSet.root.totalResultsAvailable;
             //opt.resReturned = obj.body.ResultSet.root.totalResultsReturned;
             //opt.resPosition = obj.body.ResultSet.root.firstResultPosition;
-            var len = obj.body.ResultSet.Result ? obj.body.ResultSet.Result.Item.length : 0;;
-            if(len) {
+            //var len = obj.body.ResultSet.Result ? obj.body.ResultSet.Result.Item.length : 0;
+            if(obj.body.ResultSet.Result.hasOwnProperty('Item')) {
               obj.body.ResultSet.Result.Item.forEach(function(obj, idx, arr) {
                 //console.dir(std.keys(obj),{showHidden: false, depth: 10, colors: true});
                 ids[idx] = obj.AuctionID;

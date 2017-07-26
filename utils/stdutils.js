@@ -106,6 +106,21 @@ exports.dup = function(o, p) {
     return result;
 }
 
+exports.dst = function(o) { 
+  var p = o.sort(function(s, t){
+    let a=s.toString().toLowerCase();
+    let b=t.toString().toLowerCase();
+    if(a<b) return -1;
+    if(a>b) return 1;
+    return 0;
+  });
+  var result =  p.filter(function(x, i, y) {
+    if(i===0) return true;
+    return x!==y[i-1];
+  })
+  return result;
+}
+
 exports.getTimeStamp = function() {
   var dt = new Date();
   return dt.toISOString();

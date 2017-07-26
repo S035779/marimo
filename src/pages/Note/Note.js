@@ -31,56 +31,44 @@ class Note extends React.Component {
     }
   }
 
-  handleChangeSearch(search) {
-    const items = this.state.items.filter(item => { 
-      const isResult = item.item.body.hasOwnProperty('ResultSet');
-      if(!isResult) return false;
-      const obj = item.item.body.ResultSet.Result;
-      if(obj.Title.match(search)) return true; 
-      return false;
-    });
-    const note = search ? Object.assign({}, this.state.note, {items}) : Object.assign({}, this.state.note, this.state.items);
-    this.setState({ note });
-    //console.log(`search string.. : %s`,search);
-    //console.log('item length : %s / %s', this.state.note.items.length, this.state.items.length);
-  }
-
-  handleChangeCheckbox(checked) {
-    const items = this.state.items.filter(item => { 
-      const isResult = item.item.body.hasOwnProperty('ResultSet');
-      if(!isResult) return false;
-      const obj = item.item.body.ResultSet.Result;
-      if(Number(obj.Bids) > 0) return true; 
-      return false;
-    });
-    const note = checked ? Object.assign({}, this.state.note, {items}) : Object.assign({}, this.state.note, this.state.items);
-    this.setState({ note });
-  }
-
-  handleChangeSelect(checked) {
-    const items = this.state.items.filter(item => { 
-      const isResult = item.item.body.hasOwnProperty('ResultSet');
-      if(!isResult) return false;
-      const obj = item.item.body.ResultSet.Result;
-      return checked.some(opt => {
-        return opt === obj.CategoryPath;
-      });
-    });
-    const note = checked ? Object.assign({}, this.state.note, {items}) : Object.assign({}, this.state.note, this.state.items);
+  handleSearch(options) {
+    const note = Object.assign({}, this.state.note, { options });
     this.setState({ note });
   }
 
   render() {
     const note = this.state.note;
     if (!note || !note.id) return null;
+    if (!note.hasOwnProperty('items')) null;
+
+    const items = note.items.filter(item => { 
+      if(!item.item.body.hasOwnProperty('ResultSet')) 
+        return false;
+      const obj = item.item.body.ResultSet.Result;
+      if(note.hasOwnProperty('options')) {
+        if(!obj.Title.match(note.options.searchString)
+          && note.options.searchString !== '') 
+          return false;
+        if(note.options.bids 
+          && Number(obj.Bids) === 0) 
+          return false;
+        if(note.options.status
+          && obj.Status !== 'open') 
+          return false;
+        if(!note.options.categoryPath.some(path => { 
+          return path === obj.CategoryPath; })
+          && note.options.categoryPath.length !== 0 )
+          return false;
+      }
+      return true;
+    });
+
     return <div className="page-Note">
       <NoteHeader
         note={note} 
         onChangeStar={this.handleChangeStar.bind(this)} 
-        onChangeSearch={this.handleChangeSearch.bind(this)} 
-        onChangeCheckbox={this.handleChangeCheckbox.bind(this)}
-        onChangeSelect={this.handleChangeSelect.bind(this)} />
-      <NoteBody items={note.items}/>
+        onSearch={this.handleSearch.bind(this)} />
+      <NoteBody items={items}/>
     </div>;
   }
 }

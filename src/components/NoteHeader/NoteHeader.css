@@ -7,13 +7,29 @@
 .NoteHeader-title {
   margin: 0;
   padding: 0;
+}
+
+.NoteHeader-title > span {
+  margin: 0 5px;
+}
+
+.NoteHeader-titlename {
   font-size: 32px;
+  font-weight: bold;
+}
+
+.NoteHeader-category {
+  font-size: 20px;
   font-weight: bold;
 }
 
 .NoteHeader-meta {
   font-size: 15px;
   margin-top: 10px;
+}
+
+.NoteHeader-meta > span {
+  margin: 0 5px;
 }
 
 .NoteHeader-author {
@@ -27,6 +43,15 @@
 
 .NoteHeader-updated {
   color: #666;
+}
+
+.NoteHeader-searchs {
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+.NoteHeader-searchs > span {
+  margin: 0 5px;
 }
 
 .NoteHeader-buttons {
