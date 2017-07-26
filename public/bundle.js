@@ -16263,7 +16263,7 @@ var Note = function (_React$Component) {
     value: function render() {
       var note = this.state.note;
       if (!note || !note.id) return null;
-      if (!note.hasOwnProperty('items')) null;
+      if (!note.hasOwnProperty('items')) return null;
 
       var items = note.items.filter(function (item) {
         if (!item.item.body.hasOwnProperty('ResultSet')) return false;
