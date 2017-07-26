@@ -39,7 +39,7 @@ class Note extends React.Component {
   render() {
     const note = this.state.note;
     if (!note || !note.id) return null;
-    if (!note.hasOwnProperty('items')) null;
+    if (!note.hasOwnProperty('items')) return null;
 
     const items = note.items.filter(item => { 
       if(!item.item.body.hasOwnProperty('ResultSet')) 
