@@ -3871,6 +3871,214 @@ module.exports = reactProdInvariant;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+/*
+ * Copy the enumerable properties of p to o, and return o.
+ * If o and p have a property by the same name, o's property is overwritten.
+ * This function does not handle getters and setters or copy attributes.
+ */
+exports.extend = function (o, p) {
+  for (prop in p) {
+    // For all props in p.
+    o[prop] = p[prop]; // Add the property to o.
+  }
+  return o;
+};
+
+/*
+ * Copy the enumerable properties of p to o, and return o.
+ * If o and p have a property by the same name, o's property is left alone.
+ * This function does not handle getters and setters or copy attributes.
+ */
+exports.merge = function (o, p) {
+  for (prop in p) {
+    // For all props in p.
+    if (o.hasOwnProperty[prop]) continue; // Except those already in o.
+    o[prop] = p[prop]; // Add the property to o.
+  }
+  return o;
+};
+
+/*
+ * Remove properties from o if there is not a property with the same name in p.
+ * Return o.
+ */
+exports.restrict = function (o, p) {
+  for (prop in o) {
+    // For all props in o
+    if (!(prop in p)) delete o[prop]; // Delete if not in p
+  }
+  return o;
+};
+
+/*
+ * For each property of p, delete the property with the same name from o.
+ * Return o.
+ */
+exports.subtract = function (o, p) {
+  for (prop in p) {
+    // For all props in p
+    delete o[prop]; // Delete from o (deleting a
+    // nonexistent prop is harmless)
+  }
+  return o;
+};
+
+/*
+ * Return a new object that holds the properties of both o and p.
+ * If o and p have properties by the same name, the values from o are used.
+ */
+exports.union = function (o, p) {
+  return extend(extend({}, o), p);
+};
+
+/*
+ * Return a new object that holds only the properties of o that also appear
+ * in p. This is something like the intersection of o and p, but the values of
+ * the properties in p are discarded
+ */
+exports.intersection = function (o, p) {
+  return restrict(extend({}, o), p);
+};
+
+/*
+ * Return an array that holds the names of the enumerable own properties of o.
+ */
+exports.keys = function (o) {
+  if ((typeof o === "undefined" ? "undefined" : _typeof(o)) !== "object") throw TypeError(); // Object argument required
+  var result = []; // The array we will return
+  for (var prop in o) {
+    // For all enumerable properties
+    if (o.hasOwnProperty(prop)) // If it is an own property
+      result.push(prop); // add it to the array.
+  }
+  return result; // Return the array.
+};
+
+/**
+ * and
+ *
+ * @param o
+ * @param p
+ * @returns {array}
+ */
+exports.and = function (o, p) {
+  var result = o.concat(p).filter(function (x, i, y) {
+    return y.indexOf(x) !== y.lastIndexOf(x);
+  }).filter(function (x, i, y) {
+    return y.indexOf(x) === i;
+  });
+  return result;
+};
+
+/**
+ * del
+ *
+ * @param o
+ * @param p
+ * @returns {array}
+ */
+exports.del = function (o, p) {
+  var result = o.filter(function (x, i, y) {
+    return p.indexOf(x) === -1;
+  });
+  return result;
+};
+
+/**
+ * add
+ *
+ * @param o
+ * @param p
+ * @returns {array}
+ */
+exports.add = function (o, p) {
+  var result = p.filter(function (x, i, y) {
+    return o.indexOf(x) === -1;
+  });
+  return result;
+};
+
+/**
+ * dif
+ *
+ * @param o
+ * @param p
+ * @returns {array}
+ */
+exports.dif = function (o, p) {
+  var result = o.filter(function (x, i, y) {
+    return p.indexOf(x) === -1;
+  }).concat(p.filter(function (x, i, y) {
+    return o.indexOf(x) === -1;
+  }));
+  return result;
+};
+
+/**
+ * dup
+ *
+ * @param o
+ * @param p
+ * @returns {array}
+ */
+exports.dup = function (o, p) {
+  var result = o.concat(p).filter(function (x, i, y) {
+    return y.indexOf(x) === i;
+  });
+  return result;
+};
+
+/**
+ * dst
+ *
+ * @param o
+ * @returns {array}
+ */
+exports.dst = function (o) {
+  var p = o.sort(function (s, t) {
+    var a = s.toString().toLowerCase();
+    var b = t.toString().toLowerCase();
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  });
+  var result = p.filter(function (x, i, y) {
+    if (i === 0) return true;
+    return x !== y[i - 1];
+  });
+  return result;
+};
+
+/**
+ * getTimeStamp
+ *
+ * @returns {string}
+ */
+exports.getTimeStamp = function () {
+  var dt = new Date();
+  return dt.toISOString();
+};
+
+/**
+ * getLocalTimeStamp
+ *
+ * @param s
+ * @returns {string}
+ */
+exports.getLocalTimeStamp = function (s) {
+  var dt = new Date(s);
+  return dt.getFullYear() + "-" + (dt.getMonth() + 1) + "-" + dt.getDate() + " " + dt.toTimeString().split(' ')[0];
+};
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/**
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
@@ -4147,7 +4355,7 @@ module.exports = EventPluginHub;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4163,7 +4371,7 @@ module.exports = EventPluginHub;
 
 
 
-var EventPluginHub = __webpack_require__(33);
+var EventPluginHub = __webpack_require__(34);
 var EventPluginUtils = __webpack_require__(60);
 
 var accumulateInto = __webpack_require__(105);
@@ -4287,7 +4495,7 @@ module.exports = EventPropagators;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4338,7 +4546,7 @@ var ReactInstanceMap = {
 module.exports = ReactInstanceMap;
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4402,7 +4610,7 @@ SyntheticEvent.augmentClass(SyntheticUIEvent, UIEventInterface);
 module.exports = SyntheticUIEvent;
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4435,7 +4643,7 @@ var route = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0_prop_types__["oneO
 var routes = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0_prop_types__["oneOfType"])([route, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0_prop_types__["arrayOf"])(route)]);
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4498,7 +4706,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4554,162 +4762,6 @@ var Button = function (_React$Component) {
 }(_react2.default.Component);
 
 exports.default = Button;
-
-/***/ }),
-/* 40 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-/*
- * Copy the enumerable properties of p to o, and return o.
- * If o and p have a property by the same name, o's property is overwritten.
- * This function does not handle getters and setters or copy attributes.
- */
-exports.extend = function (o, p) {
-    for (prop in p) {
-        // For all props in p.
-        o[prop] = p[prop]; // Add the property to o.
-    }
-    return o;
-};
-
-/*
- * Copy the enumerable properties of p to o, and return o.
- * If o and p have a property by the same name, o's property is left alone.
- * This function does not handle getters and setters or copy attributes.
- */
-exports.merge = function (o, p) {
-    for (prop in p) {
-        // For all props in p.
-        if (o.hasOwnProperty[prop]) continue; // Except those already in o.
-        o[prop] = p[prop]; // Add the property to o.
-    }
-    return o;
-};
-
-/*
- * Remove properties from o if there is not a property with the same name in p.
- * Return o.
- */
-exports.restrict = function (o, p) {
-    for (prop in o) {
-        // For all props in o
-        if (!(prop in p)) delete o[prop]; // Delete if not in p
-    }
-    return o;
-};
-
-/*
- * For each property of p, delete the property with the same name from o.
- * Return o.
- */
-exports.subtract = function (o, p) {
-    for (prop in p) {
-        // For all props in p
-        delete o[prop]; // Delete from o (deleting a
-        // nonexistent prop is harmless)
-    }
-    return o;
-};
-
-/*
- * Return a new object that holds the properties of both o and p.
- * If o and p have properties by the same name, the values from o are used.
- */
-exports.union = function (o, p) {
-    return extend(extend({}, o), p);
-};
-
-/*
- * Return a new object that holds only the properties of o that also appear
- * in p. This is something like the intersection of o and p, but the values of
- * the properties in p are discarded
- */
-exports.intersection = function (o, p) {
-    return restrict(extend({}, o), p);
-};
-
-/*
- * Return an array that holds the names of the enumerable own properties of o.
- */
-exports.keys = function (o) {
-    if ((typeof o === "undefined" ? "undefined" : _typeof(o)) !== "object") throw TypeError(); // Object argument required
-    var result = []; // The array we will return
-    for (var prop in o) {
-        // For all enumerable properties
-        if (o.hasOwnProperty(prop)) // If it is an own property
-            result.push(prop); // add it to the array.
-    }
-    return result; // Return the array.
-};
-
-exports.and = function (o, p) {
-    var result = o.concat(p).filter(function (x, i, y) {
-        return y.indexOf(x) !== y.lastIndexOf(x);
-    }).filter(function (x, i, y) {
-        return y.indexOf(x) === i;
-    });
-    return result;
-};
-
-exports.del = function (o, p) {
-    var result = o.filter(function (x, i, y) {
-        return p.indexOf(x) === -1;
-    });
-    return result;
-};
-
-exports.add = function (o, p) {
-    var result = p.filter(function (x, i, y) {
-        return o.indexOf(x) === -1;
-    });
-    return result;
-};
-
-exports.dif = function (o, p) {
-    var result = o.filter(function (x, i, y) {
-        return p.indexOf(x) === -1;
-    }).concat(p.filter(function (x, i, y) {
-        return o.indexOf(x) === -1;
-    }));
-    return result;
-};
-
-exports.dup = function (o, p) {
-    var result = o.concat(p).filter(function (x, i, y) {
-        return y.indexOf(x) === i;
-    });
-    return result;
-};
-
-exports.dst = function (o) {
-    var p = o.sort(function (s, t) {
-        var a = s.toString().toLowerCase();
-        var b = t.toString().toLowerCase();
-        if (a < b) return -1;
-        if (a > b) return 1;
-        return 0;
-    });
-    var result = p.filter(function (x, i, y) {
-        if (i === 0) return true;
-        return x !== y[i - 1];
-    });
-    return result;
-};
-
-exports.getTimeStamp = function () {
-    var dt = new Date();
-    return dt.toISOString();
-};
-
-exports.getLocalTimeStamp = function (s) {
-    var dt = new Date(s);
-    return dt.getFullYear() + "-" + (dt.getMonth() + 1) + "-" + dt.getDate() + " " + dt.toTimeString().split(' ')[0];
-};
 
 /***/ }),
 /* 41 */
@@ -5498,7 +5550,7 @@ module.exports = ReactBrowserEventEmitter;
 
 
 
-var SyntheticUIEvent = __webpack_require__(36);
+var SyntheticUIEvent = __webpack_require__(37);
 var ViewportMetrics = __webpack_require__(104);
 
 var getEventModifierState = __webpack_require__(68);
@@ -6069,7 +6121,7 @@ var _encutils = __webpack_require__(146);
 
 var _encutils2 = _interopRequireDefault(_encutils);
 
-var _stdutils = __webpack_require__(40);
+var _stdutils = __webpack_require__(33);
 
 var _stdutils2 = _interopRequireDefault(_stdutils);
 
@@ -6097,19 +6149,6 @@ exports.default = {
           notes = data;
           resolve(notes);
         });
-        //$.ajax({
-        //  url: url + '?' + 'user=' + username,
-        //  dataType: 'json',
-        //  cache: false,
-        //  success: function(data) {
-        //    notes = data;
-        //    resolve(data);
-        //  }.bind(this),
-        //    error: function(xhr, status, err) {
-        //    console.error(url, status, err.toString());
-        //    reject(new Error('Error'));
-        //  }.bind(this)
-        //})
       });
     } else if (func === 'create' || func === 'delete' || func === 'search') {
       console.log(response);
@@ -6118,19 +6157,6 @@ exports.default = {
         _xhrutils2.default.postJSON(uri, response, function (data) {
           resolve(response);
         });
-        //$.ajax({
-        //  url: url + '/' + func,
-        //  dataType: 'json',
-        //  type: 'POST',
-        //  data: response,
-        //  success: function(data) {
-        //    resolve(response);
-        //  }.bind(this),
-        //    error: function(xhr, status, err) {
-        //    console.error(url, status, err.toString());
-        //    reject(new Error('Error'));
-        //  }.bind(this)
-        //})
       });
     } else if (func === 'post') {
       console.log(response);
@@ -6139,19 +6165,6 @@ exports.default = {
         _xhrutils2.default.postJSON(uri, response, function (data) {
           resolve(response.id);
         });
-        //$.ajax({
-        //  url: url,
-        //  dataType: 'json',
-        //  type: 'POST',
-        //  data: response,
-        //  success: function(data) {
-        //    resolve(response.id);
-        //  }.bind(this),
-        //    error: function(xhr, status, err) {
-        //    console.error(url, status, err.toString());
-        //    reject(new Error('Error'));
-        //  }.bind(this)
-        //})
       });
     } else {
       console.log(response);
@@ -6166,13 +6179,10 @@ exports.default = {
 
   // 更新日付を生成
   getUpdated: function getUpdated() {
-    //const d = new Date();
-    //return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.toTimeString().split(' ')[0]}`;
     return _stdutils2.default.getTimeStamp();
   },
   getName: function getName() {
     var memory = window.localStorage || window.UserDataStorage && new str.UserDataStorage() || new str.CookieStorage();
-    //console.log(username);
     return memory.getItem("username");
   },
 
@@ -6249,14 +6259,12 @@ exports.default = {
 
   // ６．特定のノートを削除する
   deleteNote: function deleteNote(id) {
-    //console.dir(notes);
     var note = notes.find(function (note) {
       return note.id === id;
     });
     notes = notes.filter(function (note) {
       return note.id !== id;
     });
-    //console.log(`%s  :  %s`, id, note.id);
     return this.request('delete', note);
   },
 
@@ -6267,7 +6275,6 @@ exports.default = {
       return note.id === id;
     });
     note.starred = Boolean(1);
-    //console.log(note);
     return this.request('post', note);
   },
 
@@ -6278,7 +6285,6 @@ exports.default = {
       return note.id === id;
     });
     note.starred = Boolean(0);
-    //console.log(note);
     return this.request('post', note);
   }
 };
@@ -7480,7 +7486,7 @@ module.exports = ReactErrorUtils;
 var _prodInvariant = __webpack_require__(3);
 
 var ReactCurrentOwner = __webpack_require__(14);
-var ReactInstanceMap = __webpack_require__(35);
+var ReactInstanceMap = __webpack_require__(36);
 var ReactInstrumentation = __webpack_require__(11);
 var ReactUpdates = __webpack_require__(13);
 
@@ -8832,7 +8838,7 @@ var _react = __webpack_require__(5);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _stdutils = __webpack_require__(40);
+var _stdutils = __webpack_require__(33);
 
 var _stdutils2 = _interopRequireDefault(_stdutils);
 
@@ -12387,7 +12393,7 @@ var ReactDOMComponentTree = __webpack_require__(6);
 var ReactDOMContainerInfo = __webpack_require__(200);
 var ReactDOMFeatureFlags = __webpack_require__(202);
 var ReactFeatureFlags = __webpack_require__(98);
-var ReactInstanceMap = __webpack_require__(35);
+var ReactInstanceMap = __webpack_require__(36);
 var ReactInstrumentation = __webpack_require__(11);
 var ReactMarkupChecksum = __webpack_require__(222);
 var ReactReconciler = __webpack_require__(27);
@@ -13901,7 +13907,7 @@ function isPromise(obj) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_invariant___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_invariant__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__RouteUtils__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__PatternUtils__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__InternalPropTypes__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__InternalPropTypes__ = __webpack_require__(38);
 
 
 
@@ -15182,13 +15188,13 @@ var _StarButton = __webpack_require__(135);
 
 var _StarButton2 = _interopRequireDefault(_StarButton);
 
-var _Button = __webpack_require__(39);
+var _Button = __webpack_require__(40);
 
 var _Button2 = _interopRequireDefault(_Button);
 
 var _reactRouter = __webpack_require__(29);
 
-var _stdutils = __webpack_require__(40);
+var _stdutils = __webpack_require__(33);
 
 var _stdutils2 = _interopRequireDefault(_stdutils);
 
@@ -15210,6 +15216,8 @@ var NoteHeader = function (_React$Component) {
 
     _this.state = {
       searchString: '',
+      highestPrice: '',
+      lowestPrice: '',
       bids: false,
       status: false,
       categoryPath: []
@@ -15239,6 +15247,13 @@ var NoteHeader = function (_React$Component) {
     key: 'handleChangeSearch',
     value: function handleChangeSearch(e) {
       this.setState({ searchString: e.target.value });
+    }
+  }, {
+    key: 'handleChangePrice',
+    value: function handleChangePrice(name, e) {
+      var newState = {};
+      newState[name] = e.target.value;
+      this.setState(newState);
     }
   }, {
     key: 'handleChangeCheckbox',
@@ -15314,7 +15329,7 @@ var NoteHeader = function (_React$Component) {
                 _react2.default.createElement('input', { ref: 'search',
                   value: this.state.searchString,
                   type: 'text',
-                  placeholder: 'Search string',
+                  placeholder: 'Search string...',
                   onChange: this.handleChangeSearch.bind(this) })
               )
             )
@@ -15348,6 +15363,43 @@ var NoteHeader = function (_React$Component) {
                     onChange: this.handleChangeSelect.bind(this) },
                   options
                 )
+              )
+            )
+          ),
+          _react2.default.createElement(
+            'tr',
+            null,
+            _react2.default.createElement(
+              'td',
+              { width: '10%' },
+              _react2.default.createElement(
+                'span',
+                null,
+                _react2.default.createElement(
+                  'label',
+                  { htmlFor: 'search_string' },
+                  'Price :'
+                )
+              )
+            ),
+            _react2.default.createElement(
+              'td',
+              null,
+              _react2.default.createElement(
+                'span',
+                null,
+                _react2.default.createElement('input', { ref: 'lowestPrice',
+                  value: this.state.lowestPrice,
+                  type: 'text',
+                  placeholder: 'Lowest price',
+                  onChange: this.handleChangePrice.bind(this, 'lowestPrice') }),
+                'yen ~\xA0',
+                _react2.default.createElement('input', { ref: 'highestPrice',
+                  value: this.state.highestPrice,
+                  type: 'text',
+                  placeholder: 'Highest price',
+                  onChange: this.handleChangePrice.bind(this, 'highestPrice') }),
+                'yen'
               )
             )
           ),
@@ -15515,6 +15567,10 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRouter = __webpack_require__(29);
 
+var _stdutils = __webpack_require__(33);
+
+var _stdutils2 = _interopRequireDefault(_stdutils);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -15538,8 +15594,7 @@ var NoteList = function (_React$Component) {
     // 子要素のレンダリング
     value: function renderItem(note) {
       var classNames = ['NoteList-item'];
-      var d = new Date(note.updated);
-      var updated = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + ' ' + d.toTimeString().split(' ')[0];
+      var updated = _stdutils2.default.getLocalTimeStamp(note.updated);
 
       // 選択中の要素に`is-selected`classを付与する
       if (Number(this.props.selectedNoteId) === note.id) {
@@ -15616,7 +15671,7 @@ var _react = __webpack_require__(5);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _Button = __webpack_require__(39);
+var _Button = __webpack_require__(40);
 
 var _Button2 = _interopRequireDefault(_Button);
 
@@ -15716,7 +15771,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRouter = __webpack_require__(29);
 
-var _stdutils = __webpack_require__(40);
+var _stdutils = __webpack_require__(33);
 
 var _stdutils2 = _interopRequireDefault(_stdutils);
 
@@ -15911,7 +15966,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _utils = __webpack_require__(17);
 
-var _NoteAction = __webpack_require__(38);
+var _NoteAction = __webpack_require__(39);
 
 var _NoteAction2 = _interopRequireDefault(_NoteAction);
 
@@ -15919,7 +15974,7 @@ var _dashboardStore = __webpack_require__(143);
 
 var _dashboardStore2 = _interopRequireDefault(_dashboardStore);
 
-var _Button = __webpack_require__(39);
+var _Button = __webpack_require__(40);
 
 var _Button2 = _interopRequireDefault(_Button);
 
@@ -16041,11 +16096,11 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRouter = __webpack_require__(29);
 
-var _NoteAction = __webpack_require__(38);
+var _NoteAction = __webpack_require__(39);
 
 var _NoteAction2 = _interopRequireDefault(_NoteAction);
 
-var _Button = __webpack_require__(39);
+var _Button = __webpack_require__(40);
 
 var _Button2 = _interopRequireDefault(_Button);
 
@@ -16122,7 +16177,6 @@ var NoteEdit = function (_React$Component) {
     value: function render() {
       var note = this.state.note;
       if (!note.id) return null;
-      //console.dir(note.items);
       // 変更があったらSaveボタンのところに編集中マークを出す。
       var isChanged = this.props.note.title !== note.title || this.props.note.body !== note.body || this.props.note.category !== note.category;
 
@@ -16132,8 +16186,20 @@ var NoteEdit = function (_React$Component) {
         _react2.default.createElement(
           'div',
           { className: 'page-NoteEdit-header' },
-          _react2.default.createElement('input', { 'aria-label': '\u30BF\u30A4\u30C8\u30EB', ref: 'title', type: 'text', placeholder: 'title', value: note.title, onChange: this.onChangeTitle.bind(this), 'data-page-title': true }),
-          _react2.default.createElement('input', { 'aria-label': '\u30AB\u30C6\u30B4\u30EA', ref: 'category', type: 'text', placeholder: 'category', value: note.category, onChange: this.onChangeCategory.bind(this), 'data-page-category': true }),
+          _react2.default.createElement('input', { 'aria-label': '\u30BF\u30A4\u30C8\u30EB',
+            ref: 'title',
+            type: 'text',
+            placeholder: 'Title',
+            value: note.title,
+            onChange: this.onChangeTitle.bind(this),
+            'data-page-title': true }),
+          _react2.default.createElement('input', { 'aria-label': '\u30AB\u30C6\u30B4\u30EA',
+            ref: 'category',
+            type: 'text',
+            placeholder: 'Category',
+            value: note.category,
+            onChange: this.onChangeCategory.bind(this),
+            'data-page-category': true }),
           _react2.default.createElement(
             'div',
             { className: 'page-NoteEdit-buttons' },
@@ -16160,10 +16226,14 @@ var NoteEdit = function (_React$Component) {
           { className: 'page-NoteEdit-body' },
           _react2.default.createElement(
             'label',
-            { htmlFor: 'note-body', className: 'u-for-at' },
+            { htmlFor: 'note-body',
+              className: 'u-for-at' },
             '\u672C\u6587'
           ),
-          _react2.default.createElement('textarea', { id: 'note-body', value: note.body, placeholder: 'search strings...', onChange: this.onChangeBody.bind(this) })
+          _react2.default.createElement('textarea', { id: 'note-body',
+            value: note.body,
+            placeholder: 'Search string...',
+            onChange: this.onChangeBody.bind(this) })
         ),
         _react2.default.createElement(
           'div',
@@ -16206,7 +16276,7 @@ var _NoteBody = __webpack_require__(78);
 
 var _NoteBody2 = _interopRequireDefault(_NoteBody);
 
-var _NoteAction = __webpack_require__(38);
+var _NoteAction = __webpack_require__(39);
 
 var _NoteAction2 = _interopRequireDefault(_NoteAction);
 
@@ -16275,6 +16345,9 @@ var Note = function (_React$Component) {
           if (!note.options.categoryPath.some(function (path) {
             return path === obj.CategoryPath;
           }) && note.options.categoryPath.length !== 0) return false;
+          if (!isFinite(note.options.lowestPrice) || !isFinite(note.options.highestPrice)) return false;
+          if (Number(note.options.lowestPrice) > obj.Price && note.options.lowestPrice !== '') return false;
+          if (Number(note.options.highestPrice) < obj.Price && note.options.highestPrice !== '') return false;
         }
         return true;
       });
@@ -16325,7 +16398,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _utils = __webpack_require__(17);
 
-var _NoteAction = __webpack_require__(38);
+var _NoteAction = __webpack_require__(39);
 
 var _NoteAction2 = _interopRequireDefault(_NoteAction);
 
@@ -20129,7 +20202,7 @@ module.exports = AutoFocusUtils;
 
 
 
-var EventPropagators = __webpack_require__(34);
+var EventPropagators = __webpack_require__(35);
 var ExecutionEnvironment = __webpack_require__(7);
 var FallbackCompositionState = __webpack_require__(193);
 var SyntheticCompositionEvent = __webpack_require__(236);
@@ -20739,8 +20812,8 @@ module.exports = CSSPropertyOperations;
 
 
 
-var EventPluginHub = __webpack_require__(33);
-var EventPropagators = __webpack_require__(34);
+var EventPluginHub = __webpack_require__(34);
+var EventPropagators = __webpack_require__(35);
 var ExecutionEnvironment = __webpack_require__(7);
 var ReactDOMComponentTree = __webpack_require__(6);
 var ReactUpdates = __webpack_require__(13);
@@ -21139,7 +21212,7 @@ module.exports = DefaultEventPluginOrder;
 
 
 
-var EventPropagators = __webpack_require__(34);
+var EventPropagators = __webpack_require__(35);
 var ReactDOMComponentTree = __webpack_require__(6);
 var SyntheticMouseEvent = __webpack_require__(47);
 
@@ -21782,7 +21855,7 @@ var React = __webpack_require__(31);
 var ReactComponentEnvironment = __webpack_require__(63);
 var ReactCurrentOwner = __webpack_require__(14);
 var ReactErrorUtils = __webpack_require__(64);
-var ReactInstanceMap = __webpack_require__(35);
+var ReactInstanceMap = __webpack_require__(36);
 var ReactInstrumentation = __webpack_require__(11);
 var ReactNodeTypes = __webpack_require__(102);
 var ReactReconciler = __webpack_require__(27);
@@ -22809,7 +22882,7 @@ var DOMLazyTree = __webpack_require__(26);
 var DOMNamespaces = __webpack_require__(59);
 var DOMProperty = __webpack_require__(19);
 var DOMPropertyOperations = __webpack_require__(94);
-var EventPluginHub = __webpack_require__(33);
+var EventPluginHub = __webpack_require__(34);
 var EventPluginRegistry = __webpack_require__(45);
 var ReactBrowserEventEmitter = __webpack_require__(46);
 var ReactDOMComponentFlags = __webpack_require__(95);
@@ -25916,7 +25989,7 @@ module.exports = REACT_ELEMENT_TYPE;
 
 
 
-var EventPluginHub = __webpack_require__(33);
+var EventPluginHub = __webpack_require__(34);
 
 function runEventQueueInBatch(events) {
   EventPluginHub.enqueueEvents(events);
@@ -26153,7 +26226,7 @@ module.exports = ReactHostOperationHistoryHook;
 
 
 var DOMProperty = __webpack_require__(19);
-var EventPluginHub = __webpack_require__(33);
+var EventPluginHub = __webpack_require__(34);
 var EventPluginUtils = __webpack_require__(60);
 var ReactComponentEnvironment = __webpack_require__(63);
 var ReactEmptyComponent = __webpack_require__(97);
@@ -26292,7 +26365,7 @@ module.exports = ReactMarkupChecksum;
 var _prodInvariant = __webpack_require__(3);
 
 var ReactComponentEnvironment = __webpack_require__(63);
-var ReactInstanceMap = __webpack_require__(35);
+var ReactInstanceMap = __webpack_require__(36);
 var ReactInstrumentation = __webpack_require__(11);
 
 var ReactCurrentOwner = __webpack_require__(14);
@@ -27716,7 +27789,7 @@ module.exports = SVGDOMPropertyConfig;
 
 
 
-var EventPropagators = __webpack_require__(34);
+var EventPropagators = __webpack_require__(35);
 var ExecutionEnvironment = __webpack_require__(7);
 var ReactDOMComponentTree = __webpack_require__(6);
 var ReactInputSelection = __webpack_require__(100);
@@ -27913,7 +27986,7 @@ module.exports = SelectEventPlugin;
 var _prodInvariant = __webpack_require__(3);
 
 var EventListener = __webpack_require__(82);
-var EventPropagators = __webpack_require__(34);
+var EventPropagators = __webpack_require__(35);
 var ReactDOMComponentTree = __webpack_require__(6);
 var SyntheticAnimationEvent = __webpack_require__(234);
 var SyntheticClipboardEvent = __webpack_require__(235);
@@ -27924,7 +27997,7 @@ var SyntheticMouseEvent = __webpack_require__(47);
 var SyntheticDragEvent = __webpack_require__(237);
 var SyntheticTouchEvent = __webpack_require__(241);
 var SyntheticTransitionEvent = __webpack_require__(242);
-var SyntheticUIEvent = __webpack_require__(36);
+var SyntheticUIEvent = __webpack_require__(37);
 var SyntheticWheelEvent = __webpack_require__(243);
 
 var emptyFunction = __webpack_require__(9);
@@ -28310,7 +28383,7 @@ module.exports = SyntheticDragEvent;
 
 
 
-var SyntheticUIEvent = __webpack_require__(36);
+var SyntheticUIEvent = __webpack_require__(37);
 
 /**
  * @interface FocusEvent
@@ -28393,7 +28466,7 @@ module.exports = SyntheticInputEvent;
 
 
 
-var SyntheticUIEvent = __webpack_require__(36);
+var SyntheticUIEvent = __webpack_require__(37);
 
 var getEventCharCode = __webpack_require__(67);
 var getEventKey = __webpack_require__(249);
@@ -28482,7 +28555,7 @@ module.exports = SyntheticKeyboardEvent;
 
 
 
-var SyntheticUIEvent = __webpack_require__(36);
+var SyntheticUIEvent = __webpack_require__(37);
 
 var getEventModifierState = __webpack_require__(68);
 
@@ -28863,7 +28936,7 @@ var _prodInvariant = __webpack_require__(3);
 
 var ReactCurrentOwner = __webpack_require__(14);
 var ReactDOMComponentTree = __webpack_require__(6);
-var ReactInstanceMap = __webpack_require__(35);
+var ReactInstanceMap = __webpack_require__(36);
 
 var getHostComponentFromComposite = __webpack_require__(107);
 var invariant = __webpack_require__(1);
@@ -29432,7 +29505,7 @@ var IndexLink = __WEBPACK_IMPORTED_MODULE_1_create_react_class___default()({
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_invariant__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_invariant___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_invariant__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Redirect__ = __webpack_require__(116);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__InternalPropTypes__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__InternalPropTypes__ = __webpack_require__(38);
 
 
 
@@ -29488,7 +29561,7 @@ var IndexRedirect = __WEBPACK_IMPORTED_MODULE_0_create_react_class___default()({
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_invariant__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_invariant___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_invariant__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__RouteUtils__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__InternalPropTypes__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__InternalPropTypes__ = __webpack_require__(38);
 
 
 
@@ -29544,7 +29617,7 @@ var IndexRoute = __WEBPACK_IMPORTED_MODULE_0_create_react_class___default()({
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_invariant__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_invariant___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_invariant__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__RouteUtils__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__InternalPropTypes__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__InternalPropTypes__ = __webpack_require__(38);
 
 
 
@@ -29600,7 +29673,7 @@ var Route = __WEBPACK_IMPORTED_MODULE_0_create_react_class___default()({
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_prop_types__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_prop_types__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__createTransitionManager__ = __webpack_require__(120);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__InternalPropTypes__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__InternalPropTypes__ = __webpack_require__(38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__RouterContext__ = __webpack_require__(76);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__RouteUtils__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__RouterUtils__ = __webpack_require__(117);
