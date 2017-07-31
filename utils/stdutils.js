@@ -72,6 +72,13 @@ exports.keys = function(o) {
     return result;                   // Return the array.
 }
 
+/**
+ * and
+ *
+ * @param o
+ * @param p
+ * @returns {array}
+ */
 exports.and = function(o, p) {
     var result = o.concat(p)
      .filter(function(x, i, y){ return y.indexOf(x) !== y.lastIndexOf(x); })
@@ -79,18 +86,39 @@ exports.and = function(o, p) {
     return result;
 }
 
+/**
+ * del
+ *
+ * @param o
+ * @param p
+ * @returns {array}
+ */
 exports.del = function(o, p) {
     var result =
      o.filter(function(x, i, y) { return p.indexOf(x) === -1; });
     return result;
 }
 
+/**
+ * add
+ *
+ * @param o
+ * @param p
+ * @returns {array}
+ */
 exports.add = function(o, p) {
     var result =
      p.filter(function(x, i, y) { return o.indexOf(x) === -1; });
     return result;
 }
 
+/**
+ * dif
+ *
+ * @param o
+ * @param p
+ * @returns {array}
+ */
 exports.dif = function(o, p) {
     var result =
       o.filter(function(x, i, y) { return p.indexOf(x) === -1; })
@@ -100,12 +128,25 @@ exports.dif = function(o, p) {
     return result;
 }
 
+/**
+ * dup
+ *
+ * @param o
+ * @param p
+ * @returns {array}
+ */
 exports.dup = function(o, p) {
     var result = o.concat(p)
      .filter(function(x, i, y){ return y.indexOf(x) === i; });
     return result;
 }
 
+/**
+ * dst
+ *
+ * @param o
+ * @returns {array}
+ */
 exports.dst = function(o) { 
   var p = o.sort(function(s, t){
     let a=s.toString().toLowerCase();
@@ -121,11 +162,22 @@ exports.dst = function(o) {
   return result;
 }
 
+/**
+ * getTimeStamp
+ *
+ * @returns {string}
+ */
 exports.getTimeStamp = function() {
   var dt = new Date();
   return dt.toISOString();
 };
 
+/**
+ * getLocalTimeStamp
+ *
+ * @param s
+ * @returns {string}
+ */
 exports.getLocalTimeStamp = function (s) {
   var dt = new Date(s);
   return `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()} ${dt.toTimeString().split(' ')[0]}`;

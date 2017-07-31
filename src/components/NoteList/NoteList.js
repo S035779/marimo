@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router';
+import std from '../../../utils/stdutils';
 
 export default class NoteList extends React.Component {
   // 子要素のレンダリング
   renderItem(note) {
     const classNames = ['NoteList-item'];
-    const d = new Date(note.updated);
-    const updated = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.toTimeString().split(' ')[0]}`;
+    const updated = std.getLocalTimeStamp(note.updated);
 
     // 選択中の要素に`is-selected`classを付与する
     if (Number(this.props.selectedNoteId) === note.id) {

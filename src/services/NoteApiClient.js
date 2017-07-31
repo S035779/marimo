@@ -20,19 +20,6 @@ export default {
             notes = data;
             resolve(notes);
         });
-        //$.ajax({
-        //  url: url + '?' + 'user=' + username,
-        //  dataType: 'json',
-        //  cache: false,
-        //  success: function(data) {
-        //    notes = data;
-        //    resolve(data);
-        //  }.bind(this),
-        //    error: function(xhr, status, err) {
-        //    console.error(url, status, err.toString());
-        //    reject(new Error('Error'));
-        //  }.bind(this)
-        //})
       });
     } else if(func === 'create' || func === 'delete' || func === 'search') {
       console.log(response);
@@ -41,19 +28,6 @@ export default {
         xhr.postJSON(uri, response, function(data) {
             resolve(response);
         });
-        //$.ajax({
-        //  url: url + '/' + func,
-        //  dataType: 'json',
-        //  type: 'POST',
-        //  data: response,
-        //  success: function(data) {
-        //    resolve(response);
-        //  }.bind(this),
-        //    error: function(xhr, status, err) {
-        //    console.error(url, status, err.toString());
-        //    reject(new Error('Error'));
-        //  }.bind(this)
-        //})
       });
     } else if(func === 'post') {
       console.log(response);
@@ -62,19 +36,6 @@ export default {
         xhr.postJSON(uri, response, function(data) {
             resolve(response.id);
         });
-        //$.ajax({
-        //  url: url,
-        //  dataType: 'json',
-        //  type: 'POST',
-        //  data: response,
-        //  success: function(data) {
-        //    resolve(response.id);
-        //  }.bind(this),
-        //    error: function(xhr, status, err) {
-        //    console.error(url, status, err.toString());
-        //    reject(new Error('Error'));
-        //  }.bind(this)
-        //})
       });
     } else {
       console.log(response);
@@ -86,8 +47,6 @@ export default {
 
   // 更新日付を生成
   getUpdated() {
-    //const d = new Date();
-    //return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.toTimeString().split(' ')[0]}`;
     return std.getTimeStamp();
   },
 
@@ -95,7 +54,6 @@ export default {
     var memory = window.localStorage ||
       (window.UserDataStorage && new str.UserDataStorage()) ||
       new str.CookieStorage();
-    //console.log(username);
     return memory.getItem("username");
   },
 
@@ -151,10 +109,8 @@ export default {
 
   // ６．特定のノートを削除する
   deleteNote(id) {
-    //console.dir(notes);
     const note = notes.find(note => note.id === id);
     notes = notes.filter(note => note.id !== id);
-    //console.log(`%s  :  %s`, id, note.id);
     return this.request('delete', note);
   },
 
@@ -162,7 +118,6 @@ export default {
   createStar(id) {
     const note = notes.find(note => note.id === id);
     note.starred = Boolean(1);
-    //console.log(note);
     return this.request('post', note);
   },
 
@@ -170,7 +125,6 @@ export default {
   deleteStar(id) {
     const note = notes.find(note => note.id === id);
     note.starred = Boolean(0);
-    //console.log(note);
     return this.request('post', note);
   },
 };

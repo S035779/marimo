@@ -59,6 +59,15 @@ class Note extends React.Component {
           return path === obj.CategoryPath; })
           && note.options.categoryPath.length !== 0 )
           return false;
+        if(!isFinite(note.options.lowestPrice) 
+          || !isFinite(note.options.highestPrice))
+          return false;
+        if(Number(note.options.lowestPrice) > obj.Price 
+          && note.options.lowestPrice !== '')
+          return false;
+        if(Number(note.options.highestPrice) < obj.Price 
+          && note.options.highestPrice !== '')
+          return false;
       }
       return true;
     });

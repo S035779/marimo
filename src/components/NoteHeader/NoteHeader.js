@@ -9,6 +9,8 @@ export default class NoteHeader extends React.Component {
     super(props);
     this.state = { 
       searchString: '' 
+      , highestPrice: ''
+      , lowestPrice: ''
       , bids: false
       , status: false
       , categoryPath: []
@@ -32,6 +34,12 @@ export default class NoteHeader extends React.Component {
 
   handleChangeSearch(e) {
     this.setState({ searchString: e.target.value });
+  }
+
+  handleChangePrice(name, e) {
+    let newState = {};
+    newState[name] = e.target.value;
+    this.setState(newState);
   }
 
   handleChangeCheckbox(name, e) {
@@ -76,7 +84,7 @@ export default class NoteHeader extends React.Component {
         <input ref="search" 
           value={this.state.searchString} 
           type="text" 
-          placeholder="Search string" 
+          placeholder="Search string..." 
           onChange={this.handleChangeSearch.bind(this)} />
       </span></td></tr>
       <tr><td width="10%"><span>
@@ -88,6 +96,21 @@ export default class NoteHeader extends React.Component {
           onChange={this.handleChangeSelect.bind(this)}>
           {options}
         </select>
+      </span></td></tr>
+      <tr><td width="10%"><span>
+        <label htmlFor="search_string">Price :</label>
+      </span></td>
+      <td><span>
+        <input ref="lowestPrice" 
+          value={this.state.lowestPrice} 
+          type="text" 
+          placeholder="Lowest price" 
+          onChange={this.handleChangePrice.bind(this, 'lowestPrice')} />yen ~&nbsp;
+        <input ref="highestPrice" 
+          value={this.state.highestPrice} 
+          type="text" 
+          placeholder="Highest price" 
+          onChange={this.handleChangePrice.bind(this, 'highestPrice')} />yen
       </span></td></tr>
       <tr><td width="10%"><span>
         <label htmlFor="search_checks">Bids :</label>
