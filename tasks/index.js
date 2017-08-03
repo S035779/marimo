@@ -6,7 +6,7 @@ var mongoose = require('mongoose');
 var dbs = require('../utils/dbsutils');
 
 var dburl = process.env.mongodb;
-var options = {
+var opt = {
   useMongoClient: true
   , promiseLibrary: global.Promise
 };
@@ -16,7 +16,7 @@ process.on('message', function(req) {
   console.log('>  child got message:', req);
 
   // DB Connection
-  mongoose.connect(dburl, options);
+  mongoose.connect(dburl, opt);
   var db = mongoose.connection;
 
   db.on('error', function () {
