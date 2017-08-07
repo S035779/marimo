@@ -1,70 +1,81 @@
 require('dotenv').config();
+var dburl = process.env.mongodb;
+var secnd = process.env.interval;
 
-var mp = require('child_process');
-var async = require('async');
 var mongoose = require('mongoose');
+var async = require('async');
+var mps = require('child_process');
+var std = require('./utils/stdutils');
+var dbs = require('./utils/dbsutils');
+
+var cps = [];
+var mod = __dirname + '/tasks/index.js';
 var cpu = require('os').cpus().length;
 
-var dbs = require('../utils/dbsutils');
-
-/*
- *  First set 'YAHOO! Web Service's Application ID' & initial values.
-**/
-var appid = process.env.app_id;
-var dburl = process.env.mongodb;
-var mod = __dirname + '/tasks/index.js';
+// DB Connection
 var opt = {
   useMongoClient: true
   , promiseLibrary: global.Promise
 };
-
-// DB Connection
-mongoose.connect(mgurl, opt);
+mongoose.connect(dburl, opt);
 var db = mongoose.connection;
-
 db.on('error', function () {
   console.error('connection error', arguments)
 });
-
 db.once('open', function() {
-  console.log('\n===========');
-  console.log('mongoose version: %s', mongoose.version);
-  console.log('========\n\n');
+  console.log('main> mongoose Version: v%s', mongoose.version);
 });
 
-var cp = [];
+console.log('main> nodejs Version: %s', process.version);
 for (var i=0; i<cpu; i++) {
-  cp[i] = mp.fork(mod);
-
-  cp[i].on('message', function(req) {
-    //console.log('< Message parent pid: %d', process.pid);
-    console.log('< parent got message:', req);
-  });
-
-  cp[i].on('exit', function(code, signal) {
-    console.log('< Terminated child pid: %d', cp[i].pid);
-    console.log('< child process terminated due to receipt of code/signal %s', signal || code);
-    cp[i].fork(mod);
-  });
-
-  console.log('< Forked child pid: %d', cp[i].pid);
+  init(i);
 }
 
-var min = 5;
+function init(idx) {
+  cps[idx] = mps.fork(mod);
+  cps[idx].on('message', function(req) {
+    console.log('main> parent got message: ', req);
+  });
+  cps[idx].on('exit', function(code, signal) {
+    console.log('main> child process terminated due to receipt of code/signal %s', signal || code);
+  });
+  cps[idx].on('disconnect', function() {
+    console.log('main> child process disconnected.');
+  });
+  console.log('main> Forked child pid: %d', cps[idx].pid);
+};
+
+var index=0;
+var queue = async.queue(function (req, callback) {
+  if(index >= cps.length) index=0;
+  if(!cps[index].connected) {
+    console.log('main> child.connnected proparty is [%s].', cps[index].connected);
+    init(index);
+  }
+  cps[index].send( req );
+  index++;
+  if(callback) callback();
+}, cps.length);
+
+queue.drain = function() {
+  console.log('main> all items have been processed.');
+};
+
 setInterval(function() {
   async.waterfall(
   [
-    dbs.findUser(req)
-    , dbs.findNote
+    async.apply(dbs.findUsers, {}, {})
+    , dbs.findNotes
   ], function(err, res) {
     if(err) {
       console.error(err.stack);
       throw err;
     }
-    console.log('%s [INFO] %d min. interval...', std.getTimeStamp(), min);
+    console.log('main> results: ', res);
+    res.notes.forEach(function(note) {
+      queue.push(note);
+    });
+    console.log('%s [INFO] %d sec. interval...', std.getTimeStamp(), secnd);
   });
+}, secnd*1000);
 
-  for(var i=0; i<cp.length; i++) {
-    cp[i].send( { message: 'from parent. pid:' + process.pid } );
-  }
-}, min*1000*60)

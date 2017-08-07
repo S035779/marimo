@@ -1,35 +1,39 @@
 require('dotenv').config();
+var dburl = process.env.mongodb;
 
 var async = require('async');
 var mongoose = require('mongoose');
-
 var dbs = require('../utils/dbsutils');
 
-var dburl = process.env.mongodb;
-var opt = {
-  useMongoClient: true
-  , promiseLibrary: global.Promise
+console.log('sub > nodejs Version: %s', process.version);
+init();
+
+function init() {
+  process.on('exit', function(code, signal) {
+    console.log('sub > Terminated child pid: %d', process.pid);
+    console.log('sub >  child process terminated due to receipt of code/signal ', signal || code);
+  });
+  process.on('message', function(req) {
+    console.log('sub >  child got message: ', req);
+    queue.push(req);
+  });
 };
 
-process.on('message', function(req) {
-  //console.log('> Message child pid: %d', process.pid);
-  console.log('>  child got message:', req);
-
+var queue = async.queue(function (req, callback) {
   // DB Connection
+  var opt = {
+    useMongoClient: true
+    , promiseLibrary: global.Promise
+  };
   mongoose.connect(dburl, opt);
   var db = mongoose.connection;
-
   db.on('error', function () {
     console.error('connection error', arguments)
   });
-
-  /*
-   *  main function.
-  **/
-  db.on('open', function () {
+  db.on('open', function() {
     async.waterfall(
       [
-        dbs.findUser(req)
+        async.apply(dbs.findUser, req, {})
         , dbs.findNote
         , dbs.getResultSet
         , dbs.getIds
@@ -43,18 +47,15 @@ process.on('message', function(req) {
           console.error(err.stack);
           throw err;
         }
-        mongoose.connection.close();
-        console.log('all done.');
+        console.log('sub > results: ', res);
+        process.send({ request: req, result: res, pid: process.pid });
       }
     );
+    db.close();
+    if(callback) callback();
   });
-
-
-  process.send( { message: 'from child.  pid:' + process.pid } );
 });
 
-process.on('exit', function(code, signal) {
-  console.log('> Terminated child pid: %d', process.pid);
-  console.log('>  parent process terminated due to receipt of code/signal ', signal || code);
-});
-
+queue.drain = function() {
+  console.log('sub > all items have been processed.');
+};

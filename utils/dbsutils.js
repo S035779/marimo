@@ -1,17 +1,67 @@
 var mongoose = require('mongoose');
+var async = require('async');
 var std = require('../utils/stdutils');
 var app = require('../utils/apputils');
-
-//Query Execution
 var User = require('../models/models').User;
 var Note = require('../models/models').Note;
 var History = require('../models/models').History;
+
 var ObjectId = mongoose.Types.ObjectId;
+
+/*
+ * Find Users Object from collection.
+**/
+exports.findUsers = function(req, res, callback) {
+  var users=[];
+  User.find()
+  .exec(function(err, docs) {
+    if(err) {
+      console.error(err.message);
+      throw err;
+    }
+    docs.forEach(function(doc) {
+      users.push(doc);
+    });
+    //console.log(users);
+    if(callback) callback(err, req, std.extend(res, { users }));
+  });
+};
+
+/*
+ * Find Notes Object from collection.
+**/
+exports.findNotes = function(req, res, callback) {
+  var notes=[];
+  async.forEachOf(res.users, function(user, idx, cbk) {
+    Note.find({ userid: ObjectId(user._id) })
+    .exec(function(err, docs) {
+      if(err) {
+        console.error(err.message);
+        return cbk(err);
+      }
+      try {
+        docs.forEach(function(doc) {
+          notes.push(doc);
+        });
+      } catch(e) {
+        return cbk(e);
+      }
+      cbk();
+    });
+  }, function (err) {
+    if(err) {
+      console.error(err.message);
+      throw err;
+    }
+    //console.log(notes);
+    if(callback) callback(err, req, std.extend(res, { notes }));
+  });
+};
 
 /*
  * Find User Object from user collection.
 **/
-exports.findUser = function(req) {
+exports.findUser = function(req, res, callback) {
   User.findOne({ username: req.user })
   .exec(function(err, user) {
     if (err) {
@@ -20,7 +70,7 @@ exports.findUser = function(req) {
     }
     //console.log(user);
     console.log(`%s [INFO] find user object done.`, std.getTimeStamp());
-    callback(null, req, std.extend( {}, { userId: ObjectId(user._id) });
+    if(callback) callback(err, req, std.extend(res, { userId: ObjectId(user._id) }));
   });
 };
 
@@ -37,7 +87,7 @@ exports.findNote = function(req, res, callback) {
     }
     //console.log(note);
     console.log(`%s [INFO] find note object done.`, std.getIimeStamp());
-    if(callback) callback(null, req, std.extend(res, { note: note });
+    if(callback) callback(err, req, std.extend(res, { note: note }));
   });
 };
 
@@ -60,7 +110,7 @@ exports.getResultSet = function(req, res, callback) {
     console.log(`%s [INFO] Number of pages : %s`, std.getTimeStamp(), pages.length);
     console.log(`%s [INFO] Avail: %s, Return: %s, position: %s`, std.getTimeStamp(), opt.resAvailable, opt.resReturned, opt.resPosition);
     console.log(`%s [INFO] get getResultSet done.`, std.getTimeStamp());
-    if(callback) callback(null, req, std.extend(res, { pages: pages });
+    if(callback) callback(err, req, std.extend(res, { pages: pages }));
   });
 };
 
@@ -108,7 +158,7 @@ exports.getIds = function( req, res, callback) {
     });
     //console.dir(Ids);
     console.log(`%s [INFO] get NewIds done.`, std.getTimeStamp());
-    if(callback) callback(null, req, std.extend(res, { Ids: Ids });
+    if(callback) callback(err, req, std.extend(res, { Ids: Ids }));
   });
 };
 
@@ -139,7 +189,7 @@ exports.getAuctionItems = function( req, res, callback) {
     }
     //console.dir(Items);
     console.log(`%s [INFO] get AuctionItems done.`, std.getTimeStamp());
-    if(callback) callback(null, req, std.extend(res, { Items: Items });
+    if(callback) callback(err, req, std.extend(res, { Items: Items }));
   });
 };
 
@@ -170,7 +220,7 @@ exports.getBidHistorys = function(req, res, callback) {
     }
     //console.dir(Bids);
     console.log(`%s [INFO] get BidsHistorys done.`, std.getTimeStamp());
-    if(callback) callback(null, req, std.extend(res, { Bids: Bids });
+    if(callback) callback(err, req, std.extend(res, { Bids: Bids }));
   });
 };
 
@@ -243,7 +293,7 @@ exports.updateHistory = function(req, res, callback) {
       throw err;
     }
     console.log(`%s [INFO] update history done.`, std.getTimeStamp());
-    if(callback) callback(null, req, std.extend(res, { historyIds: historyIds });
+    if(callback) callback(err, req, std.extend(res, { historyIds: historyIds }));
   });
 };
 
@@ -280,7 +330,7 @@ exports.updateNote = function( req, res, callback) {
       throw err;
     }
     console.log(`%s [INFO] update note done`, std.getTimeStamp());
-    if(callback) callback(null, req, res);
+    if(callback) callback(err, req, res);
   });
 };
 
@@ -309,7 +359,7 @@ exports.findUpdateNote = function( req, res, callback){
       });
     });
     console.log(`%s [INFO] find notes done`, std.getTimeStamp());
-    if(callback) callback(null, newNotes);
+    if(callback) callback(err, req, newNotes);
   });
 };
 
