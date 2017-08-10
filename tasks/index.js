@@ -1,61 +1,62 @@
 require('dotenv').config();
 var dburl = process.env.mongodb;
+var appid = process.env.app_id;
 
 var async = require('async');
 var mongoose = require('mongoose');
+var std = require('../utils/stdutils');
 var dbs = require('../utils/dbsutils');
 
-console.log('sub > nodejs Version: %s', process.version);
+// DB Connection
+mongoose.Promise = global.Promise;
+mongoose.connect(dburl,{
+  useMongoClient: true
+  , promiseLibrary: global.Promise
+});
+
+mongoose.connection.on('error', function () {
+  console.error('%s [ERR] sub > connection error', std.getTimeStamp(), arguments)
+});
+
+mongoose.connection.once('open', function() {
+  console.log('%s [INFO] sub > mongoose Version: v%s', std.getTimeStamp(), mongoose.version);
+});
+
+console.log('%s [INFO] sub > nodejs Version: %s', std.getTimeStamp(), process.version);
 init();
 
 function init() {
   process.on('exit', function(code, signal) {
-    console.log('sub > Terminated child pid: %d', process.pid);
-    console.log('sub >  child process terminated due to receipt of code/signal ', signal || code);
+    console.log('%s [INFO] sub > Terminated child pid: %d', std.getTimeStamp(), process.pid);
+    console.log('%s [INFO] sub >  child process terminated due to receipt of code/signal ', std.getTimeStamp(), signal || code);
   });
   process.on('message', function(req) {
-    console.log('sub >  child got message: ', req);
-    queue.push(req);
+    //console.log('%s [INFO] sub >  child got message: ', std.getTimeStamp(), req);
+    queue.push(req, function() {
+      console.log('%s [INFO] sub > finished processing note object.', std.getTimeStamp());
+    });
   });
 };
 
 var queue = async.queue(function (req, callback) {
-  // DB Connection
-  var opt = {
-    useMongoClient: true
-    , promiseLibrary: global.Promise
-  };
-  mongoose.connect(dburl, opt);
-  var db = mongoose.connection;
-  db.on('error', function () {
-    console.error('connection error', arguments)
-  });
-  db.on('open', function() {
-    async.waterfall(
-      [
-        async.apply(dbs.findUser, req, {})
-        , dbs.findNote
-        , dbs.getResultSet
-        , dbs.getIds
-        , dbs.getAuctionItems
-        , dbs.getBidHistorys
-        , dbs.updateHistory
-        , dbs.updateNote
-        , dbs.findUpdateNote
-      ], function(err, res) {
-        if (err) {
-          console.error(err.stack);
-          throw err;
-        }
-        console.log('sub > results: ', res);
-        process.send({ request: req, result: res, pid: process.pid });
-      }
-    );
-    db.close();
+  async.waterfall([
+    async.apply(dbs.getResultSet, { appid }, { note: req })
+    , dbs.getIds
+    , dbs.getAuctionItems
+    , dbs.getBidHistorys
+    , dbs.updateHistory
+    , dbs.updateNote
+  ], function(err, req, res) {
+    if (err) {
+      console.error('%s [ERR] sub > ', std.getTimeStamp(), err.stack);
+      throw err;
+    }
+    //console.log('%s [INFO] sub > results: ', std.getTimeStamp(), res);
+    process.send({ request: req, pid: process.pid });
     if(callback) callback();
   });
-});
+}, 1);
 
 queue.drain = function() {
-  console.log('sub > all items have been processed.');
+  console.log('%s [INFO] sub > all items have been processed.', std.getTimeStamp());
 };

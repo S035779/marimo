@@ -12,13 +12,13 @@ var ObjectId = mongoose.Types.ObjectId;
  * Find Users Object from collection.
 **/
 exports.findUsers = function(req, res, callback) {
-  var users=[];
   User.find()
   .exec(function(err, docs) {
     if(err) {
       console.error(err.message);
       throw err;
     }
+    var users=[];
     docs.forEach(function(doc) {
       users.push(doc);
     });
@@ -59,39 +59,6 @@ exports.findNotes = function(req, res, callback) {
 };
 
 /*
- * Find User Object from user collection.
-**/
-exports.findUser = function(req, res, callback) {
-  User.findOne({ username: req.user })
-  .exec(function(err, user) {
-    if (err) {
-      console.error(err.message);
-      throw err;
-    }
-    //console.log(user);
-    console.log(`%s [INFO] find user object done.`, std.getTimeStamp());
-    if(callback) callback(err, req, std.extend(res, { userId: ObjectId(user._id) }));
-  });
-};
-
-
-/*
- * Find Note Object from note collection.
-**/
-exports.findNote = function(req, res, callback) {
-  Note.findOne({userid: res.userId, id: req.key })
-  .exec(function (err, note) {
-    if (err) {
-      console.error(err.message);
-      throw err;
-    }
-    //console.log(note);
-    console.log(`%s [INFO] find note object done.`, std.getIimeStamp());
-    if(callback) callback(err, req, std.extend(res, { note: note }));
-  });
-};
-
-/*
  *  Get the 'YAHOO! Search Pages',
  *  using 'YAHOO! Search' utility.
 **/
@@ -103,14 +70,14 @@ exports.getResultSet = function(req, res, callback) {
       throw err;
     }
     var pages = [];
-    var page = Math.ceil(opt.resAvailable / opt.resReturned);
-    for(var i=0; i<page; i++){
+    var opt = obj.body.ResultSet.root;
+    for(var i=0; i<Math.ceil(opt.totalResultsAvailable / opt.totalResultsReturned); i++){
       pages[i]=i+1;
     }
     console.log(`%s [INFO] Number of pages : %s`, std.getTimeStamp(), pages.length);
-    console.log(`%s [INFO] Avail: %s, Return: %s, position: %s`, std.getTimeStamp(), opt.resAvailable, opt.resReturned, opt.resPosition);
+    console.log(`%s [INFO] Avail: %s, Return: %s, position: %s`, std.getTimeStamp(), opt.totalResultsAvailable, opt.totalResultsReturned, opt.firstResultPosition);
     console.log(`%s [INFO] get getResultSet done.`, std.getTimeStamp());
-    if(callback) callback(err, req, std.extend(res, { pages: pages }));
+    if(callback) callback(err, req, std.extend(res, { pages }));
   });
 };
 
@@ -118,11 +85,11 @@ exports.getResultSet = function(req, res, callback) {
  *  Get the 'YAHOO! Auction IDs',
  *  using 'YAHOO! Search' utility.
 **/
-exports.getIds = function( req, res, callback) {
+exports.getAuctionIds = function( req, res, callback) {
   var oldIds = res.note.items;
   var newIds=[];
   var Ids = [];
-  async.forEachOf(pages, function(page, idx, cbk) {
+  async.forEachOf(res.pages, function(page, idx, cbk) {
     console.log(`%s [INFO] page: %s, idx: %s`, std.getTimeStamp(), page, idx);
     app.YHsearch({ appid: req.appid, query: res.note.search, sort: 'gids', order: 'a', page: page }, 
       function(err, ids, obj, str){
@@ -148,17 +115,17 @@ exports.getIds = function( req, res, callback) {
     var addIds = std.add(oldIds, newIds);
     var delIds = std.del(oldIds, newIds);
     nowIds.forEach(function(id, idx, arr){
-      Ids.push({ id: id, status: 0 });
+      Ids.push({ id, status: 0 });
     });
     addIds.forEach(function(id, idx, arr){
-      Ids.push({ id: id, status: 1 });
+      Ids.push({ id, status: 1 });
     });
     delIds.forEach(function(id, idx, arr){
-      Ids.push({ id: id, status: 2 });
+      Ids.push({ id, status: 2 });
     });
     //console.dir(Ids);
     console.log(`%s [INFO] get NewIds done.`, std.getTimeStamp());
-    if(callback) callback(err, req, std.extend(res, { Ids: Ids }));
+    if(callback) callback(err, req, std.extend(res, { Ids }));
   });
 };
 
@@ -168,15 +135,15 @@ exports.getIds = function( req, res, callback) {
 **/
 exports.getAuctionItems = function( req, res, callback) {
   var Items=[];
-  async.forEachOf(res.Ids, function(item, idx, cbk) {
-    console.log(`%s [INFO] id: %s, status: %s, idx: %s`, std.getTimeStamp(), item.id, item.status, idx);
-    app.YHauctionItem({ appid: req.appid, auctionID: item.id }, function(err, obj, str){
+  async.forEachOf(res.Ids, function(auction, idx, cbk) {
+    console.log(`%s [INFO] auction_id: %s, status: %s, idx: %s`, std.getTimeStamp(), auction.id, auction.status, idx);
+    app.YHauctionItem({ appid: req.appid, auctionID: auction.id }, function(err, obj, str){
       if(err) {
         console.error(err.message);
         return cbk(err);
       }
       try {
-        Items[item.id]={ item: obj, status: item.status };
+        Items[auction.id]={ item: obj, status: auction.status };
       } catch(e) {
         return cbk(e);
       }
@@ -189,7 +156,7 @@ exports.getAuctionItems = function( req, res, callback) {
     }
     //console.dir(Items);
     console.log(`%s [INFO] get AuctionItems done.`, std.getTimeStamp());
-    if(callback) callback(err, req, std.extend(res, { Items: Items }));
+    if(callback) callback(err, req, std.extend(res, { Items }));
   });
 };
 
@@ -199,15 +166,15 @@ exports.getAuctionItems = function( req, res, callback) {
 **/
 exports.getBidHistorys = function(req, res, callback) {
   var Bids=[];
-  async.forEachOf(res.Ids, function(bids,idx,cbk) {
-    console.log(`%s [INFO] id: %s, status: %s, idx: %s`, std.getTimeStamp(), bids.id, bids.status, idx);
-    app.YHbidHistory({ appid: req.eppid, auctionID: bids.id}, function(err, obj, str){
+  async.forEachOf(res.Ids, function(auction,idx,cbk) {
+    console.log(`%s [INFO] auction_id: %s, status: %s, idx: %s`, std.getTimeStamp(), auction.id, auction.status, idx);
+    app.YHbidHistory({ appid: req.appid, auctionID: auction.id }, function(err, obj, str){
       if(err) {
         console.error(err.message);
         return cbk(err);
       }
       try {
-        Bids[bids.id]={ bids: obj, status: bids.status };
+        Bids[auction.id]={ bids: obj, status: auction.status };
       } catch(e) {
         return cbk(e);
       }
@@ -220,7 +187,7 @@ exports.getBidHistorys = function(req, res, callback) {
     }
     //console.dir(Bids);
     console.log(`%s [INFO] get BidsHistorys done.`, std.getTimeStamp());
-    if(callback) callback(err, req, std.extend(res, { Bids: Bids }));
+    if(callback) callback(err, req, std.extend(res, { Bids }));
   });
 };
 
@@ -234,12 +201,12 @@ exports.updateHistory = function(req, res, callback) {
   var set = {};
   var opt = {};
   var historyIds = res.note.historyid;
-  async.forEachOf(res.Ids, function(id,idx,cbk) {
-    if(id.status === 0) {
-      where = { userid: res.userId, auctionID: id.id };
+  async.forEachOf(res.Ids, function(auction,idx,cbk) {
+    if(auction.status === 0) { // Status is 'now'.
+      where = { userid: res.note.userid, auctionID: auction.id };
       set = {$set: {
-        item:         res.Items[id.id].item
-        , bids:       res.Bids[id.id].bids
+        item:         res.Items[auction.id].item
+        , bids:       res.Bids[auction.id].bids
         , status:     0
         , updated:    Date.now()
       }};
@@ -251,14 +218,14 @@ exports.updateHistory = function(req, res, callback) {
         }
         cbk();
       });
-    } else if(id.status === 1) {
+    } else if(auction.status === 1) { // Status is 'add'.
       historyId = new ObjectId;
       values = {
         _id: historyId
-        , userid:     res.userId
-        , auctionID:  id.id
-        , item:       res.Items[id.id].item
-        , bids:       res.Bids[id.id].bids
+        , userid:     res.note.userid
+        , auctionID:  auction.id
+        , item:       res.Items[auction.id].item
+        , bids:       res.Bids[auction.id].bids
         , status:     1
         , updated:    Date.now()
       }; 
@@ -270,11 +237,11 @@ exports.updateHistory = function(req, res, callback) {
         }
         cbk();
       });
-    } else if(id.status === 2) {
-      where = { userid: res.userId, auctionID: id.id };
+    } else if(auction.status === 2) { // Status is 'del' within 24 hours.
+      where = { userid: res.note.userid, auctionID: auction.id, update: {$gte: (Date.now() -1)} };
       set = {$set: {
-        item:         res.Items[id.id].item
-        , bids:       res.Bids[id.id].bids
+        item:         res.Items[auction.id].item
+        , bids:       res.Bids[auction.id].bids
         , status:     2
         , updated:    Date.now()
       }};
@@ -293,7 +260,7 @@ exports.updateHistory = function(req, res, callback) {
       throw err;
     }
     console.log(`%s [INFO] update history done.`, std.getTimeStamp());
-    if(callback) callback(err, req, std.extend(res, { historyIds: historyIds }));
+    if(callback) callback(err, req, std.extend(res, { historyIds }));
   });
 };
 
@@ -306,14 +273,43 @@ exports.updateNote = function( req, res, callback) {
   var set = {};
   var opt = {};
   var items = [];
-  var starred = Boolean(0);
 
   for(var i=0; i<res.Ids.length; i++) {
     items.push(res.Ids[i].id);
   }
-  if(req.starred) starred=Boolean(1);
 
-  where = { userid: res.userId, id: res.note.id };
+  where = { userid: res.note.userid, id: res.note.id };
+  set = {$set: {
+    historyid:  res.historyIds
+    , items:    items
+  }};
+  opt = { upsert: false, multi: true };
+  Note.update(where, set, opt, function(err, docs) {
+    if(err) {
+      console.error(err.message);
+      throw err;
+    }
+    console.log(`%s [INFO] update note done`, std.getTimeStamp());
+    if(callback) callback(err, req, res);
+  });
+};
+
+/*
+ *  Post Note Object to note collection.
+**/
+exports.postNote = function( req, res, callback) {
+  var where = {};
+  var set = {};
+  var opt = {};
+  var items = [];
+
+  var starred = Boolean(0);
+  if(req.starred) starred=Boolean(1);
+  for(var i=0; i<res.Ids.length; i++) {
+    items.push(res.Ids[i].id);
+  }
+
+  where = { userid: res.note.userid, id: res.note.id };
   set = {$set: {
     title:        req.title
     , category:   req.category
@@ -335,19 +331,19 @@ exports.updateNote = function( req, res, callback) {
 };
 
 /*
- *  Find the 'YAHOO! Auction Items History',
- *  from 'YAHOO! Web Application' datadase.
+ * Get Notes Object from note collection.
 **/
-exports.findUpdateNote = function( req, res, callback){
-  Note.find({ id: res.userId }).populate('historyid').exec(function (err, docs) {
+exports.getNotes = function(req, res, callback){
+  Note.find({ userid: ObjectId(res.user._id) }).populate('historyid')
+  .exec(function (err, docs) {
     if(err) {
       console.error(err.message);
       throw err;
     }
-    var newNotes = [];
+    var notes = [];
     docs.forEach(function(doc) {
       //console.log(JSON.stringify(doc, null, 4));
-      newNotes.push({
+      notes.push({
         user:       req.user
         , id:       doc.id
         , title:    doc.title
@@ -359,7 +355,39 @@ exports.findUpdateNote = function( req, res, callback){
       });
     });
     console.log(`%s [INFO] find notes done`, std.getTimeStamp());
-    if(callback) callback(err, req, newNotes);
+    if(callback) callback(err, req, notes);
+  });
+};
+
+/*
+ * Find User Object from user collection.
+**/
+exports.findUser = function(req, res, callback) {
+  User.findOne({ username: req.user })
+  .exec(function(err, user) {
+    if (err) {
+      console.error(err.message);
+      throw err;
+    }
+    //console.log(user);
+    console.log(`%s [INFO] find user object done.`, std.getTimeStamp());
+    if(callback) callback(err, req, std.extend(res, { user }));
+  });
+};
+
+/*
+ * Find Note Object from note collection.
+**/
+exports.findNote = function(req, res, callback) {
+  Note.findOne({ userid: ObjectId(res.user._id), id: req.key })
+  .exec(function (err, note) {
+    if (err) {
+      console.error(err.message);
+      throw err;
+    }
+    //console.log(note);
+    console.log(`%s [INFO] find note object done.`, std.getIimeStamp());
+    if(callback) callback(err, req, std.extend(res, { note }));
   });
 };
 

@@ -16,7 +16,6 @@ exports.YHsearch = function(options, callback) {
     http.get(uri, function(stat, head, body) {
         var ids = [];
         var str = [];
-        //var opt = {};
         var head = {
           search: options.query
           , page: options.page
@@ -34,15 +33,13 @@ exports.YHsearch = function(options, callback) {
             //console.dir(obj,{showHidden: false, depth: 10, colors: true});
             str=JSON.stringify(obj);
 
-            //opt.resAvailable = obj.body.ResultSet.root.totalResultsAvailable;
-            //opt.resReturned = obj.body.ResultSet.root.totalResultsReturned;
-            //opt.resPosition = obj.body.ResultSet.root.firstResultPosition;
-            //var len = obj.body.ResultSet.Result ? obj.body.ResultSet.Result.Item.length : 0;
-            if(obj.body.ResultSet.Result.hasOwnProperty('Item')) {
-              obj.body.ResultSet.Result.Item.forEach(function(obj, idx, arr) {
-                //console.dir(std.keys(obj),{showHidden: false, depth: 10, colors: true});
-                ids[idx] = obj.AuctionID;
-              });
+            var res = obj.body.ResultSet.Result;
+            //console.log('ResultSet >', res);
+            if(obj.hasOwnProperty('ResultSet') && res.hasOwnProperty('Item')) {
+              //console.log('Item length >', res.Item.length);
+              for(i=0; i<res.Item.length; i++) {
+                ids[i] = res.Item[i].AuctionID;
+              }
             }
             if(callback) callback(err, ids, obj, str);
         });
@@ -57,7 +54,6 @@ exports.YHauctionItem = function(options, callback) {
     var uri = v2 + 'auctionItem?' + enc.encodeFormData(options);
     http.get(uri, function(stat, head, body) {
         var str = [];
-        //var opt = {};
         var head = {
           auctionID: options.auctionID
           , request: uri
@@ -75,9 +71,6 @@ exports.YHauctionItem = function(options, callback) {
             //console.dir(obj,{showHidden: false, depth: 10, colors: true});
             str=JSON.stringify(obj);
 
-            //opt.resAvailable = obj.body.ResultSet.root.totalResultsAvailable;
-            //opt.resReturned = obj.body.ResultSet.root.totalResultsReturned;
-            //opt.resPosition = obj.body.ResultSet.root.firstResultPosition;
             if(callback) callback(err, obj, str);
         });
     });
@@ -91,7 +84,6 @@ exports.YHbidHistory = function(options, callback) {
     var uri = v1 + 'BidHistory?' + enc.encodeFormData(options);
     http.get(uri, function(stat, head, body) {
         var str = [];
-        //var opt = {};
         var head = {
           auctionID: options.auctionID
           , request: uri
@@ -108,9 +100,6 @@ exports.YHbidHistory = function(options, callback) {
             //console.dir(obj,{showHidden: false, depth: 10, colors: true});
             str=JSON.stringify(obj);
 
-            //opt.resAvailable = obj.body.ResultSet.root.totalResultsAvailable;
-            //opt.resReturned = obj.body.ResultSet.root.totalResultsReturned;
-            //opt.resPosition = obj.body.ResultSet.root.firstResultPosition;
             if(callback) callback(err, obj, str);
         });
     });
