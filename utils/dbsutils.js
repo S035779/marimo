@@ -23,6 +23,7 @@ exports.findUsers = function(req, res, callback) {
       users.push(doc);
     });
     //console.log(users);
+    console.log(`%s [INFO] find Users done.`, std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { users }));
   });
 };
@@ -54,17 +55,50 @@ exports.findNotes = function(req, res, callback) {
       throw err;
     }
     //console.log(notes);
+    console.log(`%s [INFO] find Notes done.`, std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { notes }));
   });
 };
+
+/*
+ * Find Notes Object from collection.
+**/
+exports.findHistorys = function(req, res, callback) {
+  var historys=[];
+  async.forEachOf(res.note.historyid, function(historyid, idx, cbk) {
+    History.find({ _id: ObjectId(historyid) })
+    .exec(function(err, docs) {
+      if(err) {
+        console.error(err.message);
+        return cbk(err);
+      }
+      try {
+        docs.forEach(function(doc) {
+          historys[doc.auctionID] = doc;
+        });
+      } catch(e) {
+        return cbk(e);
+      }
+      cbk();
+    });
+  }, function (err) {
+    if(err) {
+      console.error(err.message);
+      throw err;
+    }
+    //console.log(historys);
+    console.log(`%s [INFO] find Historys done.`, std.getTimeStamp());
+    if(callback) callback(err, req, std.extend(res, { historys }));
+  });
+};;
 
 /*
  *  Get the 'YAHOO! Search Pages',
  *  using 'YAHOO! Search' utility.
 **/
 exports.getResultSet = function(req, res, callback) {
-  app.YHsearch({ appid: req.appid, query: res.note.search, sort: 'bids', order: 'a' },
-    function(err, ids, obj, str){
+  app.YHsearch({ appid: req.appid, query: res.note.search, sort: 'bids', order: 'a' }
+    , function(err, ids, obj, str){
     if (err) {
       console.error(err.message);
       throw err;
@@ -74,9 +108,14 @@ exports.getResultSet = function(req, res, callback) {
     for(var i=0; i<Math.ceil(opt.totalResultsAvailable / opt.totalResultsReturned); i++){
       pages[i]=i+1;
     }
-    console.log(`%s [INFO] Number of pages : %s`, std.getTimeStamp(), pages.length);
-    console.log(`%s [INFO] Avail: %s, Return: %s, position: %s`, std.getTimeStamp(), opt.totalResultsAvailable, opt.totalResultsReturned, opt.firstResultPosition);
-    console.log(`%s [INFO] get getResultSet done.`, std.getTimeStamp());
+    //console.log(`%s [INFO] Number of pages : %s`, std.getTimeStamp(), pages.length);
+    //console.log(`%s [INFO] Avail: %s, Return: %s, position: %s`
+    //  , std.getTimeStamp()
+    //  , opt.totalResultsAvailable
+    //  , opt.totalResultsReturned
+    //  , opt.firstResultPosition
+    //);
+    console.log(`%s [INFO] get ResultSet done.`, std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { pages }));
   });
 };
@@ -90,9 +129,9 @@ exports.getAuctionIds = function( req, res, callback) {
   var newIds=[];
   var Ids = [];
   async.forEachOf(res.pages, function(page, idx, cbk) {
-    console.log(`%s [INFO] page: %s, idx: %s`, std.getTimeStamp(), page, idx);
-    app.YHsearch({ appid: req.appid, query: res.note.search, sort: 'gids', order: 'a', page: page }, 
-      function(err, ids, obj, str){
+    //console.log(`%s [INFO] page: %s, idx: %s`, std.getTimeStamp(), page, idx);
+    app.YHsearch({ appid: req.appid, query: res.note.search, sort: 'gids', order: 'a', page: page }
+      , function(err, ids, obj, str){
       if(err) {
         console.error(err.message);
         return cbk(err);
@@ -114,17 +153,20 @@ exports.getAuctionIds = function( req, res, callback) {
     var nowIds = std.and(oldIds, newIds);
     var addIds = std.add(oldIds, newIds);
     var delIds = std.del(oldIds, newIds);
+    var nowDay = new Date();
+    var oldDay = nowDay.setDate(nowDay.getDate()-1);
     nowIds.forEach(function(id, idx, arr){
-      Ids.push({ id, status: 0 });
+      Ids.push({ id, status: 0, updated: Date.now() });
     });
     addIds.forEach(function(id, idx, arr){
-      Ids.push({ id, status: 1 });
+      Ids.push({ id, status: 1, updated: Date.now() });
     });
     delIds.forEach(function(id, idx, arr){
-      Ids.push({ id, status: 2 });
+      if(res.historys[id].updated > oldDay)
+        Ids.push({ id, status: 2, updated: res.historys[id].updated });
     });
     //console.dir(Ids);
-    console.log(`%s [INFO] get NewIds done.`, std.getTimeStamp());
+    console.log(`%s [INFO] get AuctionIDs done.`, std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { Ids }));
   });
 };
@@ -136,8 +178,14 @@ exports.getAuctionIds = function( req, res, callback) {
 exports.getAuctionItems = function( req, res, callback) {
   var Items=[];
   async.forEachOf(res.Ids, function(auction, idx, cbk) {
-    console.log(`%s [INFO] auction_id: %s, status: %s, idx: %s`, std.getTimeStamp(), auction.id, auction.status, idx);
-    app.YHauctionItem({ appid: req.appid, auctionID: auction.id }, function(err, obj, str){
+    //console.log(`%s [INFO] auction_id: %s, status: %s, idx: %s`
+    //  , std.getTimeStamp()
+    //  , auction.id
+    //  , auction.status
+    //  , idx
+    //);
+    app.YHauctionItem({ appid: req.appid, auctionID: auction.id }
+      , function(err, obj, str){
       if(err) {
         console.error(err.message);
         return cbk(err);
@@ -167,8 +215,14 @@ exports.getAuctionItems = function( req, res, callback) {
 exports.getBidHistorys = function(req, res, callback) {
   var Bids=[];
   async.forEachOf(res.Ids, function(auction,idx,cbk) {
-    console.log(`%s [INFO] auction_id: %s, status: %s, idx: %s`, std.getTimeStamp(), auction.id, auction.status, idx);
-    app.YHbidHistory({ appid: req.appid, auctionID: auction.id }, function(err, obj, str){
+    //console.log(`%s [INFO] auction_id: %s, status: %s, idx: %s`
+    //  , std.getTimeStamp()
+    //  , auction.id
+    //  , auction.status
+    //  , idx
+    //);
+    app.YHbidHistory({ appid: req.appid, auctionID: auction.id }
+      , function(err, obj, str){
       if(err) {
         console.error(err.message);
         return cbk(err);
@@ -195,14 +249,14 @@ exports.getBidHistorys = function(req, res, callback) {
  *  Update 'YAHOO! Auction Items History',
  *  to 'YAHOO! Web Application' datadase.
 **/
-exports.updateHistory = function(req, res, callback) {
+exports.updateHistorys = function(req, res, callback) {
   var where = {};
   var values = {};
   var set = {};
   var opt = {};
   var historyIds = res.note.historyid;
   async.forEachOf(res.Ids, function(auction,idx,cbk) {
-    if(auction.status === 0) { // Status is 'now'.
+    if(auction.status === 0) { // When the status is '0:now'.
       where = { userid: res.note.userid, auctionID: auction.id };
       set = {$set: {
         item:         res.Items[auction.id].item
@@ -218,7 +272,7 @@ exports.updateHistory = function(req, res, callback) {
         }
         cbk();
       });
-    } else if(auction.status === 1) { // Status is 'add'.
+    } else if(auction.status === 1) { // When the status is '1:add'.
       historyId = new ObjectId;
       values = {
         _id: historyId
@@ -237,13 +291,13 @@ exports.updateHistory = function(req, res, callback) {
         }
         cbk();
       });
-    } else if(auction.status === 2) { // Status is 'del' within 24 hours.
-      where = { userid: res.note.userid, auctionID: auction.id, update: {$gte: (Date.now() -1)} };
+    } else if(auction.status === 2) { // When the status is '2:del'.
+      where = { userid: res.note.userid, auctionID: auction.id };
       set = {$set: {
         item:         res.Items[auction.id].item
         , bids:       res.Bids[auction.id].bids
         , status:     2
-        , updated:    Date.now()
+        //, updated:    Date.now()
       }};
       opt = { upsert: false, multi: true };
       History.update(where, set, opt, function(err, docs) {
@@ -259,7 +313,7 @@ exports.updateHistory = function(req, res, callback) {
       console.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] update history done.`, std.getTimeStamp());
+    console.log(`%s [INFO] update Historys done.`, std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { historyIds }));
   });
 };
@@ -289,7 +343,7 @@ exports.updateNote = function( req, res, callback) {
       console.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] update note done`, std.getTimeStamp());
+    console.log(`%s [INFO] update Note done`, std.getTimeStamp());
     if(callback) callback(err, req, res);
   });
 };
@@ -325,7 +379,7 @@ exports.postNote = function( req, res, callback) {
       console.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] update note done`, std.getTimeStamp());
+    console.log(`%s [INFO] post Note done`, std.getTimeStamp());
     if(callback) callback(err, req, res);
   });
 };
@@ -354,7 +408,7 @@ exports.getNotes = function(req, res, callback){
         , updated:  doc.updated
       });
     });
-    console.log(`%s [INFO] find notes done`, std.getTimeStamp());
+    console.log(`%s [INFO] get Notes done`, std.getTimeStamp());
     if(callback) callback(err, req, notes);
   });
 };
@@ -370,7 +424,7 @@ exports.findUser = function(req, res, callback) {
       throw err;
     }
     //console.log(user);
-    console.log(`%s [INFO] find user object done.`, std.getTimeStamp());
+    console.log(`%s [INFO] find User done.`, std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { user }));
   });
 };
@@ -386,7 +440,7 @@ exports.findNote = function(req, res, callback) {
       throw err;
     }
     //console.log(note);
-    console.log(`%s [INFO] find note object done.`, std.getIimeStamp());
+    console.log(`%s [INFO] find Note done.`, std.getIimeStamp());
     if(callback) callback(err, req, std.extend(res, { note }));
   });
 };
