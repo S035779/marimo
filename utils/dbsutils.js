@@ -23,7 +23,8 @@ exports.findUsers = function(req, res, callback) {
       users.push(doc);
     });
     //console.log(users);
-    console.log(`%s [INFO] find Users done.`, std.getTimeStamp());
+    console.log(`%s [INFO] find Users done.`
+      , std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { users }));
   });
 };
@@ -33,7 +34,7 @@ exports.findUsers = function(req, res, callback) {
 **/
 exports.findNotes = function(req, res, callback) {
   var notes=[];
-  async.forEachOf(res.users, function(user, idx, cbk) {
+  async.forEach(res.users, function(user, cbk) {
     Note.find({ userid: ObjectId(user._id) })
     .exec(function(err, docs) {
       if(err) {
@@ -55,7 +56,8 @@ exports.findNotes = function(req, res, callback) {
       throw err;
     }
     //console.log(notes);
-    console.log(`%s [INFO] find Notes done.`, std.getTimeStamp());
+    console.log(`%s [INFO] find Notes done.`
+      , std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { notes }));
   });
 };
@@ -65,7 +67,7 @@ exports.findNotes = function(req, res, callback) {
 **/
 exports.findHistorys = function(req, res, callback) {
   var historys=[];
-  async.forEachOf(res.note.historyid, function(historyid, idx, cbk) {
+  async.forEach(res.note.historyid, function(historyid, cbk) {
     History.find({ _id: ObjectId(historyid) })
     .exec(function(err, docs) {
       if(err) {
@@ -87,8 +89,10 @@ exports.findHistorys = function(req, res, callback) {
       throw err;
     }
     //console.log(historys);
-    console.log(`%s [INFO] find Historys done.`, std.getTimeStamp());
-    if(callback) callback(err, req, std.extend(res, { historys }));
+    console.log(`%s [INFO] find Historys done.`
+      , std.getTimeStamp());
+    if(callback) 
+      callback(err, req, std.extend(res, { historys }));
   });
 };;
 
@@ -97,25 +101,34 @@ exports.findHistorys = function(req, res, callback) {
  *  using 'YAHOO! Search' utility.
 **/
 exports.getResultSet = function(req, res, callback) {
-  app.YHsearch({ appid: req.appid, query: res.note.search, sort: 'bids', order: 'a' }
-    , function(err, ids, obj, str){
+  app.YHsearch({ 
+    appid:    req.appid
+    , query:  res.note.search
+    , sort:   'bids'
+    , order:  'a' 
+  }, function(err, ids, obj){
     if (err) {
       console.error(err.message);
       throw err;
     }
-    var pages = [];
     var opt = obj.body.ResultSet.root;
-    for(var i=0; i<Math.ceil(opt.totalResultsAvailable / opt.totalResultsReturned); i++){
+    var pages = [];
+    for(var i=0; i<Math.ceil(
+      opt.totalResultsAvailable / opt.totalResultsReturned); 
+      i++){
       pages[i]=i+1;
+      if(i>750) break; // Upper limit of Yahoo! Auction Search.
     }
-    //console.log(`%s [INFO] Number of pages : %s`, std.getTimeStamp(), pages.length);
+    //console.log(`%s [INFO] Number of pages : %s`
+    //  , std.getTimeStamp(), pages.length);
     //console.log(`%s [INFO] Avail: %s, Return: %s, position: %s`
     //  , std.getTimeStamp()
     //  , opt.totalResultsAvailable
     //  , opt.totalResultsReturned
     //  , opt.firstResultPosition
     //);
-    console.log(`%s [INFO] get ResultSet done.`, std.getTimeStamp());
+    console.log(`%s [INFO] get ResultSet done.`
+      , std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { pages }));
   });
 };
@@ -126,47 +139,56 @@ exports.getResultSet = function(req, res, callback) {
 **/
 exports.getAuctionIds = function( req, res, callback) {
   var oldIds = res.note.items;
-  var newIds=[];
+  var newIds = [];
   var Ids = [];
-  async.forEachOf(res.pages, function(page, idx, cbk) {
-    //console.log(`%s [INFO] page: %s, idx: %s`, std.getTimeStamp(), page, idx);
-    app.YHsearch({ appid: req.appid, query: res.note.search, sort: 'gids', order: 'a', page: page }
-      , function(err, ids, obj, str){
-      if(err) {
+  async.forEachSeries(res.pages, function(page, cbk) {
+    //console.log(`%s [INFO] page: %s, std.getTimeStamp(), page);
+    app.YHsearch({ 
+      appid:    req.appid
+      , query:  res.note.search
+      , sort:   'bids'
+      , order:  'a'
+      , page:   page 
+    }, function(err, ids, obj){
+      if (err) {
         console.error(err.message);
         return cbk(err);
       }
       try {
-        newIds=newIds.concat(ids);
-        //console.dir(newIds);
+        if (ids.length > 0) newIds=newIds.concat(ids);
+        //console.dir(ids);
       } catch(e) {
         return cbk(e);
       }
       cbk();
     });
   }, function(err) {
-    if(err) {
+    if (err) {
       console.error(err.message);
       throw err;
     }
+    //console.dir(oldIds);
     //console.dir(newIds);
     var nowIds = std.and(oldIds, newIds);
     var addIds = std.add(oldIds, newIds);
     var delIds = std.del(oldIds, newIds);
     var nowDay = new Date();
     var oldDay = nowDay.setDate(nowDay.getDate()-1);
-    nowIds.forEach(function(id, idx, arr){
-      Ids.push({ id, status: 0, updated: Date.now() });
+    nowIds.forEach(function(id){
+      Ids.push({ id, status: 0, updated: nowDay });
     });
-    addIds.forEach(function(id, idx, arr){
-      Ids.push({ id, status: 1, updated: Date.now() });
+    addIds.forEach(function(id){
+      Ids.push({ id, status: 1, updated: nowDay });
     });
-    delIds.forEach(function(id, idx, arr){
-      if(res.historys[id].updated > oldDay)
-        Ids.push({ id, status: 2, updated: res.historys[id].updated });
+    delIds.forEach(function(id){
+      if(res.historys[id].updated > oldDay) {
+        Ids.push({ id, status: 2
+          , updated: res.historys[id].updated });
+      }
     });
     //console.dir(Ids);
-    console.log(`%s [INFO] get AuctionIDs done.`, std.getTimeStamp());
+    console.log(`%s [INFO] get AuctionIDs done.`
+      , std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { Ids }));
   });
 };
@@ -175,35 +197,32 @@ exports.getAuctionIds = function( req, res, callback) {
  *  Get the 'YAHOO! Auction Items',
  *  using 'YAHOO! Auction item' utility.
 **/
-exports.getAuctionItems = function( req, res, callback) {
+exports.getAuctionItems = function(req, res, callback) {
   var Items=[];
-  async.forEachOf(res.Ids, function(auction, idx, cbk) {
-    //console.log(`%s [INFO] auction_id: %s, status: %s, idx: %s`
+  async.forEachSeries(res.Ids, function(Id, cbk) {
+    //console.log(`%s [INFO] auction_id: %s, status: %s`
     //  , std.getTimeStamp()
-    //  , auction.id
-    //  , auction.status
-    //  , idx
+    //  , Id.id
+    //  , Id.status
     //);
-    app.YHauctionItem({ appid: req.appid, auctionID: auction.id }
-      , function(err, obj, str){
+    app.YHauctionItem({ appid: req.appid, auctionID: Id.id }
+    , function(err, obj){
       if(err) {
         console.error(err.message);
         return cbk(err);
       }
-      try {
-        Items[auction.id]={ item: obj, status: auction.status };
-      } catch(e) {
-        return cbk(e);
-      }
+      Items[Id.id]={ item: obj, status: Id.status };
+      //console.dir(Items[Id.id]);
       cbk();
     });
-  },function(err) {
+  }, function(err) {
     if(err) {
       console.error(err.message);
       throw err;
     }
     //console.dir(Items);
-    console.log(`%s [INFO] get AuctionItems done.`, std.getTimeStamp());
+    console.log(`%s [INFO] get AuctionItems done.`
+      , std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { Items }));
   });
 };
@@ -214,24 +233,20 @@ exports.getAuctionItems = function( req, res, callback) {
 **/
 exports.getBidHistorys = function(req, res, callback) {
   var Bids=[];
-  async.forEachOf(res.Ids, function(auction,idx,cbk) {
-    //console.log(`%s [INFO] auction_id: %s, status: %s, idx: %s`
+  async.forEachSeries(res.Ids, function(Id, cbk) {
+    //console.log(`%s [INFO] auction_id: %s, status: %s`
     //  , std.getTimeStamp()
-    //  , auction.id
-    //  , auction.status
-    //  , idx
+    //  , Id.id
+    //  , Id.status
     //);
-    app.YHbidHistory({ appid: req.appid, auctionID: auction.id }
-      , function(err, obj, str){
+    app.YHbidHistory({ appid: req.appid, auctionID: Id.id }
+    , function(err, obj){
       if(err) {
         console.error(err.message);
         return cbk(err);
       }
-      try {
-        Bids[auction.id]={ bids: obj, status: auction.status };
-      } catch(e) {
-        return cbk(e);
-      }
+      Bids[Id.id]={ bids: obj, status: Id.status };
+      //console.dir(Bids[Id.id]);
       cbk();
     });
   },function(err) {
@@ -240,7 +255,8 @@ exports.getBidHistorys = function(req, res, callback) {
       throw err;
     }
     //console.dir(Bids);
-    console.log(`%s [INFO] get BidsHistorys done.`, std.getTimeStamp());
+    console.log(`%s [INFO] get BidsHistorys done.`
+      , std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { Bids }));
   });
 };
@@ -255,12 +271,12 @@ exports.updateHistorys = function(req, res, callback) {
   var set = {};
   var opt = {};
   var historyIds = res.note.historyid;
-  async.forEachOf(res.Ids, function(auction,idx,cbk) {
-    if(auction.status === 0) { // When the status is '0:now'.
-      where = { userid: res.note.userid, auctionID: auction.id };
+  async.forEach(res.Ids, function(Id, cbk) {
+    if(Id.status === 0) { // When the status is '0:now'.
+      where = { userid: res.note.userid, auctionID: Id.id };
       set = {$set: {
-        item:         res.Items[auction.id].item
-        , bids:       res.Bids[auction.id].bids
+        item:         res.Items[Id.id].item
+        , bids:       res.Bids[Id.id].bids
         , status:     0
         , updated:    Date.now()
       }};
@@ -272,14 +288,14 @@ exports.updateHistorys = function(req, res, callback) {
         }
         cbk();
       });
-    } else if(auction.status === 1) { // When the status is '1:add'.
+    } else if(Id.status === 1) { // When the status is '1:add'.
       historyId = new ObjectId;
       values = {
         _id: historyId
         , userid:     res.note.userid
-        , auctionID:  auction.id
-        , item:       res.Items[auction.id].item
-        , bids:       res.Bids[auction.id].bids
+        , auctionID:  Id.id
+        , item:       res.Items[Id.id].item
+        , bids:       res.Bids[Id.id].bids
         , status:     1
         , updated:    Date.now()
       }; 
@@ -291,11 +307,11 @@ exports.updateHistorys = function(req, res, callback) {
         }
         cbk();
       });
-    } else if(auction.status === 2) { // When the status is '2:del'.
-      where = { userid: res.note.userid, auctionID: auction.id };
+    } else if(Id.status === 2) { // When the status is '2:del'.
+      where = { userid: res.note.userid, auctionID: Id.id };
       set = {$set: {
-        item:         res.Items[auction.id].item
-        , bids:       res.Bids[auction.id].bids
+        item:         res.Items[Id.id].item
+        , bids:       res.Bids[Id.id].bids
         , status:     2
         //, updated:    Date.now()
       }};

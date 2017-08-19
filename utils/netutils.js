@@ -3,82 +3,115 @@
  */
 
 /*
- *  Make an asynchronous HTTP GET request for the specified URL and pass the
- * HTTP status, headers and response body to the specified callback function.
- * Notice how we export this method through the exports object.
+ * Simple HTTP GET request
  */
 exports.get = function(url, callback) {  
-    // Parse the URL and get the pieces we need from it
-    url = require('url').parse(url);
-    var hostname = url.hostname, port = url.port || 80;
-    var path = url.pathname, query = url.query;
-    if (query) path += "?" + query;
+  url = require('url').parse(url);
+  var hostname  = url.hostname
+    , port      = url.port || 80
+    , path      = url.pathname
+    , query     = url.query;
+  if (query) path += "?" + query;
 
-    // Make a simple GET request
-    var client = require("http");
-    client.get({
-        host: hostname,
-        port: port,
-        path: path
-    }, function(response) {
-        // Set an encoding so the body is returned as text, not bytes
-        response.setEncoding("utf8");
-        // Save the response body as it arrives
-        var body = "";
-        response.on("data", function(chunk) { body += chunk; });
-        // When response is complete, call the callback
-        response.on("end", function() {
-            if (callback) callback(response.statusCode, response.headers, body);
-        });
-    }).on("error", function(e) {
-        console.error(`Got error: ${e.message}`);
+  var callee = arguments.callee;
+  var client = require("http");
+  var req = client.get({
+    host: hostname
+    , port: port
+    , path: path
+  }, function(res) {
+    var stat = res.statusCode;
+    var head = res.headers;
+    if(stat !== 200){
+      switch (stat) {
+        case 400: case 401: case 403: case 404:
+          console.error('HTTP Request Failed. ' 
+            + `Status Code: ${stat}`);
+          res.resume();
+          return; 
+        default:
+          process.stdout.write('x');
+          setTimeout(callee, 1000);
+          break;
+      }
+    }
+    res.setEncoding("utf8");
+    var body = "";
+    res.on("data", function(chunk) { body += chunk; });
+    res.on("end", function() {
+      process.stdout.write('-');
+      if (callback) callback(stat, head, body);
     });
+  });
+
+  req.on('error', function(err) {
+    console.error('Problem with HTTP Request. '
+      + `${err.code}: ${err.message}`);
+  });
 };
 
 /*
  * Simple HTTP POST request with data as the request body
  */
 exports.post = function(url, data, callback) {
-    // Parse the URL and get the pieces we need from it
-    url = require('url').parse(url);
-    var hostname = url.hostname, port = url.port || 80;
-    var path = url.pathname, query = url.query;
-    if (query) path += "?" + query;
+  url = require('url').parse(url);
+  var hostname  = url.hostname
+    , port      = url.port || 80
+    , path      = url.pathname
+    , query     = url.query;
+  if (query) path += "?" + query;
 
-    // Figure out the type of data we're sending as the request body
-    var type;
-    if (data == null) data = "";
-    if (data instanceof Buffer)             // Binary data
-        type = "application/octet-stream";
-    else if (typeof data === "string")      // String data
-        type = "text/plain; charset=UTF-8";
-    else if (typeof data === "object") {    // Name=value pairs
-        data = require("querystring").stringify(data);
-        type = "application/x-www-form-urlencoded";
+  var type;
+  if (data == null) data = "";
+  if (data instanceof Buffer)
+    type = "application/octet-stream";
+  else if (typeof data === "string")
+    type = "text/plain; charset=UTF-8";
+  else if (typeof data === "object") {
+    data = require("querystring").stringify(data);
+    type = "application/x-www-form-urlencoded";
+  }
+
+  var callee = arguments.callee;
+  var client = require("http");
+  var req = client.request({
+    hostname: hostname,
+    port: port,
+    path: path,
+    method: 'POST',
+    headers: {
+      'Content-Type': type,
+      'Content-Length': Buffer.byteLength(data)
     }
+  },function(res) {
+    var stat = res.statusCode;
+    var head = res.headers;
+    if(stat !== 200){
+      switch (stat) {
+        case 400: case 401: case 403: case 404:
+          console.error('HTTP Request Failed. ' 
+            + `Status Code: ${stat}`);
+          res.resume();
+          return; 
+        default:
+          process.stdout.write('x');
+          setTimeout(callee, 1000);
+          break;
+      }
+    }
+    res.setEncoding("utf8");
+    var body = "";
+    res.on("data", function(chunk) { body += chunk; });
+    res.on("end", function() {
+      process.stdout.write('-');
+      if (callback) callback(stat, head, body);
+    });
+  });
 
-    // Make a POST request, including a request body
-    var client = require("http");
-    var request = client.request({
-        hostname: hostname,
-        port: port,
-        path: path,
-        method: 'POST',
-        headers: {
-            'Content-Type': type,
-            'Content-Length': Buffer.byteLength(data)
-        }
-    },function(response) {
-        response.setEncoding("utf8");           // Assume it is text
-        var body = ""                           // To save the response body
-        response.on("data", function(chunk) { body += chunk; });
-        response.on("end", function() {         // When done, call the callback
-            if (callback) callback(response.statusCode, response.headers, body);
-        });
-    });
-    req.on('error', (e) => {
-          console.error(`problem with request: ${e.message}`);
-    });
-    request.write(data);                        // Send request body
-    request.end();
+  req.on('error', function(err) {
+    console.error('Problem with HTTP Request. '
+      + `${err.code}: ${err.message}`);
+  });
+  req.write(data);
+  req.end();
 };

@@ -66,7 +66,7 @@ var queue = async.queue(function (req, callback) {
     , dbs.getAuctionIds
     , dbs.getAuctionItems
     , dbs.getBidHistorys
-    , dbs.updateHistory
+    , dbs.updateHistorys
     , dbs.updateNote
   ], function(err, req, res) {
     if (err) {
