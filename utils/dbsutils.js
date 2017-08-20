@@ -172,8 +172,9 @@ exports.getAuctionIds = function( req, res, callback) {
     var nowIds = std.and(oldIds, newIds);
     var addIds = std.add(oldIds, newIds);
     var delIds = std.del(oldIds, newIds);
-    var nowDay = new Date();
-    var oldDay = nowDay.setDate(nowDay.getDate()-1);
+    var date = new Date();
+    var nowDay = date.getTime();
+    var oldDay = date.setDate(date.getDate()-1);
     nowIds.forEach(function(id){
       Ids.push({ id, status: 0, updated: nowDay });
     });
@@ -186,6 +187,8 @@ exports.getAuctionIds = function( req, res, callback) {
           , updated: res.historys[id].updated });
       }
     });
+    console.log('now: %d(msec), old: %d(msec), int: %d(msec)'
+      , nowDay, oldDay, (nowDay-oldDay));
     //console.dir(Ids);
     console.log(`%s [INFO] get AuctionIDs done.`
       , std.getTimeStamp());
@@ -277,8 +280,8 @@ exports.updateHistorys = function(req, res, callback) {
       set = {$set: {
         item:         res.Items[Id.id].item
         , bids:       res.Bids[Id.id].bids
-        , status:     0
-        , updated:    Date.now()
+        , status:     Id.status
+        , updated:    Id.updated
       }};
       opt = { upsert: false, multi: true };
       History.update(where, set, opt, function(err, docs) {
@@ -296,8 +299,8 @@ exports.updateHistorys = function(req, res, callback) {
         , auctionID:  Id.id
         , item:       res.Items[Id.id].item
         , bids:       res.Bids[Id.id].bids
-        , status:     1
-        , updated:    Date.now()
+        , status:     Id.status
+        , updated:    Id.updated
       }; 
       historyIds.push(historyId);
       History.create(values, function(err, docs) {
@@ -312,8 +315,8 @@ exports.updateHistorys = function(req, res, callback) {
       set = {$set: {
         item:         res.Items[Id.id].item
         , bids:       res.Bids[Id.id].bids
-        , status:     2
-        //, updated:    Date.now()
+        , status:     Id.status
+        , updated:    Id.updated
       }};
       opt = { upsert: false, multi: true };
       History.update(where, set, opt, function(err, docs) {
@@ -329,8 +332,10 @@ exports.updateHistorys = function(req, res, callback) {
       console.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] update Historys done.`, std.getTimeStamp());
-    if(callback) callback(err, req, std.extend(res, { historyIds }));
+    console.log(`%s [INFO] update Historys done.`
+      , std.getTimeStamp());
+    if(callback) 
+      callback(err, req, std.extend(res, { historyIds }));
   });
 };
 
@@ -359,7 +364,8 @@ exports.updateNote = function( req, res, callback) {
       console.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] update Note done`, std.getTimeStamp());
+    console.log(`%s [INFO] update Note done`
+      , std.getTimeStamp());
     if(callback) callback(err, req, res);
   });
 };
