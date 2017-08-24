@@ -52,6 +52,7 @@ var get = function(url, callback) {
       + `${err.code}: ${err.message}`);
   });
 };
+module.exports.get = get;
 
 /*
  * Simple HTTP POST request with data as the request body
@@ -118,11 +119,9 @@ var post = function(url, data, callback) {
     console.error('Problem with HTTP Request. '
       + `${err.code}: ${err.message}`);
   });
+
   req.write(data);
   req.end();
 };
+module.exports.post = post;
 
-module.exports = {
-  get: get
-  ,post: post
-}

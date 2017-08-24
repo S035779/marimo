@@ -1,6 +1,6 @@
 require('dotenv').config();
 var dburl = process.env.mongodb;
-var secnd = process.env.interval;
+var hour = process.env.interval*1000*60*60;
 
 var mongoose = require('mongoose');
 var async = require('async');
@@ -8,76 +8,102 @@ var mps = require('child_process');
 var std = require('./utils/stdutils');
 var dbs = require('./utils/dbsutils');
 
-var cps = [];
-var mod = __dirname + '/tasks/index.js';
-var cpu = require('os').cpus().length;
+init();
+main();
 
-// DB Connection
-mongoose.Promise = global.Promise;
-mongoose.connect(dburl,{
-  useMongoClient: true
-  , promiseLibrary: global.Promise
-});
+function init(){
+  console.log('%s [INFO] main> nodejs Version: %s'
+    , std.getTimeStamp()
+    , process.version
+  );
 
-mongoose.connection.on('error', function () {
-  console.error('%s [ERR] connection error', std.getTimeStamp(), arguments)
-});
-
-mongoose.connection.once('open', function() {
-  console.log('%s [INFO] main> mongoose Version: v%s', std.getTimeStamp(), mongoose.version);
-});
-
-console.log('%s [INFO] main> nodejs Version: %s', std.getTimeStamp(), process.version);
-for (var i=0; i<cpu; i++) {
-  init(i);
-}
-
-function init(idx) {
-  cps[idx] = mps.fork(mod);
-  cps[idx].on('message', function(req) {
-    console.log('%s [INFO] main> parent got message: ', std.getTimeStamp(), req);
+  // DB Connection
+  mongoose.Promise = global.Promise;
+  mongoose.connect(dburl,{
+    useMongoClient: true
+    , promiseLibrary: global.Promise
   });
-  cps[idx].on('exit', function(code, signal) {
-    console.log('%s [INFO] main> child process terminated due to receipt of code/signal %s', std.getTimeStamp(), signal || code);
+
+  mongoose.connection.on('error', function () {
+    console.error('%s [ERR] connection error'
+      , std.getTimeStamp()
+      , arguments
+    );
   });
-  cps[idx].on('disconnect', function() {
-    console.log('%s [INFO] main> child process disconnected.', std.getTimeStamp());
+
+  mongoose.connection.once('open', function() {
+    console.log('%s [INFO] main> mongoose Version: v%s'
+      , std.getTimeStamp()
+      , mongoose.version
+    );
   });
-  console.log('%s [INFO] main> Forked child pid: %d', std.getTimeStamp(), cps[idx].pid);
 };
 
-var index=0;
-var queue = async.queue(function (req, callback) {
-  if(index >= cps.length) index=0;
-  if(!cps[index].connected) {
-    console.log('%s [INFO] main> child.connnected proparty is [%s].', std.getTimeStamp(), cps[index].connected);
-    init(index);
-  }
-  cps[index].send(req);
-  index++;
-  if(callback) callback();
-}, cps.length);
+function main() {
+  var cps = [];
+  var mod = __dirname + '/tasks/index.js';
+  //var cpu = require('os').cpus().length;
+  var cpu = 1;
 
-queue.drain = function() {
-  console.log('%s [INFO] main> all items have been processed.', std.getTimeStamp());
-};
-
-//setInterval(function() {
-  async.waterfall([
-    async.apply(dbs.findUsers, {}, {})
-    , dbs.findNotes
-  ], function(err, req, res) {
-    if(err) {
-      console.error('%s [ERR] main> ', std.getTimeStamp(), err.stack);
-      throw err;
-    }
-    //console.log('%s [INFO] main> results: ', std.getTimeStamp(), res);
-    res.notes.forEach(function(note) {
-      queue.push(note, function() {
-        console.log('%s [INFO] main> finished processing note object.', std.getTimeStamp());
-      });
+  for (var i=0; i<cpu; i++) {
+    cps[i] = mps.fork(mod);
+    cps[i].on('message', function(req) {
+      console.log('%s [INFO] main> parent got message: '
+        , std.getTimeStamp(), req);
     });
-    console.log('%s [INFO] main> %d sec. interval...', std.getTimeStamp(), secnd);
-  });
-//}, secnd*1000);
+    cps[i].on('exit', function(code, signal) {
+      console.log(
+        '%s [INFO] main> child process terminated. code/signal: %s'
+        , std.getTimeStamp(), signal || code);
+    });
+    cps[i].on('disconnect', function() {
+      console.log('%s [INFO] main> child process disconnected.'
+        , std.getTimeStamp());
+    });
+    console.log('%s [INFO] main> Forked child pid: %d'
+      , std.getTimeStamp(), cps[i].pid);
+  }
+
+  var index=0;
+  var queue = async.queue(function (req, callback) {
+    if(index >= cps.length) index=0;
+    if(!cps[index].connected) {
+      console.log(
+        '%s [INFO] main> child.connnected proparty is [%s].'
+        , std.getTimeStamp(), cps[index].connected );
+      init(index);
+    }
+    cps[index].send(req);
+    index++;
+    if(callback) callback();
+  }, cps.length);
+
+  queue.drain = function() {
+    console.log('%s [INFO] main> all items have been processed.'
+      , std.getTimeStamp());
+  };
+
+  std.invoke(function() {
+    async.waterfall([
+      async.apply(dbs.findUsers, {}, {})
+      , dbs.findNotes
+    ], function(err, req, res) {
+      if(err) {
+        console.error('%s [ERR] main> '
+          , std.getTimeStamp(), err.stack);
+        throw err;
+      }
+      //console.log('%s [INFO] main> results: '
+      //, std.getTimeStamp(), res);
+      res.notes.forEach( function(note) {
+        queue.push(note, function() {
+          console.log('%s [INFO] main> finished processing.'
+            , std.getTimeStamp());
+        });
+      });
+      console.log('%s [INFO] main> %d sec. interval...'
+        , std.getTimeStamp(), secnd);
+    });
+  }, 0, hour);
+};
 
