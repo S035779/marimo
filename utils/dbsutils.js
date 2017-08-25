@@ -8,9 +8,179 @@ var History = require('../models/models').History;
 
 var ObjectId = mongoose.Types.ObjectId;
 
-/*
+/**
+ * Find User Object from user collection.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
+var findUser = function(req, res, callback) {
+  User.findOne({ 
+    username: req.body.user 
+  }).exec(function(err, user) {
+    if (err) {
+      console.error(err.message);
+      throw err;
+    }
+    //console.log(user);
+    console.log(`%s [INFO] find User done.`
+      , std.getTimeStamp());
+    if(callback) callback(err, req, std.extend(res, { user }));
+  });
+};
+module.exports.findUser = findUser;
+
+/**
+ * Get Notes Object from note collection.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
+var getNotes = function(req, res, callback){
+  Note.find({ 
+    userid: ObjectId(res.user._id) 
+  }).populate('historyid').exec(function (err, docs) {
+    if(err) {
+      console.error(err.message);
+      throw err;
+    }
+    var newNotes = [];
+    docs.forEach(function(doc) {
+      //console.log(JSON.stringify(doc, null, 4));
+      newNotes.push({
+        user:       req.body.user
+        , id:       doc.id
+        , title:    doc.title
+        , category: doc.category
+        , body:     doc.search
+        , starred:  doc.starred
+        , items:    doc.historyid
+        , updated:  doc.updated
+      });
+    });
+    console.log(`%s [INFO] get Notes done.`, std.getTimeStamp());
+    if(callback) 
+      callback(err, req, std.extend(res, { newNotes }));
+  });
+};
+module.exports.getNotes = getNotes;
+
+/**
+ * Find Note Object from note collection.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
+var findNote = function(req, res, callback) {
+  Note.findOne({ 
+    userid: ObjectId(res.user._id)
+    , id:   req.body.id
+  }).exec(function (err, note) {
+    if (err) {
+      console.error(err.message);
+      throw err;
+    }
+    //console.log(note);
+    console.log(`%s [INFO] find Note done.`
+      , std.getTimeStamp());
+    if(callback) callback(err, req, std.extend(res, { note }));
+  });
+};
+module.exports.findNote = findNote;
+
+/**
+ * Remove Note Object from note collection.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
+var removeNote = function(req, res, callback) {
+  Note.remove({
+    userid: ObjectId(res.user._id)
+    , id: req.body.id
+  }, function(err) {
+    if (err) {
+      console.error(err.message);
+      throw err;
+    }
+    console.log(`%s [INFO] remove Note done.`
+      , std.getTimeStamp());
+    if(callback) callback(err, req, res);
+  });
+};
+module.exports.removeNote = removeNote;
+
+/**
+ * Create Note Object to note collection.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
+var createNote = function(req, res, callback){
+  Note.create({ 
+    _id: new ObjectId
+    , userid:    ObjectId(res.user._id)
+    , id:        req.body.id
+    , title:     req.body.title
+    , category:  req.body.category
+    , starred:   req.body.starred
+    , search:    req.body.body
+    , options: { category:       0
+               , page:           0
+               , sort:           ""
+               , order:          ""
+               , store:          ""
+               , aucminprice:    0
+               , aucmaxprice:    0
+               , aucmin_bidorbuy_price: 0
+               , aucmax_bidorbuy_price: 0
+               , loc_cd:         0
+               , easypayment:    0
+               , new:            0
+               , freeshipping:   0
+               , wrappingicon:   0
+               , buynow:         0
+               , thumbnail:      0
+               , attn:           0
+               , point:          0
+               , gift_icon:      0
+               , item_status:    0
+               , offer:          0
+               , adf:            0
+               , min_charity:    0
+               , max_charity:    0
+               , min_affiliate:  0
+               , max_affiliate:  0
+               , timebuf:        0
+               , ranking:        ""
+               , seller:         ""
+               , f:              "" 
+      }
+    , items: []
+    , created:   Date.now()
+    , updated:   Date.now()
+  }, function(err) {
+    if(err) {
+      console.error(err.message);
+      throw err;
+    }
+    if(callback) callback(err, req, res);
+  });
+};
+module.exports.createNote = createNote;
+
+/**
  * Find Users Object from collection.
-**/
+ * 
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
 var findUsers = function(req, res, callback) {
   User.find()
   .exec(function(err, docs) {
@@ -30,9 +200,13 @@ var findUsers = function(req, res, callback) {
 };
 module.exports.findUsers = findUsers;
 
-/*
+/**
  * Find Notes Object from collection.
-**/
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
 var findNotes = function(req, res, callback) {
   var notes=[];
   async.forEach(res.users, function(user, cbk) {
@@ -64,14 +238,19 @@ var findNotes = function(req, res, callback) {
 };
 module.exports.findNotes = findNotes;
 
-/*
+/**
  * Find Historys Object from collection.
-**/
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
 var findHistorys = function(req, res, callback) {
   var historys=[];
   async.forEach(res.note.historyid, function(historyid, cbk) {
-    History.find({ _id: ObjectId(historyid) })
-    .exec(function(err, docs) {
+    History.find({ 
+      _id: ObjectId(historyid) 
+    }).exec(function(err, docs) {
       if(err) {
         console.error(err.message);
         return cbk(err);
@@ -99,18 +278,23 @@ var findHistorys = function(req, res, callback) {
 };
 module.exports.findHistorys = findHistorys;
 
-/*
- *  Get the 'YAHOO! Search Pages',
- *  using 'YAHOO! Search' utility.
-**/
+/**
+ * Get the 'YAHOO! Search Pages', using 'YAHOO! Search' utility.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
 var getResultSet = function(req, res, callback) {
-  var query = (req.body !== undefined) 
+  var query = req.hasOwnProperty('body') 
     ? req.body.body : res.note.search;
-  var page = (req.body !== undefined) ? 1 : 5;
+  var page = req.hasOwnProperty('body') ? 1 : 5;
+
   var c = std.counter();
   var t = std.timer();
   var m = std.heapused();
   var p = std.cpuused();
+
   app.YHsearch({ 
     appid:    req.appid
     , query
@@ -125,7 +309,7 @@ var getResultSet = function(req, res, callback) {
     var pages = [];
     for(var i=0; i<Math.ceil(
       opt.totalResultsAvailable / opt.totalResultsReturned); i++){
-      if(i >=  page) break;
+      if(i>=page) break;
       pages[i]=i+1;
     }
     //console.log(`%s [INFO] Number of pages : %s`
@@ -136,10 +320,12 @@ var getResultSet = function(req, res, callback) {
     //  , opt.totalResultsReturned
     //  , opt.firstResultPosition
     //);
+    
     c.count();  c.print();
     t.count();  t.print();
     m.count();  m.print();
     p.count();  p.print();
+
     console.log(`%s [INFO] get ResultSet done.`
       , std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { pages }));
@@ -147,20 +333,27 @@ var getResultSet = function(req, res, callback) {
 };
 module.exports.getResultSet = getResultSet;
 
-/*
- *  Get the 'YAHOO! Auction IDs',
- *  using 'YAHOO! Search' utility.
-**/
+/**
+ * Get the 'YAHOO! Auction IDs', using 'YAHOO! Search' utility.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
 var getAuctionIds = function( req, res, callback) {
-  var query = (req.body !== undefined) 
-    ? req.body.body : res.note.search;
   var oldIds = res.note.items;
   var newIds = [];
   var Ids = [];
+  var query = req.hasOwnProperty('body') 
+    ? req.body.body : res.note.search;
+  var historys = (res.historys !== undefined)
+    ? res.history : null;
+
   var c = std.counter();
   var t = std.timer();
   var m = std.heapused();
   var p = std.cpuused();
+
   async.forEachSeries(res.pages, function(page, cbk) {
     //console.log(`%s [INFO] page: %s, std.getTimeStamp(), page);
     app.YHsearch({ 
@@ -203,7 +396,7 @@ var getAuctionIds = function( req, res, callback) {
       Ids.push({ id, status: 1, updated: nowDay });
     });
     delIds.forEach(function(id){
-      if(res.historys[id].updated > oldDay) {
+      if( historys && historys[id].updated > oldDay) {
         Ids.push({ id, status: 2
           , updated: res.historys[id].updated });
       }
@@ -211,10 +404,12 @@ var getAuctionIds = function( req, res, callback) {
     //console.log('now: %d(msec), old: %d(msec), int: %d(msec)'
     //  , nowDay, oldDay, (nowDay-oldDay));
     //console.dir(Ids);
+    
     c.print();
     t.count();  t.print();
     m.count();  m.print();
     p.count();  p.print();
+
     console.log(`%s [INFO] get AuctionIDs done.`
       , std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { Ids }));
@@ -222,16 +417,22 @@ var getAuctionIds = function( req, res, callback) {
 };
 module.exports.getAuctionIds = getAuctionIds;
 
-/*
- *  Get the 'YAHOO! Auction Items',
- *  using 'YAHOO! Auction item' utility.
-**/
+/**
+ * Get the 'YAHOO! Auction Items', 
+ * using 'YAHOO! Auction item' utility.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
 var getAuctionItems = function(req, res, callback) {
   var Items=[];
+
   var c = std.counter();
   var t = std.timer();
   var m = std.heapused();
   var p = std.cpuused();
+
   async.forEachSeries(res.Ids, function(Id, cbk) {
     //console.log(`%s [INFO] auction_id: %s, status: %s`
     //  , std.getTimeStamp()
@@ -255,10 +456,12 @@ var getAuctionItems = function(req, res, callback) {
       throw err;
     }
     //console.dir(Items);
+    
     c.print();
     t.count();  t.print();
     m.count();  m.print();
     p.count();  p.print();
+
     console.log(`%s [INFO] get AuctionItems done.`
       , std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { Items }));
@@ -266,16 +469,22 @@ var getAuctionItems = function(req, res, callback) {
 };
 module.exports.getAuctionItems = getAuctionItems;
 
-/*
- *  Get the 'YAHOO! Bids Historys',
- *  using 'YAHOO! Bids History' utility.
-**/
+/**
+ * Get the 'YAHOO! Bids Historys',
+ * using 'YAHOO! Bids History' utility.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
 var getBidHistorys = function(req, res, callback) {
   var Bids=[];
+
   var c = std.counter();
   var t = std.timer();
   var m = std.heapused();
   var p = std.cpuused();
+
   async.forEachSeries(res.Ids, function(Id, cbk) {
     //console.log(`%s [INFO] auction_id: %s, status: %s`
     //  , std.getTimeStamp()
@@ -299,10 +508,12 @@ var getBidHistorys = function(req, res, callback) {
       throw err;
     }
     //console.dir(Bids);
+    
     c.print();
     t.count();  t.print();
     m.count();  m.print();
     p.count();  p.print();
+
     console.log(`%s [INFO] get BidsHistorys done.`
       , std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { Bids }));
@@ -310,10 +521,13 @@ var getBidHistorys = function(req, res, callback) {
 };
 module.exports.getBidHistorys = getBidHistorys;
 
-/*
- *  Update 'YAHOO! Auction Items History',
- *  to 'YAHOO! Web Application' datadase.
-**/
+/**
+ * Update Historys Object to history collection.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
 var updateHistorys = function(req, res, callback) {
   var where = {};
   var values = {};
@@ -386,10 +600,13 @@ var updateHistorys = function(req, res, callback) {
 };
 module.exports.updateHistorys = updateHistorys;
 
-/*
- *  Update the 'YAHOO! Auction Items History',
- *  to 'YAHOO! Web Application' datadase.
-**/
+/**
+ * Update Note Object to note collection.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
 var updateNote = function( req, res, callback) {
   var where = {};
   var set = {};
@@ -418,112 +635,56 @@ var updateNote = function( req, res, callback) {
 };
 module.exports.updateNote = updateNote;
 
-/*
+/**
  *  Post Note Object to note collection.
-**/
-var postNote = function( req, res, callback) {
-  var where = {};
-  var set = {};
-  var opt = {};
-
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
+var postNote = function(req, res, callback) {
   var userid = req.hasOwnProperty('note') 
     ? res.note.userid : ObjectId(res.user._id);
   var id = req.hasOwnProperty('note') 
     ? res.note.id : req.body.id;
   var starred = req.body.starred 
     ? Boolean(1) : Boolean(0);
-  var historyids = res.hasOwnProperty('historyIds') 
+  var historyid = res.hasOwnProperty('historyIds') 
     ? res.historyIds : null;
   var items = res.hasOwnProperty('Ids') 
-    ? res.Ids.forEach(function(Id){ items.push(Id.id); }) : null;
+    ? function() { 
+      var array = [];
+      res.Ids.forEach(function(Id){ array.push(Id.id); });
+      return array; } 
+    : null;
 
-  where = { userid, id };
-  set = {$set: {
-    title:        req.body.title
-    , category:   req.body.category
-    , search:     req.body.body
-    , starred:    starred
-    , updated:    req.body.updated
-    , historyid
-    , items
-  }};
-  opt = { upsert: false, multi: true };
+  var where = { userid, id };
+  var set = (historyid && items) 
+    ? {$set: {
+        title:        req.body.title
+        , category:   req.body.category
+        , search:     req.body.body
+        , starred:    starred
+        , updated:    req.body.updated
+        , historyid
+        , items
+      }}
+    : {$set: {
+        title:        req.body.title
+        , category:   req.body.category
+        , search:     req.body.body
+        , starred:    starred
+        , updated:    req.body.updated
+      }};
+  var opt = { upsert: false, multi: true };
   Note.update(where, set, opt, function(err, docs) {
     if(err) {
       console.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] post Note done`, std.getTimeStamp());
+    console.log(`%s [INFO] post Note done.`, std.getTimeStamp());
     if(callback) callback(err, req, res);
   });
 };
 module.exports.postNote = postNote;
-
-/*
- * Get Notes Object from note collection.
-**/
-var getNotes = function(req, res, callback){
-  Note.find({ userid: ObjectId(res.user._id) })
-  .populate('historyid')
-  .exec(function (err, docs) {
-    if(err) {
-      console.error(err.message);
-      throw err;
-    }
-    var newNotes = [];
-    docs.forEach(function(doc) {
-      //console.log(JSON.stringify(doc, null, 4));
-      newNotes.push({
-        user:       req.body.user
-        , id:       doc.id
-        , title:    doc.title
-        , category: doc.cateory
-        , body:     doc.search
-        , starred:  doc.starred
-        , items:    doc.historyid
-        , updated:  doc.updated
-      });
-    });
-    console.log(`%s [INFO] get Notes done`, std.getTimeStamp());
-    if(callback) 
-      callback(err, req, std.extend(res, { newNotes }));
-  });
-};
-module.exports.getNotes = getNotes;
-
-/*
- * Find User Object from user collection.
-**/
-var findUser = function(req, res, callback) {
-  User.findOne({ username: req.body.user })
-  .exec(function(err, user) {
-    if (err) {
-      console.error(err.message);
-      throw err;
-    }
-    //console.log(user);
-    console.log(`%s [INFO] find User done.`, std.getTimeStamp());
-    if(callback) callback(err, req, std.extend(res, { user }));
-  });
-};
-module.exports.findUser = findUser;
-
-/*
- * Find Note Object from note collection.
-**/
-var findNote = function(req, res, callback) {
-  Note.findOne({ 
-    userid: ObjectId(res.user._id)
-    , id:   req.body.id
-  }).exec(function (err, note) {
-    if (err) {
-      console.error(err.message);
-      throw err;
-    }
-    //console.log(note);
-    console.log(`%s [INFO] find Note done.`, std.getTimeStamp());
-    if(callback) callback(err, req, std.extend(res, { note }));
-  });
-};
-module.exports.findNote = findNote;
 

@@ -1,6 +1,6 @@
 require('dotenv').config();
 var dburl = process.env.mongodb;
-var hour = process.env.interval*1000*60*60;
+var hour = process.env.interval;
 
 var mongoose = require('mongoose');
 var async = require('async');
@@ -49,19 +49,25 @@ function main() {
     cps[i] = mps.fork(mod);
     cps[i].on('message', function(req) {
       console.log('%s [INFO] main> parent got message: '
-        , std.getTimeStamp(), req);
+        , std.getTimeStamp()
+        , req
+      );
     });
     cps[i].on('exit', function(code, signal) {
       console.log(
         '%s [INFO] main> child process terminated. code/signal: %s'
-        , std.getTimeStamp(), signal || code);
+        , std.getTimeStamp()
+        , signal || code
+      );
     });
     cps[i].on('disconnect', function() {
       console.log('%s [INFO] main> child process disconnected.'
-        , std.getTimeStamp());
+        , std.getTimeStamp()
+      );
     });
     console.log('%s [INFO] main> Forked child pid: %d'
-      , std.getTimeStamp(), cps[i].pid);
+      , std.getTimeStamp(), cps[i].pid
+    );
   }
 
   var index=0;
@@ -70,7 +76,9 @@ function main() {
     if(!cps[index].connected) {
       console.log(
         '%s [INFO] main> child.connnected proparty is [%s].'
-        , std.getTimeStamp(), cps[index].connected );
+        , std.getTimeStamp()
+        , cps[index].connected 
+      );
       init(index);
     }
     cps[index].send(req);
@@ -80,17 +88,21 @@ function main() {
 
   queue.drain = function() {
     console.log('%s [INFO] main> all items have been processed.'
-      , std.getTimeStamp());
+      , std.getTimeStamp()
+    );
   };
 
   std.invoke(function() {
     async.waterfall([
-      async.apply(dbs.findUsers, {}, {})
+      async.apply(
+        dbs.findUsers, {}, {})
       , dbs.findNotes
     ], function(err, req, res) {
       if(err) {
         console.error('%s [ERR] main> '
-          , std.getTimeStamp(), err.stack);
+          , std.getTimeStamp()
+          , err.stack
+        );
         throw err;
       }
       //console.log('%s [INFO] main> results: '
@@ -98,12 +110,15 @@ function main() {
       res.notes.forEach( function(note) {
         queue.push(note, function() {
           console.log('%s [INFO] main> finished processing.'
-            , std.getTimeStamp());
+            , std.getTimeStamp()
+          );
         });
       });
-      console.log('%s [INFO] main> %d sec. interval...'
-        , std.getTimeStamp(), secnd);
+      console.log('%s [INFO] main> %d hours interval...'
+        , std.getTimeStamp()
+        , hour 
+      );
     });
-  }, 0, hour);
+  }, 1000*5, 1000*60*10, 1000*60*60);
 };
 

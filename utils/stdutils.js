@@ -295,12 +295,13 @@ var timer = function(s) {
     var mn = i%60;    i = (i-mn)/60;
     var hr = i%24;    i = (i-hr)/24;
     var dy = i;
-    return
+    var ret =
       (dy<10 ? '0' : '') + dy + ' ' + 
       (hr<10 ? '0' : '') + hr + ':' + 
       (mn<10 ? '0' : '') + mn + ':' + 
       (sc<10 ? '0' : '') + sc + '.' + 
-      (ms<100 ? '0' : '') + (ms<10 ? '0' : '') + ms
+      (ms<100 ? '0' : '') + (ms<10 ? '0' : '') + ms;
+    return ret;
   };
   return {
     count: function() { 
@@ -331,8 +332,9 @@ var heapused = function(s) {
     var d = b || 3;
     var e = ["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"];
     var f = Math.floor(Math.log(a)/Math.log(c));
-    return 
+    var ret =
       parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f]
+    return ret; 
   };
   return {
     count: function() {
@@ -362,7 +364,8 @@ var cpuused = function(s) {
     if(0 === a) return "0 %";
     var i = (b - _t) * 1000;
     var d = c || 2;
-    return parseFloat((a / i).toFixed(d))+" "+"%"
+    var ret = parseFloat((a / i).toFixed(d))+" "+"%"; 
+    return ret;
   };
   return {
     count: function() {
@@ -397,11 +400,10 @@ var invoke = function(fn, s, i, e) {
   if (arguments.length <= 2)
     setTimeout(fn, s);
   else {
-    setTimeout(repeat, s);
-    function repeat() {
+    setTimeout(function() {
       var h = setInterval(fn, i);
       if (e) setTimeout(function() { clearInterval(h); }, e);
-    }
+    }, s);
   }
 }
 module.exports.invoke = invoke;

@@ -11,8 +11,9 @@ init();
 main();
 
 function init() {
-  console.log('%s [INFO] sub > nodejs Version: %s'
+  console.log('%s [INFO] sub(%d) > nodejs Version: %s'
     , std.getTimeStamp()
+    , process.pid
     , process.version
   );
 
@@ -24,15 +25,17 @@ function init() {
   });
 
   mongoose.connection.on('error', function () {
-    console.error('%s [ERR] sub > connection error'
+    console.error('%s [ERR] sub(%d) > connection error'
       , std.getTimeStamp()
+      , process.pid
       , arguments
     );
   });
 
   mongoose.connection.once('open', function() {
-    console.log('%s [INFO] sub > mongoose Version: v%s'
+    console.log('%s [INFO] sub(%d) > mongoose Version: v%s'
       , std.getTimeStamp()
+      , process.pid
       , mongoose.version
     );
   });
@@ -50,8 +53,11 @@ function main() {
       , dbs.updateNote
     ], function(err, req, res) {
       if (err) {
-        console.error('%s [ERR] sub > '
-          , std.getTimeStamp(), err.stack);
+        console.error('%s [ERR] sub(%d) > '
+          , std.getTimeStamp()
+          , process.pid
+          , err.stack
+        );
         throw err;
       }
       //console.log('%s [INFO] sub > results: '
@@ -62,13 +68,14 @@ function main() {
   }, 1);
 
   process.on('exit', function(code, signal) {
-    console.log('%s [INFO] sub > Terminated child pid: %d'
+    console.log('%s [INFO] sub(%d) > Terminated child pid: %d'
       , std.getTimeStamp()
       , process.pid
+      , process.pid
     );
-    console.log(
-      '%s [INFO] sub >  child process terminated. code/signal: %s'
+    console.log('%s [INFO] sub(%d) >  child process terminated. code/signal: %s'
       , std.getTimeStamp()
+      , process.pid
       , signal || code
     );
   });
@@ -80,13 +87,17 @@ function main() {
     //);
     queue.push(req, function() {
       console.log(
-        '%s [INFO] sub > finished processing note object.'
-        , std.getTimeStamp());
+        '%s [INFO] sub(%d) > finished processing note object.'
+        , std.getTimeStamp()
+        , process.pid
+      );
     });
   });
 
   queue.drain = function() {
-    console.log('%s [INFO] sub > all items have been processed.'
-      , std.getTimeStamp());
+    console.log('%s [INFO] sub(%d) > all items have been processed.'
+      , std.getTimeStamp()
+      , process.pid
+    );
   };
 };
