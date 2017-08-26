@@ -397,9 +397,8 @@ module.exports.cpuused = cpuused;
  */
 var invoke = function(fn, s, i, e) {
   if (!s) s = 0;
-  if (arguments.length <= 2)
-    setTimeout(fn, s);
-  else {
+  setTimeout(fn, s);
+  if (arguments.length >= 3) {
     setTimeout(function() {
       var h = setInterval(fn, i);
       if (e) setTimeout(function() { clearInterval(h); }, e);

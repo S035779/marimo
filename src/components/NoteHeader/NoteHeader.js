@@ -12,8 +12,12 @@ export default class NoteHeader extends React.Component {
       , highestPrice: ''
       , lowestPrice: ''
       , bids: false
+      , new: false
+      , used: false
+      , other: false
       , status: false
       , categoryPath: []
+      , seller: []
     };
   }
 
@@ -48,7 +52,8 @@ export default class NoteHeader extends React.Component {
     this.setState(newState);
   }
 
-  handleChangeSelect(e) {
+  handleChangeSelect(name, e) {
+    let newState = {}
     let options = e.target.options;
     let values = [];
     for(let i=0; i<options.length; i++){
@@ -56,7 +61,19 @@ export default class NoteHeader extends React.Component {
         values.push(options[i].value);
       }
     }
-    this.setState({ categoryPath: values })
+    newState[name] = values;
+    this.setState(newState)
+  }
+
+  handleChangeSelectSelr(e) {
+    let options = e.target.options;
+    let values = [];
+    for(let i=0; i<options.length; i++){
+      if(options[i].selected) {
+        values.push(options[i].value);
+      }
+    }
+    this.setState({ seller: values })
   }
 
   handleSearch(e) {
@@ -65,15 +82,26 @@ export default class NoteHeader extends React.Component {
   }
 
   renderOptions() {
-    const array = this.props.note.items.map(function(item,i) {
+    const pathArray = this.props.note.items.map(function(item,i) {
       if(!item.item.body.hasOwnProperty('ResultSet')) return null;
       const obj = item.item.body.ResultSet.Result;
       return obj.CategoryPath;
     });
-    const categoryPaths = std.dst(array);
-    const options = categoryPaths.map(function(path,i) {
+    const paths = std.dst(pathArray);
+    const optPaths = paths.map(function(path,i) {
       return <option
         key={"choice-" + i} value={path} >{path}</option>;
+    })
+
+    const selrArray = this.props.note.items.map(function(item,i) {
+      if(!item.item.body.hasOwnProperty('ResultSet')) return null;
+      const obj = item.item.body.ResultSet.Result;
+      return obj.Seller.Id;
+    });
+    const selrs = std.dst(selrArray);
+    const optSelrs = selrs.map(function(seler,i) {
+      return <option
+        key={"choice-" + i} value={seler} >{seler}</option>;
     })
 
     return <table width="100%"><tbody>
@@ -93,8 +121,18 @@ export default class NoteHeader extends React.Component {
       <td><span>
         <select multiple={true}
           value={this.state.categoryPath}
-          onChange={this.handleChangeSelect.bind(this)}>
-          {options}
+          onChange={this.handleChangeSelect.bind(this, 'categoryPath')}>
+          {optPaths}
+        </select>
+      </span></td></tr>
+      <tr><td width="10%"><span>
+        <label htmlFor="search_select">Seller :</label></span>
+      </td>
+      <td><span>
+        <select multiple={true}
+          value={this.state.seller}
+          onChange={this.handleChangeSelect.bind(this, 'seller')}>
+          {optSelrs}
         </select>
       </span></td></tr>
       <tr><td width="10%"><span>
@@ -105,31 +143,61 @@ export default class NoteHeader extends React.Component {
           value={this.state.lowestPrice} 
           type="text" 
           placeholder="Lowest price" 
-          onChange={this.handleChangePrice.bind(this, 'lowestPrice')} />yen ~&nbsp;
+          onChange={this.handleChangePrice.bind(this, 'lowestPrice')} /></span>
+      <span>yen ~</span>
+      <span>
         <input ref="highestPrice" 
           value={this.state.highestPrice} 
           type="text" 
           placeholder="Highest price" 
-          onChange={this.handleChangePrice.bind(this, 'highestPrice')} />yen
-      </span></td></tr>
+          onChange={this.handleChangePrice.bind(this, 'highestPrice')} /></span>
+      <span>yen</span>
+      </td></tr>
       <tr><td width="10%"><span>
         <label htmlFor="search_checks">Bids :</label>
       </span></td>
-      <td><span>
-        <input type="checkbox" 
+      <td>
+      <tr><td><span><input type="checkbox" 
           value="bids" 
           checked={this.state.bids} 
           onChange={this.handleChangeCheckbox.bind(this, 'bids')} />
       </span></td></tr>
+      </td></tr>
+      <tr><td width="10%"><span>
+        <label htmlFor="search_checks">Condition :</label>
+      </span></td>
+      <td>
+      <tr><td><span><input type="checkbox" 
+          value="new" 
+          checked={this.state.new} 
+          onChange={this.handleChangeCheckbox.bind(this, 'new')} />
+      </span>
+      <span><label htmlFor="condition">new</label></span></td>
+      <td><span><input type="checkbox" 
+          value="used" 
+          checked={this.state.used} 
+          onChange={this.handleChangeCheckbox.bind(this, 'used')} />
+      </span>
+      <span><label htmlFor="condition">used</label></span></td>
+      <td><span><input type="checkbox" 
+          value="other" 
+          checked={this.state.other} 
+          onChange={this.handleChangeCheckbox.bind(this, 'other')} />
+      </span>
+      <span><label htmlFor="condition">other</label></span></td>
+      </tr>
+      </td></tr>
       <tr><td width="10%"><span>
         <label htmlFor="search_checks">Open :</label>
       </span></td>
-      <td><span>
+      <td>
+      <tr><td><span>
         <input type="checkbox" 
           value="status" 
           checked={this.state.status} 
           onChange={this.handleChangeCheckbox.bind(this, 'status')} />
       </span></td></tr>
+      </td></tr>
       </tbody></table>;
   }
 

@@ -52,12 +52,25 @@ class Note extends React.Component {
         if(note.options.bids 
           && Number(obj.Bids) === 0) 
           return false;
+        if(note.options.new
+          && obj.ItemStatus.Condition !== 'new') 
+          return false;
+        if(note.options.used
+          && obj.ItemStatus.Condition !== 'used') 
+          return false;
+        if(note.options.other
+          && obj.ItemStatus.Condition !== 'other') 
+          return false;
         if(note.options.status
           && obj.Status !== 'open') 
           return false;
         if(!note.options.categoryPath.some(path => { 
           return path === obj.CategoryPath; })
           && note.options.categoryPath.length !== 0 )
+          return false;
+        if(!note.options.seller.some(selr => { 
+          return selr === obj.Seller.Id; })
+          && note.options.seller.length !== 0 )
           return false;
         if(!isFinite(note.options.lowestPrice) 
           || !isFinite(note.options.highestPrice))

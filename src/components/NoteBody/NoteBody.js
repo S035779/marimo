@@ -17,6 +17,7 @@ export default class NoteBody extends React.Component {
     const startTime = std.getLocalTimeStamp(obj.StartTime);
     const endTime   = std.getLocalTimeStamp(obj.EndTime);
     const bids      = obj.Bids;
+    const condition = obj.ItemStatus.Condition;
 
     return <li className='NoteBody-item' key={item.auctionID}>
         <table width="100%">
@@ -27,7 +28,7 @@ export default class NoteBody extends React.Component {
             <img src={img} className='NoteBody-image' width='128' height='128' />
             </div>
           </td>
-          <td width="60%">
+          <td width="50%">
             <span className='NoteBody-title'>
             <a href={url} target='_blank'>{title}</a>
             </span>
@@ -40,6 +41,9 @@ export default class NoteBody extends React.Component {
           </td>
           <td width="10%">
             <span className='NoteBody-text'>{bids}bids</span>
+          </td>
+          <td width="10%">
+            <span className='NoteBody-text'>{condition}</span>
           </td>
           <td width="10%">
             <span className='NoteBody-text'>{status}</span>
