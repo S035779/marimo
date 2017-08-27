@@ -1,6 +1,7 @@
 import React from 'react';
 import StarButton from '../StarButton/StarButton';
 import Button from '../Button/Button';
+import Radio from '../Radio/Radio';
 import { browserHistory } from 'react-router';
 import std from '../../../utils/stdutils';
 
@@ -12,9 +13,7 @@ export default class NoteHeader extends React.Component {
       , highestPrice: ''
       , lowestPrice: ''
       , bids: false
-      , new: false
-      , used: false
-      , other: false
+      , condition: 'all'
       , status: false
       , categoryPath: []
       , seller: []
@@ -36,11 +35,7 @@ export default class NoteHeader extends React.Component {
     }
   }
 
-  handleChangeSearch(e) {
-    this.setState({ searchString: e.target.value });
-  }
-
-  handleChangePrice(name, e) {
+  handleChangeText(name, e) {
     let newState = {};
     newState[name] = e.target.value;
     this.setState(newState);
@@ -49,6 +44,12 @@ export default class NoteHeader extends React.Component {
   handleChangeCheckbox(name, e) {
     let newState = {};
     newState[name] = e.target.checked;
+    this.setState(newState);
+  }
+
+  handleChangeRadio(name, e) {
+    let newState = {};
+    newState[name] = e.target.value;
     this.setState(newState);
   }
 
@@ -63,17 +64,6 @@ export default class NoteHeader extends React.Component {
     }
     newState[name] = values;
     this.setState(newState)
-  }
-
-  handleChangeSelectSelr(e) {
-    let options = e.target.options;
-    let values = [];
-    for(let i=0; i<options.length; i++){
-      if(options[i].selected) {
-        values.push(options[i].value);
-      }
-    }
-    this.setState({ seller: values })
   }
 
   handleSearch(e) {
@@ -113,7 +103,7 @@ export default class NoteHeader extends React.Component {
           value={this.state.searchString} 
           type="text" 
           placeholder="Search string..." 
-          onChange={this.handleChangeSearch.bind(this)} />
+          onChange={this.handleChangeText.bind(this, 'searchString')} />
       </span></td></tr>
       <tr><td width="10%"><span>
         <label htmlFor="search_select">Category :</label></span>
@@ -143,60 +133,45 @@ export default class NoteHeader extends React.Component {
           value={this.state.lowestPrice} 
           type="text" 
           placeholder="Lowest price" 
-          onChange={this.handleChangePrice.bind(this, 'lowestPrice')} /></span>
+          onChange={this.handleChangeText.bind(this, 'lowestPrice')} /></span>
       <span>yen ~</span>
       <span>
         <input ref="highestPrice" 
           value={this.state.highestPrice} 
           type="text" 
           placeholder="Highest price" 
-          onChange={this.handleChangePrice.bind(this, 'highestPrice')} /></span>
+          onChange={this.handleChangeText.bind(this, 'highestPrice')} /></span>
       <span>yen</span>
       </td></tr>
       <tr><td width="10%"><span>
         <label htmlFor="search_checks">Bids :</label>
       </span></td>
-      <td>
-      <tr><td><span><input type="checkbox" 
+      <td><span><input type="checkbox" 
           value="bids" 
           checked={this.state.bids} 
-          onChange={this.handleChangeCheckbox.bind(this, 'bids')} />
-      </span></td></tr>
+          onChange={this.handleChangeCheckbox.bind(this, 'bids')} /></span>
       </td></tr>
       <tr><td width="10%"><span>
-        <label htmlFor="search_checks">Condition :</label>
+        <label htmlFor="search_radios">Condition :</label>
       </span></td>
       <td>
-      <tr><td><span><input type="checkbox" 
-          value="new" 
-          checked={this.state.new} 
-          onChange={this.handleChangeCheckbox.bind(this, 'new')} />
-      </span>
-      <span><label htmlFor="condition">new</label></span></td>
-      <td><span><input type="checkbox" 
-          value="used" 
-          checked={this.state.used} 
-          onChange={this.handleChangeCheckbox.bind(this, 'used')} />
-      </span>
-      <span><label htmlFor="condition">used</label></span></td>
-      <td><span><input type="checkbox" 
-          value="other" 
-          checked={this.state.other} 
-          onChange={this.handleChangeCheckbox.bind(this, 'other')} />
-      </span>
-      <span><label htmlFor="condition">other</label></span></td>
-      </tr>
+      <Radio name="condition"
+        value={this.state.condition}
+        onChange={this.handleChangeRadio.bind(this, 'condition')}>
+        <option value="all">all</option>
+        <option value="new">new</option>
+        <option value="used">used</option>
+        <option value="other">other</option>
+      </Radio>
       </td></tr>
       <tr><td width="10%"><span>
         <label htmlFor="search_checks">Open :</label>
       </span></td>
-      <td>
-      <tr><td><span>
+      <td><span>
         <input type="checkbox" 
           value="status" 
           checked={this.state.status} 
-          onChange={this.handleChangeCheckbox.bind(this, 'status')} />
-      </span></td></tr>
+          onChange={this.handleChangeCheckbox.bind(this, 'status')} /></span>
       </td></tr>
       </tbody></table>;
   }

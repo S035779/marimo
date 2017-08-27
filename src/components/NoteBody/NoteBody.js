@@ -2,10 +2,23 @@ import React from 'react';
 import std from '../../../utils/stdutils';
 
 export default class NoteBody extends React.Component {
+  upstate(s) {
+    switch(s) {
+    case 0:
+      return 'New added.'
+    case 1:
+      return 'Now available.'
+    case 2:
+      return 'Removed.'
+    }
+  };
+
   // 子要素のレンダリング
   renderItem(item) {
     const isResult = item.item.body.hasOwnProperty('ResultSet');
     if(!isResult) return(null);
+    const upstate   = this.upstate(item.status);
+    const updated   = std.getLocalTimeStamp(item.updated);
     const obj       = item.item.body.ResultSet.Result;
     const img       = obj.Img.Image1 ? obj.Img.Image1.sub : '';
     const title     = obj.Title;
@@ -24,11 +37,15 @@ export default class NoteBody extends React.Component {
         <tbody>
         <tr>
           <td width="10%">
+            <span className='NoteBody-text'>{upstate}</span>
+            <span className='NoteBody-text'>{updated}</span>
+          </td>
+          <td width="10%">
             <div className='NoteNody-image'>
             <img src={img} className='NoteBody-image' width='128' height='128' />
             </div>
           </td>
-          <td width="50%">
+          <td width="40%">
             <span className='NoteBody-title'>
             <a href={url} target='_blank'>{title}</a>
             </span>

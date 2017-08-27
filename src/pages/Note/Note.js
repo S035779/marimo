@@ -52,14 +52,8 @@ class Note extends React.Component {
         if(note.options.bids 
           && Number(obj.Bids) === 0) 
           return false;
-        if(note.options.new
-          && obj.ItemStatus.Condition !== 'new') 
-          return false;
-        if(note.options.used
-          && obj.ItemStatus.Condition !== 'used') 
-          return false;
-        if(note.options.other
-          && obj.ItemStatus.Condition !== 'other') 
+        if(note.options.condition !== 'all'
+          && note.options.condition !== obj.ItemStatus.Condition)
           return false;
         if(note.options.status
           && obj.Status !== 'open') 
