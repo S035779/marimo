@@ -2,7 +2,7 @@ import React from 'react';
 import std from '../../../utils/stdutils';
 
 export default class NoteBody extends React.Component {
-  upstate(s) {
+  renderStatus(s) {
     switch(s) {
     case 0:
       return 'New added.'
@@ -17,58 +17,51 @@ export default class NoteBody extends React.Component {
   renderItem(item) {
     const isResult = item.item.body.hasOwnProperty('ResultSet');
     if(!isResult) return(null);
-    const upstate   = this.upstate(item.status);
-    const updated   = std.getLocalTimeStamp(item.updated);
-    const obj       = item.item.body.ResultSet.Result;
-    const img       = obj.Img.Image1 ? obj.Img.Image1.sub : '';
-    const title     = obj.Title;
-    const url       = obj.AuctionItemUrl;
-    const price     = obj.Price;
-    const status    = obj.Status;
-    const category  = obj.CategoryPath;
-    const seller    = obj.Seller.Id;
-    const startTime = std.getLocalTimeStamp(obj.StartTime);
-    const endTime   = std.getLocalTimeStamp(obj.EndTime);
-    const bids      = obj.Bids;
-    const condition = obj.ItemStatus.Condition;
+    const status        = this.renderStatus(item.status);
+    const updated       = std.getLocalTimeStamp(item.updated);
+    const obj           = item.item.body.ResultSet.Result;
+    const Img           = obj.Img.Image1 
+                            ? obj.Img.Image1.sub : '';
+    const Url           = obj.AuctionItemUrl;
+    const Price         = obj.Price;
+    const AuctionID     = obj.AuctionID;
+    const CategoryPath  = obj.CategoryPath;
+    const Title         = obj.Title;
+    const SellerId      = obj.Seller.Id;
+    const StartTime     = std.getLocalTimeStamp(obj.StartTime);
+    const EndTime       = std.getLocalTimeStamp(obj.EndTime);
+    const Bids          = obj.Bids;
+    const Condition     = obj.ItemStatus.Condition;
+    const Status        = obj.Status;
 
     return <li className='NoteBody-item' key={item.auctionID}>
-        <table width="100%">
-        <tbody>
-        <tr>
-          <td width="10%">
-            <span className='NoteBody-text'>{upstate}</span>
-            <span className='NoteBody-text'>{updated}</span>
-          </td>
-          <td width="10%">
-            <div className='NoteNody-image'>
-            <img src={img} className='NoteBody-image' width='128' height='128' />
-            </div>
-          </td>
-          <td width="40%">
-            <span className='NoteBody-title'>
-            <a href={url} target='_blank'>{title}</a>
-            </span>
-            <span className='NoteBody-text'>Time : {startTime} ~ {endTime}</span>
-            <span className='NoteBody-text'>Seller : {seller}</span>
-            <span className='NoteBody-text'>Category : {category}</span>
-          </td>
-          <td width="10%">
-            <span className='NoteBody-text'>{price}yen</span>
-          </td>
-          <td width="10%">
-            <span className='NoteBody-text'>{bids}bids</span>
-          </td>
-          <td width="10%">
-            <span className='NoteBody-text'>{condition}</span>
-          </td>
-          <td width="10%">
-            <span className='NoteBody-text'>{status}</span>
-          </td>
-        </tr>
-        </tbody>
-        </table>
-      </li>;
+      <table width="100%"><tbody>
+      <tr><td width="10%">
+      <div className='NoteNody-image'>
+      <img src={Img} 
+        className='NoteBody-image' width='128' height='128' />
+      </div>
+      </td><td width="40%">
+      <span className='NoteBody-title'>
+      <a href={Url} target='_blank'>{Title}</a></span>
+      <span className='NoteBody-text'>
+        Category : {CategoryPath}<br />
+        Condition : {Condition}<br />
+        Seller : {SellerId}<br />
+        AuctionID : {AuctionID}<br />
+        Time : {StartTime} ~ {EndTime}<br />
+      </span>
+      </td><td width="10%">
+      <span className='NoteBody-text'>{Price}yen</span>
+      </td><td width="10%">
+      <span className='NoteBody-text'>{Bids}bids</span>
+      </td><td width="10%">
+      <span className='NoteBody-text'>{Status}</span>
+      </td><td width="10%">
+      <span className='NoteBody-text'>{status}</span>
+      <span className='NoteBody-text'>{updated}</span>
+      </td></tr>
+      </tbody></table></li>;
   }
 
   // itemsを親から受け取ってリストを返す

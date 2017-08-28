@@ -66,6 +66,10 @@ class Note extends React.Component {
           return selr === obj.Seller.Id; })
           && note.options.seller.length !== 0 )
           return false;
+        if(!note.options.AuctionID.some(auid => { 
+          return auid === obj.AuctionID; })
+          && note.options.AuctionID.length !== 0 )
+          return false;
         if(!isFinite(note.options.lowestPrice) 
           || !isFinite(note.options.highestPrice))
           return false;

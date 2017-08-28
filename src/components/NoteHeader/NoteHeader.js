@@ -15,6 +15,7 @@ export default class NoteHeader extends React.Component {
       , bids: false
       , condition: 'all'
       , status: false
+      , AuctionID: []
       , categoryPath: []
       , seller: []
     };
@@ -57,104 +58,105 @@ export default class NoteHeader extends React.Component {
     let newState = {}
     let options = e.target.options;
     let values = [];
-    for(let i=0; i<options.length; i++){
-      if(options[i].selected) {
-        values.push(options[i].value);
-      }
-    }
+    for(var i=0; i<options.length; i++) {
+      if(options[i].selected) values.push(options[i].value);
+    };
     newState[name] = values;
-    this.setState(newState)
+    this.setState(newState);
   }
 
   handleSearch(e) {
     e.preventDefault();
-    this.props.onSearch(this.state)
+    this.props.onSearch(this.state);
   }
 
-  renderOptions() {
-    const pathArray = this.props.note.items.map(function(item,i) {
-      if(!item.item.body.hasOwnProperty('ResultSet')) return null;
-      const obj = item.item.body.ResultSet.Result;
-      return obj.CategoryPath;
+  renderOption(objs, prop1, prop2) {
+    const len = arguments.length;
+    const items = objs.map(function(obj) {
+      if(!obj.item.body.hasOwnProperty('ResultSet')) return null;
+      return (len === 2)
+        ? obj.item.body.ResultSet.Result[prop1]
+        : obj.item.body.ResultSet.Result[prop1][prop2];
     });
-    const paths = std.dst(pathArray);
-    const optPaths = paths.map(function(path,i) {
+    const opts = std.dst(items);
+    return opts.map(function(opt, idx) {
       return <option
-        key={"choice-" + i} value={path} >{path}</option>;
-    })
+        key={"choice-" + idx} value={opt} >{opt}</option>;
+    });
+  }
 
-    const selrArray = this.props.note.items.map(function(item,i) {
-      if(!item.item.body.hasOwnProperty('ResultSet')) return null;
-      const obj = item.item.body.ResultSet.Result;
-      return obj.Seller.Id;
-    });
-    const selrs = std.dst(selrArray);
-    const optSelrs = selrs.map(function(seler,i) {
-      return <option
-        key={"choice-" + i} value={seler} >{seler}</option>;
-    })
+  renderSearchs() {
+    const optAuIDs = this.renderOption(
+      this.props.note.items, 'AuctionID');
+    const optPaths = this.renderOption(
+      this.props.note.items, 'CategoryPath');
+    const optSelrs = this.renderOption(
+      this.props.note.items, 'Seller', 'Id');
 
     return <table width="100%"><tbody>
-      <tr><td width="10%"><span>
-        <label htmlFor="search_string">Title :</label>
-      </span></td>
-      <td><span>
-        <input ref="search" 
-          value={this.state.searchString} 
-          type="text" 
-          placeholder="Search string..." 
-          onChange={this.handleChangeText.bind(this, 'searchString')} />
-      </span></td></tr>
-      <tr><td width="10%"><span>
-        <label htmlFor="search_select">Category :</label></span>
-      </td>
-      <td><span>
-        <select multiple={true}
-          value={this.state.categoryPath}
-          onChange={this.handleChangeSelect.bind(this, 'categoryPath')}>
-          {optPaths}
-        </select>
-      </span></td></tr>
-      <tr><td width="10%"><span>
-        <label htmlFor="search_select">Seller :</label></span>
-      </td>
-      <td><span>
-        <select multiple={true}
-          value={this.state.seller}
-          onChange={this.handleChangeSelect.bind(this, 'seller')}>
-          {optSelrs}
-        </select>
-      </span></td></tr>
-      <tr><td width="10%"><span>
-        <label htmlFor="search_string">Price :</label>
-      </span></td>
-      <td><span>
-        <input ref="lowestPrice" 
-          value={this.state.lowestPrice} 
-          type="text" 
-          placeholder="Lowest price" 
-          onChange={this.handleChangeText.bind(this, 'lowestPrice')} /></span>
+      <tr><td width="10%">
+      <span><label htmlFor="search_string">Title :</label></span>
+      </td><td>
+      <span><input ref="search" 
+        value={this.state.searchString} 
+        type="text" 
+        placeholder="Search string..." 
+        onChange={this.handleChangeText.bind(this, 'searchString')} /></span>
+      </td></tr>
+      <tr><td width="10%">
+      <span><label htmlFor="search_select">Category :</label></span>
+      </td><td>
+      <span><select multiple={true}
+        value={this.state.categoryPath}
+        onChange={this.handleChangeSelect.bind(this, 'categoryPath')}>
+        {optPaths}
+      </select></span>
+      </td></tr>
+      <tr><td width="10%">
+      <span><label htmlFor="search_select">Seller :</label></span>
+      </td><td>
+      <span><select multiple={true}
+        value={this.state.seller}
+        onChange={this.handleChangeSelect.bind(this, 'seller')}>
+        {optSelrs}
+      </select></span>
+      </td></tr>
+      <tr><td width="10%">
+      <span><label htmlFor="search_select">AuctionID :</label></span>
+      </td><td>
+      <span><select multiple={true}
+        value={this.state.AuctionID}
+        onChange={this.handleChangeSelect.bind(this, 'AuctionID')}>
+        {optAuIDs}
+      </select></span>
+      </td></tr>
+      <tr><td width="10%">
+      <span><label htmlFor="search_string">Price :</label></span>
+      </td><td>
+      <span><input ref="lowestPrice" 
+        value={this.state.lowestPrice} 
+        type="text" 
+        placeholder="Lowest price" 
+        onChange={this.handleChangeText.bind(this, 'lowestPrice')} /></span>
       <span>yen ~</span>
-      <span>
-        <input ref="highestPrice" 
-          value={this.state.highestPrice} 
-          type="text" 
-          placeholder="Highest price" 
-          onChange={this.handleChangeText.bind(this, 'highestPrice')} /></span>
+      <span><input ref="highestPrice" 
+        value={this.state.highestPrice} 
+        type="text" 
+        placeholder="Highest price" 
+        onChange={this.handleChangeText.bind(this, 'highestPrice')} /></span>
       <span>yen</span>
       </td></tr>
-      <tr><td width="10%"><span>
-        <label htmlFor="search_checks">Bids :</label>
-      </span></td>
-      <td><span><input type="checkbox" 
-          value="bids" 
-          checked={this.state.bids} 
-          onChange={this.handleChangeCheckbox.bind(this, 'bids')} /></span>
+      <tr><td width="10%">
+      <span><label htmlFor="search_checks">Bids :</label></span>
+      </td><td>
+      <span><input type="checkbox" 
+        value="bids" 
+        checked={this.state.bids} 
+        onChange={this.handleChangeCheckbox.bind(this, 'bids')} /></span>
       </td></tr>
-      <tr><td width="10%"><span>
-        <label htmlFor="search_radios">Condition :</label>
-      </span></td>
-      <td>
+      <tr><td width="10%">
+      <span><label htmlFor="search_radios">Condition :</label></span>
+      </td><td>
       <Radio name="condition"
         value={this.state.condition}
         onChange={this.handleChangeRadio.bind(this, 'condition')}>
@@ -164,14 +166,13 @@ export default class NoteHeader extends React.Component {
         <option value="other">other</option>
       </Radio>
       </td></tr>
-      <tr><td width="10%"><span>
-        <label htmlFor="search_checks">Open :</label>
-      </span></td>
-      <td><span>
-        <input type="checkbox" 
-          value="status" 
-          checked={this.state.status} 
-          onChange={this.handleChangeCheckbox.bind(this, 'status')} /></span>
+      <tr><td width="10%">
+      <span><label htmlFor="search_checks">Open :</label></span>
+      </td><td>
+      <span><input type="checkbox" 
+        value="status" 
+        checked={this.state.status} 
+        onChange={this.handleChangeCheckbox.bind(this, 'status')} /></span>
       </td></tr>
       </tbody></table>;
   }
@@ -202,7 +203,7 @@ export default class NoteHeader extends React.Component {
           onChange={this.props.onChangeStar} />
       </div>
       <div className="NoteHeader-searchs">
-        {this.renderOptions()}
+        {this.renderSearchs()}
       </div>
     </div>;
   }
