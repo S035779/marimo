@@ -346,8 +346,8 @@ var getAuctionIds = function( req, res, callback) {
   var Ids = [];
   var query = req.hasOwnProperty('body') 
     ? req.body.body : res.note.search;
-  var historys = (res.historys !== undefined)
-    ? res.history : null;
+  var historys = res.hasOwnProperty('historys')
+    ? res.historys : null;
 
   var c = std.counter();
   var t = std.timer();
@@ -355,7 +355,8 @@ var getAuctionIds = function( req, res, callback) {
   var p = std.cpuused();
 
   async.forEachSeries(res.pages, function(page, cbk) {
-    //console.log(`%s [INFO] page: %s, std.getTimeStamp(), page);
+    //console.log(`%s [INFO] page: %s`
+    //, std.getTimeStamp(), page);
     app.YHsearch({ 
       appid:    req.appid
       , query
@@ -381,7 +382,6 @@ var getAuctionIds = function( req, res, callback) {
       console.error(err.message);
       throw err;
     }
-    //console.dir(oldIds);
     //console.dir(newIds);
     var nowIds = std.and(oldIds, newIds);
     var addIds = std.add(oldIds, newIds);
@@ -396,9 +396,9 @@ var getAuctionIds = function( req, res, callback) {
       Ids.push({ id, status: 1, updated: nowDay });
     });
     delIds.forEach(function(id){
-      if( historys && historys[id].updated > oldDay) {
+      if(historys && historys[id].updated > oldDay) {
         Ids.push({ id, status: 2
-          , updated: res.historys[id].updated });
+          , updated: historys[id].updated });
       }
     });
     //console.log('now: %d(msec), old: %d(msec), int: %d(msec)'
@@ -601,28 +601,25 @@ var updateHistorys = function(req, res, callback) {
 module.exports.updateHistorys = updateHistorys;
 
 /**
- * Update Note Object to note collection.
+ * Update Note Object to note collection at Task Only.
  *
  * @param req {object}
  * @param res {object}
  * @param callback {function}
  */
 var updateNote = function( req, res, callback) {
-  var where = {};
-  var set = {};
-  var opt = {};
-  var items = [];
+  var userid = res.note.userid;
+  var id = res.note.id;
 
-  for(var i=0; i<res.Ids.length; i++) {
-    items.push(res.Ids[i].id);
-  }
-
-  where = { userid: res.note.userid, id: res.note.id };
-  set = {$set: {
-    historyid:  res.historyIds
-    , items:    items
+  var historyid = res.historyIds;
+  var items = res.Ids.map(function(Id) { return Id.id; });
+  var set = {$set: { 
+    historyid
+    , items 
   }};
-  opt = { upsert: false, multi: true };
+
+  var where = { userid , id };
+  var opt = { upsert: false, multi: true };
   Note.update(where, set, opt, function(err, docs) {
     if(err) {
       console.error(err.message);
@@ -636,55 +633,52 @@ var updateNote = function( req, res, callback) {
 module.exports.updateNote = updateNote;
 
 /**
- *  Post Note Object to note collection.
+ *  Post Note Object to note collection at Web Only.
  *
  * @param req {object}
  * @param res {object}
  * @param callback {function}
  */
 var postNote = function(req, res, callback) {
-  var userid = req.hasOwnProperty('note') 
+  var userid =  res.hasOwnProperty('note') 
     ? res.note.userid : ObjectId(res.user._id);
-  var id = req.hasOwnProperty('note') 
+  var id =      res.hasOwnProperty('note') 
     ? res.note.id : req.body.id;
-  var starred = req.body.starred 
-    ? Boolean(1) : Boolean(0);
-  var historyid = res.hasOwnProperty('historyIds') 
-    ? res.historyIds : null;
-  var items = res.hasOwnProperty('Ids') 
-    ? function() { 
-      var array = [];
-      res.Ids.forEach(function(Id){ array.push(Id.id); });
-      return array; } 
-    : null;
+  var starred = req.body.starred ? Boolean(1) : Boolean(0);
+
+  if (res.hasOwnProperty('historyIds') 
+    && res.hasOwnProperty('Ids')) {
+    var historyid = res.historyIds;
+    var items = res.Ids.map(function(Id){ return Id.id; });
+    var set = {$set: {
+      title:        req.body.title
+      , category:   req.body.category
+      , search:     req.body.body
+      , starred:    starred
+      , updated:    req.body.updated
+      , historyid
+      , items 
+    }};
+  } else {
+    var set = {$set: {
+      title:        req.body.title
+      , category:   req.body.category
+      , search:     req.body.body
+      , starred:    starred
+      , updated:    req.body.updated
+    }};
+  }
 
   var where = { userid, id };
-  var set = (historyid && items) 
-    ? {$set: {
-        title:        req.body.title
-        , category:   req.body.category
-        , search:     req.body.body
-        , starred:    starred
-        , updated:    req.body.updated
-        , historyid
-        , items
-      }}
-    : {$set: {
-        title:        req.body.title
-        , category:   req.body.category
-        , search:     req.body.body
-        , starred:    starred
-        , updated:    req.body.updated
-      }};
   var opt = { upsert: false, multi: true };
-  Note.update(where, set, opt, function(err, docs) {
+  Note.update(where, set, opt, function(err) {
     if(err) {
       console.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] post Note done.`, std.getTimeStamp());
+    console.log(`%s [INFO] post Note done.`
+      , std.getTimeStamp());
     if(callback) callback(err, req, res);
   });
 };
 module.exports.postNote = postNote;
-

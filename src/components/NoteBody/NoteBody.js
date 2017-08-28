@@ -5,9 +5,9 @@ export default class NoteBody extends React.Component {
   renderStatus(s) {
     switch(s) {
     case 0:
-      return 'New added.'
-    case 1:
       return 'Now available.'
+    case 1:
+      return 'New added.'
     case 2:
       return 'Removed.'
     }
@@ -45,11 +45,11 @@ export default class NoteBody extends React.Component {
       <span className='NoteBody-title'>
       <a href={Url} target='_blank'>{Title}</a></span>
       <span className='NoteBody-text'>
-        Category : {CategoryPath}<br />
+        Bid period : {StartTime} ~ {EndTime}<br />
         Condition : {Condition}<br />
         Seller : {SellerId}<br />
         AuctionID : {AuctionID}<br />
-        Time : {StartTime} ~ {EndTime}<br />
+        Category : {CategoryPath}<br />
       </span>
       </td><td width="10%">
       <span className='NoteBody-text'>{Price}yen</span>
