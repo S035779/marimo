@@ -1,6 +1,8 @@
 require('dotenv').config();
 var dburl = process.env.mongodb;
 var appid = process.env.app_id;
+var pages = process.env.pages;
+var intvl = process.env.interval;
 
 var async = require('async');
 var mongoose = require('mongoose');
@@ -45,7 +47,7 @@ function main() {
   var queue = async.queue(function (req, callback) {
     async.waterfall([
       async.apply(
-        dbs.findHistorys, { appid }, { note: req })
+        dbs.findHistorys, { appid, pages, intvl }, { note: req })
       , dbs.getResultSet
       , dbs.getAuctionIds
       , dbs.getAuctionItems

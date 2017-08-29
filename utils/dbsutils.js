@@ -32,42 +32,6 @@ var findUser = function(req, res, callback) {
 module.exports.findUser = findUser;
 
 /**
- * Get Notes Object from note collection.
- *
- * @param req {object}
- * @param res {object}
- * @param callback {function}
- */
-var getNotes = function(req, res, callback){
-  Note.find({ 
-    userid: ObjectId(res.user._id) 
-  }).populate('historyid').exec(function (err, docs) {
-    if(err) {
-      console.error(err.message);
-      throw err;
-    }
-    var newNotes = [];
-    docs.forEach(function(doc) {
-      //console.log(JSON.stringify(doc, null, 4));
-      newNotes.push({
-        user:       req.body.user
-        , id:       doc.id
-        , title:    doc.title
-        , category: doc.category
-        , body:     doc.search
-        , starred:  doc.starred
-        , items:    doc.historyid
-        , updated:  doc.updated
-      });
-    });
-    console.log(`%s [INFO] get Notes done.`, std.getTimeStamp());
-    if(callback) 
-      callback(err, req, std.extend(res, { newNotes }));
-  });
-};
-module.exports.getNotes = getNotes;
-
-/**
  * Find Note Object from note collection.
  *
  * @param req {object}
@@ -92,6 +56,37 @@ var findNote = function(req, res, callback) {
 module.exports.findNote = findNote;
 
 /**
+ * Remove Historys Object from history collection.
+ *
+ * @param req {object}
+ * @param res {object}
+ * @param callback {function}
+ */
+var removeHistorys = function(req, res, callback) {
+  var historys=[];
+  async.forEach(res.note.historyid, function(historyid, cbk) {
+    History.remove({ 
+      _id: ObjectId(historyid) 
+    }).exec(function(err) {
+      if(err) {
+        console.error(err.message);
+        return cbk(err);
+      }
+      cbk();
+    });
+  }, function (err) {
+    if(err) {
+      console.error(err.message);
+      throw err;
+    }
+    console.log(`%s [INFO] remove Historys done.`
+      , std.getTimeStamp());
+    if(callback) callback(err, req, res);
+  });
+};
+module.exports.removeHistorys = removeHistorys;
+
+/**
  * Remove Note Object from note collection.
  *
  * @param req {object}
@@ -99,10 +94,9 @@ module.exports.findNote = findNote;
  * @param callback {function}
  */
 var removeNote = function(req, res, callback) {
-  Note.remove({
-    userid: ObjectId(res.user._id)
-    , id: req.body.id
-  }, function(err) {
+  var userid = ObjectId(res.user._id);
+  var id = req.body.id;
+  Note.remove({ userid, id }, function(err) {
     if (err) {
       console.error(err.message);
       throw err;
@@ -210,8 +204,13 @@ module.exports.findUsers = findUsers;
 var findNotes = function(req, res, callback) {
   var notes=[];
   async.forEach(res.users, function(user, cbk) {
-    Note.find({ userid: ObjectId(user._id) })
-    .exec(function(err, docs) {
+    Note.find({ 
+      userid: ObjectId(user._id) 
+      , updated: { 
+        $gte: new Date(2017,7,29,16)
+        , $lt: new Date(2017,7,29,17)  
+      } 
+    }).exec(function(err, docs) {
       if(err) {
         console.error(err.message);
         return cbk(err);
@@ -248,9 +247,8 @@ module.exports.findNotes = findNotes;
 var findHistorys = function(req, res, callback) {
   var historys=[];
   async.forEach(res.note.historyid, function(historyid, cbk) {
-    History.find({ 
-      _id: ObjectId(historyid) 
-    }).exec(function(err, docs) {
+    History.find({ _id: ObjectId(historyid) })
+    .exec(function(err, docs) {
       if(err) {
         console.error(err.message);
         return cbk(err);
@@ -286,9 +284,10 @@ module.exports.findHistorys = findHistorys;
  * @param callback {function}
  */
 var getResultSet = function(req, res, callback) {
+  var max = req.hasOwnProperty('pages') ? req.pages || 5;
   var query = req.hasOwnProperty('body') 
     ? req.body.body : res.note.search;
-  var page = req.hasOwnProperty('body') ? 1 : 5;
+  var page = req.hasOwnProperty('body') ? 1 : max;
 
   var c = std.counter();
   var t = std.timer();
@@ -341,6 +340,7 @@ module.exports.getResultSet = getResultSet;
  * @param callback {function}
  */
 var getAuctionIds = function( req, res, callback) {
+  var int = req.hasOwnProperty('intvl') ? req.intvl || 24;
   var oldIds = res.note.items;
   var newIds = [];
   var Ids = [];
@@ -388,7 +388,7 @@ var getAuctionIds = function( req, res, callback) {
     var delIds = std.del(oldIds, newIds);
     var date = new Date();
     var nowDay = date.getTime();
-    var oldDay = date.setDate(date.getDate()-1);
+    var oldDay = date.setHours(date.getHours()-int);
     nowIds.forEach(function(id){
       Ids.push({ id, status: 0, updated: nowDay });
     });
@@ -397,8 +397,7 @@ var getAuctionIds = function( req, res, callback) {
     });
     delIds.forEach(function(id){
       if(historys && historys[id].updated > oldDay) {
-        Ids.push({ id, status: 2
-          , updated: historys[id].updated });
+        Ids.push({ id, status: 2, updated: nowDay });
       }
     });
     //console.log('now: %d(msec), old: %d(msec), int: %d(msec)'
@@ -529,57 +528,39 @@ module.exports.getBidHistorys = getBidHistorys;
  * @param callback {function}
  */
 var updateHistorys = function(req, res, callback) {
+  var userid = res.note.userid;
+  var historyIds = res.note.historyid;
   var where = {};
-  var values = {};
   var set = {};
   var opt = {};
-  var historyIds = res.note.historyid;
+  var obj = {};
   async.forEach(res.Ids, function(Id, cbk) {
-    if(Id.status === 0) { // When the status is '0:now'.
-      where = { userid: res.note.userid, auctionID: Id.id };
-      set = {$set: {
-        item:         res.Items[Id.id].item
-        , bids:       res.Bids[Id.id].bids
-        , status:     Id.status
-        , updated:    Id.updated
-      }};
-      opt = { upsert: false, multi: true };
-      History.update(where, set, opt, function(err, docs) {
+    obj = {
+      item:         res.Items[Id.id].item
+      , bids:       res.Bids[Id.id].bids
+      , status:     Id.status
+      , updated:    Id.updated
+    };
+    if(Id.status === 0 || Id.status === 2) { 
+      // When the status is '0:now'.
+      // When the status is '2:del'.
+      where = { userid, auctionID: Id.id };
+      set   = { $set: obj };
+      opt   = { upsert: false, multi: true };
+      History.update(where, set, opt, function(err) {
         if(err) {
           console.error(err.message);
           return cbk(err);
         }
         cbk();
       });
-    } else if(Id.status === 1) { // When the status is '1:add'.
+    } else if(Id.status === 1) { 
+      // When the status is '1:add'.
       historyId = new ObjectId;
-      values = {
-        _id: historyId
-        , userid:     res.note.userid
-        , auctionID:  Id.id
-        , item:       res.Items[Id.id].item
-        , bids:       res.Bids[Id.id].bids
-        , status:     Id.status
-        , updated:    Id.updated
-      }; 
+      obj = std.merge(obj, 
+        { _id: historyId, userid, auctionID:  Id.id }); 
       historyIds.push(historyId);
-      History.create(values, function(err, docs) {
-        if(err) {
-          console.error(err.message);
-          return cbk(err);
-        }
-        cbk();
-      });
-    } else if(Id.status === 2) { // When the status is '2:del'.
-      where = { userid: res.note.userid, auctionID: Id.id };
-      set = {$set: {
-        item:         res.Items[Id.id].item
-        , bids:       res.Bids[Id.id].bids
-        , status:     Id.status
-        , updated:    Id.updated
-      }};
-      opt = { upsert: false, multi: true };
-      History.update(where, set, opt, function(err, docs) {
+      History.create(obj, function(err) {
         if(err) {
           console.error(err.message);
           return cbk(err);
@@ -601,31 +582,54 @@ var updateHistorys = function(req, res, callback) {
 module.exports.updateHistorys = updateHistorys;
 
 /**
- * Update Note Object to note collection at Task Only.
+ *  Update Note Object to note collection at Web Only.
  *
  * @param req {object}
  * @param res {object}
  * @param callback {function}
  */
-var updateNote = function( req, res, callback) {
-  var userid = res.note.userid;
-  var id = res.note.id;
+var updateNote = function(req, res, callback) {
+  var userid,id,starred,historyid,items;
+  var where = {};
+  var set = {};
+  var opt = {};
+  var obj = {};
 
-  var historyid = res.historyIds;
-  var items = res.Ids.map(function(Id) { return Id.id; });
-  var set = {$set: { 
-    historyid
-    , items 
-  }};
+  if (req.hasOwnProperty('body')) { 
+    // isBody
+    userid = ObjectId(res.user._id);
+    id = req.body.id;
+    starred = req.body.starred ? Boolean(1) : Boolean(0);
+    obj = {
+      title:        req.body.title
+      , category:   req.body.category
+      , search:     req.body.body
+      , starred:    starred
+      , updated:    req.body.updated
+    };
+  } else if (res.hasOwnProperty('note')) { 
+    // isNote
+    userid = res.note.userid;
+    id = res.note.id;
+  }
 
-  var where = { userid , id };
-  var opt = { upsert: false, multi: true };
-  Note.update(where, set, opt, function(err, docs) {
+  if (res.hasOwnProperty('historyIds') 
+    && res.hasOwnProperty('Ids')) { 
+    // isItem
+    historyid = res.historyIds;
+    items = res.Ids.map(function(Id){ return Id.id; });
+    obj = std.merge(obj, { historyid, items });
+  }
+
+  where = { userid, id };
+  set   = { $set: obj };
+  opt   = { upsert: false, multi: true };
+  Note.update(where, set, opt, function(err) {
     if(err) {
       console.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] update Note done`
+    console.log(`%s [INFO] update Note done.`
       , std.getTimeStamp());
     if(callback) callback(err, req, res);
   });
@@ -633,52 +637,38 @@ var updateNote = function( req, res, callback) {
 module.exports.updateNote = updateNote;
 
 /**
- *  Post Note Object to note collection at Web Only.
+ * Get Notes Object from note collection.
  *
  * @param req {object}
  * @param res {object}
  * @param callback {function}
  */
-var postNote = function(req, res, callback) {
-  var userid =  res.hasOwnProperty('note') 
-    ? res.note.userid : ObjectId(res.user._id);
-  var id =      res.hasOwnProperty('note') 
-    ? res.note.id : req.body.id;
-  var starred = req.body.starred ? Boolean(1) : Boolean(0);
-
-  if (res.hasOwnProperty('historyIds') 
-    && res.hasOwnProperty('Ids')) {
-    var historyid = res.historyIds;
-    var items = res.Ids.map(function(Id){ return Id.id; });
-    var set = {$set: {
-      title:        req.body.title
-      , category:   req.body.category
-      , search:     req.body.body
-      , starred:    starred
-      , updated:    req.body.updated
-      , historyid
-      , items 
-    }};
-  } else {
-    var set = {$set: {
-      title:        req.body.title
-      , category:   req.body.category
-      , search:     req.body.body
-      , starred:    starred
-      , updated:    req.body.updated
-    }};
-  }
-
-  var where = { userid, id };
-  var opt = { upsert: false, multi: true };
-  Note.update(where, set, opt, function(err) {
+var getNotes = function(req, res, callback){
+  Note.find({ 
+    userid: ObjectId(res.user._id) 
+  }).populate('historyid').exec(function (err, docs) {
     if(err) {
       console.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] post Note done.`
-      , std.getTimeStamp());
-    if(callback) callback(err, req, res);
+    var newNotes = [];
+    docs.forEach(function(doc) {
+      //console.log(JSON.stringify(doc, null, 4));
+      newNotes.push({
+        user:       req.body.user
+        , id:       doc.id
+        , title:    doc.title
+        , category: doc.category
+        , body:     doc.search
+        , starred:  doc.starred
+        , items:    doc.historyid
+        , updated:  doc.updated
+      });
+    });
+    console.log(`%s [INFO] get Notes done.`, std.getTimeStamp());
+    if(callback) 
+      callback(err, req, std.extend(res, { newNotes }));
   });
 };
-module.exports.postNote = postNote;
+module.exports.getNotes = getNotes;
+

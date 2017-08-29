@@ -1,6 +1,6 @@
 require('dotenv').config();
 var dburl = process.env.mongodb;
-var hour = process.env.interval;
+var intvl = process.env.interval;
 
 var mongoose = require('mongoose');
 var async = require('async');
@@ -119,6 +119,6 @@ function main() {
         , hour 
       );
     });
-  }, 0, hour *1000*60*60);
+  }, 0, 1000*60*5);
 };
 

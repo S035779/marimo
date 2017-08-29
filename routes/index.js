@@ -64,7 +64,8 @@ router.get('/logout'
  * @param response {object}
  */
 router.get('/api/note', function(request, response){
-  console.log('%s [INFO] ===getNotes===', std.getTimeStamp());
+  console.log('%s [INFO] ===getNotes==='
+    , std.getTimeStamp());
   var body = request.query;
   async.waterfall([
     async.apply(
@@ -87,12 +88,13 @@ router.get('/api/note', function(request, response){
  * @param response {object}
  */
 router.post('/api/note', function(request, response){
-  console.log('%s [INFO] ===postNote===', std.getTimeStamp());
+  console.log('%s [INFO] ===postNote==='
+    , std.getTimeStamp());
   var body = request.body;
   async.waterfall([ 
     async.apply(
       dbs.findUser, { appid, body }, {})
-    , dbs.postNote
+    , dbs.updateNote
     , dbs.getNotes
   ], function(err, req, res) {
     if (err) {
@@ -111,7 +113,8 @@ router.post('/api/note', function(request, response){
  * @param response {object}
  */
 router.post('/api/note/search', function(request, response){
-  console.log('%s [INFO] ===searchNote===', std.getTimeStamp());
+  console.log('%s [INFO] ===postSearch==='
+    , std.getTimeStamp());
   var body = request.body;
   async.waterfall([ 
     async.apply(
@@ -123,7 +126,7 @@ router.post('/api/note/search', function(request, response){
     , dbs.getAuctionItems
     , dbs.getBidHistorys
     , dbs.updateHistorys
-    , dbs.postNote
+    , dbs.updateNote
     , dbs.getNotes
   ], function(err, req, res) {
     if (err) {
@@ -142,11 +145,14 @@ router.post('/api/note/search', function(request, response){
  * @param response {object}
  */
 router.post('/api/note/delete', function(request, response){
-  console.log(`%s [INFO] ===deleteNote===`, std.getTimeStamp());
+  console.log(`%s [INFO] ===deleteNote===`
+    , std.getTimeStamp());
   var body = request.body;
   async.waterfall([
     async.apply(
       dbs.findUser, { appid, body }, {})
+    , dbs.findNote
+    , dbs.removeHistorys
     , dbs.removeNote
     , dbs.getNotes
   ], function(err, req, res) {
@@ -166,7 +172,8 @@ router.post('/api/note/delete', function(request, response){
  * @param response {object}
  */
 router.post('/api/note/create', function(request, response) {
-  console.log('%s [INFO] ===createNote===', std.getTimeStamp());
+  console.log('%s [INFO] ===createNote==='
+    , std.getTimeStamp());
   var body = request.body;
   async.waterfall([
     async.apply(
