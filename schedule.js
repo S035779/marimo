@@ -1,6 +1,7 @@
 require('dotenv').config();
 var dburl = process.env.mongodb;
 var intvl = process.env.interval;
+var monit = process.env.monitor;
 
 var mongoose = require('mongoose');
 var async = require('async');
@@ -95,7 +96,7 @@ function main() {
   std.invoke(function() {
     async.waterfall([
       async.apply(
-        dbs.findUsers, {}, {})
+        dbs.findUsers, { intvl, monit }, {})
       , dbs.findNotes
     ], function(err, req, res) {
       if(err) {
@@ -114,11 +115,11 @@ function main() {
           );
         });
       });
-      console.log('%s [INFO] main> %d hours interval...'
+      console.log('%s [INFO] main> %d min. interval...'
         , std.getTimeStamp()
-        , hour 
+        , monit
       );
     });
-  }, 0, 1000*60*5);
+  }, 0, 1000*60*monit);
 };
 

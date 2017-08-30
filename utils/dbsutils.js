@@ -16,9 +16,8 @@ var ObjectId = mongoose.Types.ObjectId;
  * @param callback {function}
  */
 var findUser = function(req, res, callback) {
-  User.findOne({ 
-    username: req.body.user 
-  }).exec(function(err, user) {
+  var username = req.body.user;
+  User.findOne({ username }).exec(function(err, user) {
     if (err) {
       console.error(err.message);
       throw err;
@@ -39,10 +38,9 @@ module.exports.findUser = findUser;
  * @param callback {function}
  */
 var findNote = function(req, res, callback) {
-  Note.findOne({ 
-    userid: ObjectId(res.user._id)
-    , id:   req.body.id
-  }).exec(function (err, note) {
+  var userid = ObjectId(res.user._id);
+  var id = req.body.id;
+  Note.findOne({ userid, id }).exec(function (err, note) {
     if (err) {
       console.error(err.message);
       throw err;
@@ -63,18 +61,8 @@ module.exports.findNote = findNote;
  * @param callback {function}
  */
 var removeHistorys = function(req, res, callback) {
-  var historys=[];
-  async.forEach(res.note.historyid, function(historyid, cbk) {
-    History.remove({ 
-      _id: ObjectId(historyid) 
-    }).exec(function(err) {
-      if(err) {
-        console.error(err.message);
-        return cbk(err);
-      }
-      cbk();
-    });
-  }, function (err) {
+  var noteid = ObjectId(res.note._id);
+  History.remove({ noteid }).exec(function(err) {
     if(err) {
       console.error(err.message);
       throw err;
@@ -202,14 +190,20 @@ module.exports.findUsers = findUsers;
  * @param callback {function}
  */
 var findNotes = function(req, res, callback) {
+  var int = req.hasOwnProperty('intvl') ? req.intvl : 24;
+  var mon = req.hasOwnProperty('monit') ? req.monit : 5;
+  var users = res.users;
+
+  var int = int*1000*60*60;
+  var mon = mon*1000*60;
+  var date = new Date();
+  var nowMon = date.getTime();
+  var pstMon = date.setTime(nowMon - int)
+
   var notes=[];
-  async.forEach(res.users, function(user, cbk) {
+  async.forEach(users, function(user, cbk) {
     Note.find({ 
       userid: ObjectId(user._id) 
-      , updated: { 
-        $gte: new Date(2017,7,29,16)
-        , $lt: new Date(2017,7,29,17)  
-      } 
     }).exec(function(err, docs) {
       if(err) {
         console.error(err.message);
@@ -217,7 +211,14 @@ var findNotes = function(req, res, callback) {
       }
       try {
         docs.forEach(function(doc) {
-          notes.push(doc);
+          var updated = doc.updated;
+          var isMon = ((nowMon - updated) % int) < mon;
+          //console.log('updated? : %d, %d, %d, %d'
+          //  , updated, now, (now-updated)%int, mon);
+          //console.log(isMon);
+          if (isMon 
+            && ((updated < nowMon) || (updated < pstMon))
+          ) notes.push(doc);
         });
       } catch(e) {
         return cbk(e);
@@ -245,10 +246,19 @@ module.exports.findNotes = findNotes;
  * @param callback {function}
  */
 var findHistorys = function(req, res, callback) {
+  var int = req.hasOwnProperty('intvl') ? req.intvl : 24;
+  var historyids = res.note.historyid;
+
+  var date = new Date();
+  var nowDay = date.getTime();
+  var oldDay = date.setHours(date.getHours()-int);
+
   var historys=[];
-  async.forEach(res.note.historyid, function(historyid, cbk) {
-    History.find({ _id: ObjectId(historyid) })
-    .exec(function(err, docs) {
+  async.forEach(historyids, function(historyid, cbk) {
+    History.find({
+      _id: ObjectId(historyid)
+      , updated: { $gte: oldDay, $lt: nowDay } 
+    }).exec(function(err, docs) {
       if(err) {
         console.error(err.message);
         return cbk(err);
@@ -284,10 +294,10 @@ module.exports.findHistorys = findHistorys;
  * @param callback {function}
  */
 var getResultSet = function(req, res, callback) {
-  var max = req.hasOwnProperty('pages') ? req.pages || 5;
+  var maxPage = req.hasOwnProperty('pages') ? req.pages : 5;
   var query = req.hasOwnProperty('body') 
     ? req.body.body : res.note.search;
-  var page = req.hasOwnProperty('body') ? 1 : max;
+  var page = req.hasOwnProperty('body') ? 1 : maxPage;
 
   var c = std.counter();
   var t = std.timer();
@@ -307,7 +317,7 @@ var getResultSet = function(req, res, callback) {
     var opt = obj.body.ResultSet.root;
     var pages = [];
     for(var i=0; i<Math.ceil(
-      opt.totalResultsAvailable / opt.totalResultsReturned); i++){
+      opt.totalResultsAvailable/opt.totalResultsReturned); i++){
       if(i>=page) break;
       pages[i]=i+1;
     }
@@ -339,8 +349,7 @@ module.exports.getResultSet = getResultSet;
  * @param res {object}
  * @param callback {function}
  */
-var getAuctionIds = function( req, res, callback) {
-  var int = req.hasOwnProperty('intvl') ? req.intvl || 24;
+var getAuctionIds = function(req, res, callback) {
   var oldIds = res.note.items;
   var newIds = [];
   var Ids = [];
@@ -383,26 +392,7 @@ var getAuctionIds = function( req, res, callback) {
       throw err;
     }
     //console.dir(newIds);
-    var nowIds = std.and(oldIds, newIds);
-    var addIds = std.add(oldIds, newIds);
-    var delIds = std.del(oldIds, newIds);
-    var date = new Date();
-    var nowDay = date.getTime();
-    var oldDay = date.setHours(date.getHours()-int);
-    nowIds.forEach(function(id){
-      Ids.push({ id, status: 0, updated: nowDay });
-    });
-    addIds.forEach(function(id){
-      Ids.push({ id, status: 1, updated: nowDay });
-    });
-    delIds.forEach(function(id){
-      if(historys && historys[id].updated > oldDay) {
-        Ids.push({ id, status: 2, updated: nowDay });
-      }
-    });
-    //console.log('now: %d(msec), old: %d(msec), int: %d(msec)'
-    //  , nowDay, oldDay, (nowDay-oldDay));
-    //console.dir(Ids);
+    Ids = helperIds(oldIds, newIds);
     
     c.print();
     t.count();  t.print();
@@ -413,6 +403,18 @@ var getAuctionIds = function( req, res, callback) {
       , std.getTimeStamp());
     if(callback) callback(err, req, std.extend(res, { Ids }));
   });
+};
+
+var helperIds = function(o, p) {
+  var ret = [];
+  var n = std.and(o, p);
+  n.forEach(function(id){ ret.push({ id, status: 0 }); });
+  var a = std.add(o, p);
+  a.forEach(function(id){ ret.push({ id, status: 1 }); });
+  var d = std.del(o, p);
+  d.forEach(function(id){ ret.push({ id, status: 2 }); });
+  //console.dir(ret);
+  return ret;
 };
 module.exports.getAuctionIds = getAuctionIds;
 
@@ -529,6 +531,7 @@ module.exports.getBidHistorys = getBidHistorys;
  */
 var updateHistorys = function(req, res, callback) {
   var userid = res.note.userid;
+  var noteid = ObjectId(res.note._id);
   var historyIds = res.note.historyid;
   var where = {};
   var set = {};
@@ -536,15 +539,15 @@ var updateHistorys = function(req, res, callback) {
   var obj = {};
   async.forEach(res.Ids, function(Id, cbk) {
     obj = {
-      item:         res.Items[Id.id].item
-      , bids:       res.Bids[Id.id].bids
-      , status:     Id.status
-      , updated:    Id.updated
+      item:      res.Items[Id.id].item
+      , bids:    res.Bids[Id.id].bids
+      , status:  Id.status
+      , updated: Date.now()
     };
     if(Id.status === 0 || Id.status === 2) { 
       // When the status is '0:now'.
       // When the status is '2:del'.
-      where = { userid, auctionID: Id.id };
+      where = { noteid, auctionID: Id.id };
       set   = { $set: obj };
       opt   = { upsert: false, multi: true };
       History.update(where, set, opt, function(err) {
@@ -557,8 +560,12 @@ var updateHistorys = function(req, res, callback) {
     } else if(Id.status === 1) { 
       // When the status is '1:add'.
       historyId = new ObjectId;
-      obj = std.merge(obj, 
-        { _id: historyId, userid, auctionID:  Id.id }); 
+      obj = std.merge(obj, {
+        _id: historyId
+        , userid
+        , noteid
+        , auctionID: Id.id
+      }); 
       historyIds.push(historyId);
       History.create(obj, function(err) {
         if(err) {
@@ -644,9 +651,9 @@ module.exports.updateNote = updateNote;
  * @param callback {function}
  */
 var getNotes = function(req, res, callback){
-  Note.find({ 
-    userid: ObjectId(res.user._id) 
-  }).populate('historyid').exec(function (err, docs) {
+  var userid = ObjectId(res.user._id);
+  Note.find({ userid }).populate('historyid')
+  .exec(function (err, docs) {
     if(err) {
       console.error(err.message);
       throw err;

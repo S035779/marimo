@@ -1,5 +1,6 @@
 require('dotenv').config();
 var appid = process.env.app_id;
+var intvl = process.env.interval;
 
 var path = require('path');
 var async = require('async');
@@ -118,7 +119,7 @@ router.post('/api/note/search', function(request, response){
   var body = request.body;
   async.waterfall([ 
     async.apply(
-      dbs.findUser, { appid, body }, {})
+      dbs.findUser, { intvl, appid, body }, {})
     , dbs.findNote
     , dbs.findHistorys
     , dbs.getResultSet

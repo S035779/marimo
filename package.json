@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "batch": "node tasks/main.js",
+    "batch": "node schedule.js",
     "devel": "webpack-dev-server",
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"

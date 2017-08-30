@@ -11,7 +11,8 @@ userSchema.plugin(passportLocalMongoose);
 exports.User = mongoose.model('User', userSchema);
 
 var historySchema = new Schema({
-    userid:   { type: Schema.Types.ObjectId,   ref: 'User' },
+    userid:   { type: Schema.Types.ObjectId, ref: 'User' },
+    noteid:   { type: Schema.Types.ObjectId, ref: 'Note' },
     auctionID:  String,
     item:     { auctionID:              String,
                 request:                String,
@@ -29,8 +30,8 @@ var historySchema = new Schema({
 exports.History = mongoose.model('History', historySchema);
 
 var noteSchema = new Schema({
-    userid:   { type: Schema.Types.ObjectId,   ref: 'User' },
-    historyid:[ { type: Schema.Types.ObjectId,   ref: 'History' } ],
+    userid:   { type: Schema.Types.ObjectId, ref: 'User' },
+    historyid:[{type: Schema.Types.ObjectId, ref: 'History'}],
     id:       { type: Number,   unique: true },
     title:      String,
     category:   String,

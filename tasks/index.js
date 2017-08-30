@@ -47,7 +47,7 @@ function main() {
   var queue = async.queue(function (req, callback) {
     async.waterfall([
       async.apply(
-        dbs.findHistorys, { appid, pages, intvl }, { note: req })
+        dbs.findHistorys, { intvl, appid, pages }, { note: req })
       , dbs.getResultSet
       , dbs.getAuctionIds
       , dbs.getAuctionItems
