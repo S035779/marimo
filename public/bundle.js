@@ -9117,13 +9117,13 @@ var NoteBody = function (_React$Component) {
   }
 
   _createClass(NoteBody, [{
-    key: 'upstate',
-    value: function upstate(s) {
+    key: 'renderStatus',
+    value: function renderStatus(s) {
       switch (s) {
         case 0:
-          return 'New added.';
-        case 1:
           return 'Now available.';
+        case 1:
+          return 'New added.';
         case 2:
           return 'Removed.';
       }
@@ -9136,20 +9136,21 @@ var NoteBody = function (_React$Component) {
     value: function renderItem(item) {
       var isResult = item.item.body.hasOwnProperty('ResultSet');
       if (!isResult) return null;
-      var upstate = this.upstate(item.status);
+      var status = this.renderStatus(item.status);
       var updated = _stdutils2.default.getLocalTimeStamp(item.updated);
       var obj = item.item.body.ResultSet.Result;
-      var img = obj.Img.Image1 ? obj.Img.Image1.sub : '';
-      var title = obj.Title;
-      var url = obj.AuctionItemUrl;
-      var price = obj.Price;
-      var status = obj.Status;
-      var category = obj.CategoryPath;
-      var seller = obj.Seller.Id;
-      var startTime = _stdutils2.default.getLocalTimeStamp(obj.StartTime);
-      var endTime = _stdutils2.default.getLocalTimeStamp(obj.EndTime);
-      var bids = obj.Bids;
-      var condition = obj.ItemStatus.Condition;
+      var Img = obj.Img.Image1 ? obj.Img.Image1.sub : '';
+      var Url = obj.AuctionItemUrl;
+      var Price = obj.Price;
+      var AuctionID = obj.AuctionID;
+      var CategoryPath = obj.CategoryPath;
+      var Title = obj.Title;
+      var SellerId = obj.Seller.Id;
+      var StartTime = _stdutils2.default.getLocalTimeStamp(obj.StartTime);
+      var EndTime = _stdutils2.default.getLocalTimeStamp(obj.EndTime);
+      var Bids = obj.Bids;
+      var Condition = obj.ItemStatus.Condition;
+      var Status = obj.Status;
 
       return _react2.default.createElement(
         'li',
@@ -9167,23 +9168,10 @@ var NoteBody = function (_React$Component) {
                 'td',
                 { width: '10%' },
                 _react2.default.createElement(
-                  'span',
-                  { className: 'NoteBody-text' },
-                  upstate
-                ),
-                _react2.default.createElement(
-                  'span',
-                  { className: 'NoteBody-text' },
-                  updated
-                )
-              ),
-              _react2.default.createElement(
-                'td',
-                { width: '10%' },
-                _react2.default.createElement(
                   'div',
                   { className: 'NoteNody-image' },
-                  _react2.default.createElement('img', { src: img, className: 'NoteBody-image', width: '128', height: '128' })
+                  _react2.default.createElement('img', { src: Img,
+                    className: 'NoteBody-image', width: '128', height: '128' })
                 )
               ),
               _react2.default.createElement(
@@ -9194,29 +9182,30 @@ var NoteBody = function (_React$Component) {
                   { className: 'NoteBody-title' },
                   _react2.default.createElement(
                     'a',
-                    { href: url, target: '_blank' },
-                    title
+                    { href: Url, target: '_blank' },
+                    Title
                   )
                 ),
                 _react2.default.createElement(
                   'span',
                   { className: 'NoteBody-text' },
-                  'Time : ',
-                  startTime,
+                  'Bid period : ',
+                  StartTime,
                   ' ~ ',
-                  endTime
-                ),
-                _react2.default.createElement(
-                  'span',
-                  { className: 'NoteBody-text' },
+                  EndTime,
+                  _react2.default.createElement('br', null),
+                  'Condition : ',
+                  Condition,
+                  _react2.default.createElement('br', null),
                   'Seller : ',
-                  seller
-                ),
-                _react2.default.createElement(
-                  'span',
-                  { className: 'NoteBody-text' },
+                  SellerId,
+                  _react2.default.createElement('br', null),
+                  'AuctionID : ',
+                  AuctionID,
+                  _react2.default.createElement('br', null),
                   'Category : ',
-                  category
+                  CategoryPath,
+                  _react2.default.createElement('br', null)
                 )
               ),
               _react2.default.createElement(
@@ -9225,7 +9214,7 @@ var NoteBody = function (_React$Component) {
                 _react2.default.createElement(
                   'span',
                   { className: 'NoteBody-text' },
-                  price,
+                  Price,
                   'yen'
                 )
               ),
@@ -9235,7 +9224,7 @@ var NoteBody = function (_React$Component) {
                 _react2.default.createElement(
                   'span',
                   { className: 'NoteBody-text' },
-                  bids,
+                  Bids,
                   'bids'
                 )
               ),
@@ -9245,7 +9234,7 @@ var NoteBody = function (_React$Component) {
                 _react2.default.createElement(
                   'span',
                   { className: 'NoteBody-text' },
-                  condition
+                  Status
                 )
               ),
               _react2.default.createElement(
@@ -9255,6 +9244,11 @@ var NoteBody = function (_React$Component) {
                   'span',
                   { className: 'NoteBody-text' },
                   status
+                ),
+                _react2.default.createElement(
+                  'span',
+                  { className: 'NoteBody-text' },
+                  updated
                 )
               )
             )
@@ -15521,6 +15515,7 @@ var NoteHeader = function (_React$Component) {
       bids: false,
       condition: 'all',
       status: false,
+      AuctionID: [],
       categoryPath: [],
       seller: []
     };
@@ -15573,10 +15568,8 @@ var NoteHeader = function (_React$Component) {
       var options = e.target.options;
       var values = [];
       for (var i = 0; i < options.length; i++) {
-        if (options[i].selected) {
-          values.push(options[i].value);
-        }
-      }
+        if (options[i].selected) values.push(options[i].value);
+      };
       newState[name] = values;
       this.setState(newState);
     }
@@ -15587,37 +15580,29 @@ var NoteHeader = function (_React$Component) {
       this.props.onSearch(this.state);
     }
   }, {
-    key: 'renderOptions',
-    value: function renderOptions() {
-      var pathArray = this.props.note.items.map(function (item, i) {
-        if (!item.item.body.hasOwnProperty('ResultSet')) return null;
-        var obj = item.item.body.ResultSet.Result;
-        return obj.CategoryPath;
+    key: 'renderOption',
+    value: function renderOption(objs, prop1, prop2) {
+      var len = arguments.length;
+      var items = objs.map(function (obj) {
+        if (!obj.item.body.hasOwnProperty('ResultSet')) return null;
+        return len === 2 ? obj.item.body.ResultSet.Result[prop1] : obj.item.body.ResultSet.Result[prop1][prop2];
       });
-      var paths = _stdutils2.default.dst(pathArray);
-      var optPaths = paths.map(function (path, i) {
+      var opts = _stdutils2.default.dst(items);
+      return opts.map(function (opt, idx) {
         return _react2.default.createElement(
           'option',
           {
-            key: "choice-" + i, value: path },
-          path
+            key: "choice-" + idx, value: opt },
+          opt
         );
       });
-
-      var selrArray = this.props.note.items.map(function (item, i) {
-        if (!item.item.body.hasOwnProperty('ResultSet')) return null;
-        var obj = item.item.body.ResultSet.Result;
-        return obj.Seller.Id;
-      });
-      var selrs = _stdutils2.default.dst(selrArray);
-      var optSelrs = selrs.map(function (seler, i) {
-        return _react2.default.createElement(
-          'option',
-          {
-            key: "choice-" + i, value: seler },
-          seler
-        );
-      });
+    }
+  }, {
+    key: 'renderSearchs',
+    value: function renderSearchs() {
+      var optAuIDs = this.renderOption(this.props.note.items, 'AuctionID');
+      var optPaths = this.renderOption(this.props.note.items, 'CategoryPath');
+      var optSelrs = this.renderOption(this.props.note.items, 'Seller', 'Id');
 
       return _react2.default.createElement(
         'table',
@@ -15715,6 +15700,38 @@ var NoteHeader = function (_React$Component) {
                     value: this.state.seller,
                     onChange: this.handleChangeSelect.bind(this, 'seller') },
                   optSelrs
+                )
+              )
+            )
+          ),
+          _react2.default.createElement(
+            'tr',
+            null,
+            _react2.default.createElement(
+              'td',
+              { width: '10%' },
+              _react2.default.createElement(
+                'span',
+                null,
+                _react2.default.createElement(
+                  'label',
+                  { htmlFor: 'search_select' },
+                  'AuctionID :'
+                )
+              )
+            ),
+            _react2.default.createElement(
+              'td',
+              null,
+              _react2.default.createElement(
+                'span',
+                null,
+                _react2.default.createElement(
+                  'select',
+                  { multiple: true,
+                    value: this.state.AuctionID,
+                    onChange: this.handleChangeSelect.bind(this, 'AuctionID') },
+                  optAuIDs
                 )
               )
             )
@@ -15949,7 +15966,7 @@ var NoteHeader = function (_React$Component) {
         _react2.default.createElement(
           'div',
           { className: 'NoteHeader-searchs' },
-          this.renderOptions()
+          this.renderSearchs()
         )
       );
     }
@@ -16841,6 +16858,9 @@ var Note = function (_React$Component) {
           if (!note.options.seller.some(function (selr) {
             return selr === obj.Seller.Id;
           }) && note.options.seller.length !== 0) return false;
+          if (!note.options.AuctionID.some(function (auid) {
+            return auid === obj.AuctionID;
+          }) && note.options.AuctionID.length !== 0) return false;
           if (!isFinite(note.options.lowestPrice) || !isFinite(note.options.highestPrice)) return false;
           if (Number(note.options.lowestPrice) > obj.Price && note.options.lowestPrice !== '') return false;
           if (Number(note.options.highestPrice) < obj.Price && note.options.highestPrice !== '') return false;
