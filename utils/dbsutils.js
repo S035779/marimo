@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var async = require('async');
 var std = require('../utils/stdutils');
+var log = require('../utils/logutils');
 var app = require('../utils/apputils');
 var User = require('../models/models').User;
 var Note = require('../models/models').Note;
@@ -299,10 +300,10 @@ var getResultSet = function(req, res, callback) {
     ? req.body.body : res.note.search;
   var page = req.hasOwnProperty('body') ? 1 : maxPage;
 
-  var c = std.counter();
-  var t = std.timer();
-  var m = std.heapused();
-  var p = std.cpuused();
+  var c = log.counter();
+  var t = log.timer();
+  var m = log.heapused();
+  var p = log.cpuused();
 
   app.YHsearch({ 
     appid:    req.appid
@@ -358,10 +359,10 @@ var getAuctionIds = function(req, res, callback) {
   var historys = res.hasOwnProperty('historys')
     ? res.historys : null;
 
-  var c = std.counter();
-  var t = std.timer();
-  var m = std.heapused();
-  var p = std.cpuused();
+  var c = log.counter();
+  var t = log.timer();
+  var m = log.heapused();
+  var p = log.cpuused();
 
   async.forEachSeries(res.pages, function(page, cbk) {
     //console.log(`%s [INFO] page: %s`
@@ -429,10 +430,10 @@ module.exports.getAuctionIds = getAuctionIds;
 var getAuctionItems = function(req, res, callback) {
   var Items=[];
 
-  var c = std.counter();
-  var t = std.timer();
-  var m = std.heapused();
-  var p = std.cpuused();
+  var c = log.counter();
+  var t = log.timer();
+  var m = log.heapused();
+  var p = log.cpuused();
 
   async.forEachSeries(res.Ids, function(Id, cbk) {
     //console.log(`%s [INFO] auction_id: %s, status: %s`
@@ -481,10 +482,10 @@ module.exports.getAuctionItems = getAuctionItems;
 var getBidHistorys = function(req, res, callback) {
   var Bids=[];
 
-  var c = std.counter();
-  var t = std.timer();
-  var m = std.heapused();
-  var p = std.cpuused();
+  var c = log.counter();
+  var t = log.timer();
+  var m = log.heapused();
+  var p = log.cpuused();
 
   async.forEachSeries(res.Ids, function(Id, cbk) {
     //console.log(`%s [INFO] auction_id: %s, status: %s`

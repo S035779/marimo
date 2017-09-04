@@ -1,13 +1,19 @@
+var R = require('ramda');
 var xml = require('xml2js');
 var std = require('../utils/stdutils');
+var log = require('../utils/logutils');
 var enc = require('../utils/encutils');
-var http = require('../utils/netutils');
+var htp = require('../utils/netutils');
 
 // YAHOO! Auction WebAPI
-var v1 = 'https://auctions.yahooapis.jp/AuctionWebService/V1/'
-var v2 = 'https://auctions.yahooapis.jp/AuctionWebService/V2/'
+var v1 = 'htps://auctions.yahooapis.jp/AuctionWebService/V1/'
+var v2 = 'htps://auctions.yahooapis.jp/AuctionWebService/V2/'
 
-// YAHOO! WebAPI ERROR Code
+/**
+ * YAHOO! WebAPI ERROR Code
+ *
+ * @param obj {object}
+ */
 function YHerror(obj) {
   var err = [];
   err[400] = { 
@@ -48,14 +54,18 @@ function YHerror(obj) {
     + ' (説明：'            + err[obj.status].description + ')'
   );
 }
+module.exports.YHerror = YHerror;
 
-/*
+/**
  * get result of the 'YAHOO! Search'.
  * options : { appid: String, query: String, page: Integer }
-**/
-exports.YHsearch = function(options, callback) {
+ *
+ * @param options {object}
+ * @param callback {function}
+ */
+var YHsearch = function(options, callback) {
   var uri = v2 + 'search?' + enc.encodeFormData(options);
-  http.get(uri, function(stat, head, body) {
+  htp.get(uri, function(stat, head, body) {
     var head = { 
       search: options.query
       , page: options.page
@@ -104,21 +114,18 @@ exports.YHsearch = function(options, callback) {
     });
   });
 };
+module.exports.YHsearch = YHsearch;
 
-/*
+/**
  *  get result of the 'YAHOO! Auction item'.
  *  options : { appid: String, auctionID: String }
-**/
-exports.YHauctionItem = function(options, callback) {
-  try {
-    var uri = v2 + 'auctionItem?' + enc.encodeFormData(options);
-  } catch(e) {
-    console.dir(options
-      , { showHidden: false, depth: 10, colors: true });
-    console.error('%s [ERR] %s: %s'
-      , std.getTimeStamp(), e.name, e.message);
-  }
-  http.get(uri, function(stat, head, body) {
+ *
+ * @param options {object}
+ * @param callback {function}
+ */
+var YHauctionItem = function(options, callback) {
+  var uri = v2 + 'auctionItem?' + enc.encodeFormData(options);
+  htp.get(uri, function(stat, head, body) {
     var head = { auctionID: options.auctionID
       , request: uri
       , status: stat
@@ -152,14 +159,18 @@ exports.YHauctionItem = function(options, callback) {
     });
   });
 };
+module.exports.YHauctionItem = YHauctionItem;
 
-/*
+/**
  * get result of the 'YAHOO! Bids History'.
  * options : { appid: String, auctionID: String }
-**/
-exports.YHbidHistory = function(options, callback) {
+ *
+ * @param options {object}
+ * @param callback {function}
+ */
+var YHbidHistory = function(options, callback) {
   var uri = v1 + 'BidHistory?' + enc.encodeFormData(options);
-  http.get(uri, function(stat, head, body) {
+  htp.get(uri, function(stat, head, body) {
     var head = { 
       auctionID: options.auctionID
       , request: uri
@@ -194,3 +205,24 @@ exports.YHbidHistory = function(options, callback) {
     });
   });
 };
+module.exports.YHbidHistory = YHbidHistory;
+
+var cat = 'scheduler';
+var apd = 'console';
+var lyt = 'color';
+var flv = 'ALL';
+var logs = {
+  server: R.curry(log.logger)(apd, lyt, cat, flv, 'INFO')
+  ,trace: R.curry(log.logger)(apd, lyt, cat, flv, 'TRACE')
+  ,debug: R.curry(log.logger)(apd, lyt, cat, flv, 'DEBUG')
+  ,info:  R.curry(log.logger)(apd, lyt, cat, flv, 'INFO')
+  ,warn:  R.curry(log.logger)(apd, lyt, cat, flv, 'WARN')
+  ,error: R.curry(log.logger)(apd, lyt, cat, flv, 'ERROR')
+  ,fatal: R.curry(log.logger)(apd, lyt, cat, flv, 'FATAL')
+  ,mark:  R.curry(log.logger)(apd, lyt, cat, flv, 'MARK')
+  ,counter: R.curry(log.counter)(apd, lyt, cat, flv, 'INFO')
+  ,timer:   R.curry(log.counter)(apd, lyt, cat, flv, 'INFO')
+  ,profile: R.curry(log.counter)(apd, lyt, cat, flv, 'INFO')
+  ,exit:  function(cb) { return log.exit(cb); }
+};
+module.exports.logs = logs;

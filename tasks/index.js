@@ -1,25 +1,21 @@
 require('dotenv').config();
-var dburl = process.env.mongodb;
-var appid = process.env.app_id;
-var pages = process.env.pages;
-var intvl = process.env.interval;
-
 var async = require('async');
 var mongoose = require('mongoose');
 var std = require('../utils/stdutils');
 var dbs = require('../utils/dbsutils');
+var log = require('../utils/apputils').logs;
 
-init();
-main();
+/**
+ * init
+ *
+ */
+var init = function() {
+  var pspid = process.pid;
+  var psver = process.version;
+  log.info(`sub(${pspid})> nodejs Version: ${psver}`);
 
-function init() {
-  console.log('%s [INFO] sub(%d) > nodejs Version: %s'
-    , std.getTimeStamp()
-    , process.pid
-    , process.version
-  );
-
-  // DB Connection
+  // Add Mongoose module Event Listener.
+  var dburl = process.env.mongodb;
   mongoose.Promise = global.Promise;
   mongoose.connect(dburl,{
     useMongoClient: true
@@ -27,23 +23,30 @@ function init() {
   });
 
   mongoose.connection.on('error', function () {
-    console.error('%s [ERR] sub(%d) > connection error'
-      , std.getTimeStamp()
-      , process.pid
-      , arguments
-    );
+    log.error(`sub(${pspid})> connection error: ${arguments}`);
   });
 
   mongoose.connection.once('open', function() {
-    console.log('%s [INFO] sub(%d) > mongoose Version: v%s'
-      , std.getTimeStamp()
-      , process.pid
-      , mongoose.version
-    );
+    var dbver = mongoose.version;
+    log.info(`sub(${pspid})> mongoose Version: v${dbver}`);
+  });
+
+  // Add Node process Event Listener.
+  process.on('exit', function(code, signal) {
+    log.info(`sub(${pspid})> Terminated child pid: ${pspid}`);
+    log.debug(`sub(${pspid})> About to exit with c/s: ${signal || code}`);
   });
 };
 
-function main() {
+/**
+ * main
+ *
+ */
+var main = (function() {
+  init();
+  var appid = process.env.app_id;
+  var pages = process.env.pages;
+  var intvl = process.env.interval;
   var queue = async.queue(function (req, callback) {
     async.waterfall([
       async.apply(
@@ -56,51 +59,24 @@ function main() {
       , dbs.updateNote
     ], function(err, req, res) {
       if (err) {
-        console.error('%s [ERR] sub(%d) > '
-          , std.getTimeStamp()
-          , process.pid
-          , err.stack
-        );
+        log.error(`sub(${pspid})>`, err.stack);
         throw err;
       }
-      //console.log('%s [INFO] sub > results: '
-      //, std.getTimeStamp(), res);
+      log.trace('sub(${pspid})> results: ', res);
       process.send({ request: req, pid: process.pid });
       if(callback) callback();
     });
   }, 1);
 
-  process.on('exit', function(code, signal) {
-    console.log('%s [INFO] sub(%d) > Terminated child pid: %d'
-      , std.getTimeStamp()
-      , process.pid
-      , process.pid
-    );
-    console.log('%s [INFO] sub(%d) >  child process terminated. code/signal: %s'
-      , std.getTimeStamp()
-      , process.pid
-      , signal || code
-    );
-  });
+  queue.drain = function() {
+    log.info(`sub(${pspid})> all items have been processed.`);
+  };
 
+  // Add Node process Event Listener.
   process.on('message', function(req) {
-    //console.log('%s [INFO] sub >  child got message: '
-    //  , std.getTimeStamp()
-    //  , req
-    //);
+    log.trace(`sub >  child got message: `, req);
     queue.push(req, function() {
-      console.log(
-        '%s [INFO] sub(%d) > finished processing note object.'
-        , std.getTimeStamp()
-        , process.pid
-      );
+      log.info(`sub(${pspid})> finished processing note object.`);
     });
   });
-
-  queue.drain = function() {
-    console.log('%s [INFO] sub(%d) > all items have been processed.'
-      , std.getTimeStamp()
-      , process.pid
-    );
-  };
-};
+})();
