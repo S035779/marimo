@@ -27,7 +27,7 @@ var get = function(url, callback) {
     res.on('end', function() {
       switch (stat) {
         case 200:
-          process.stdout.write('-');
+          //process.stdout.write('-');
           if (callback) callback(stat, head, body);
           break;
         case 400: case 401: case 403: case 404:
@@ -36,7 +36,7 @@ var get = function(url, callback) {
           res.resume();
           return; 
         case 500: case 503:
-          process.stdout.write('x');
+          //process.stdout.write('x');
           get(url, callback);
           break;
         default:
@@ -95,7 +95,7 @@ var post = function(url, data, callback) {
     res.on('end', function() {
       switch (stat) {
         case 200:
-          process.stdout.write('-');
+          //process.stdout.write('-');
           if (callback) callback(stat, head, body);
           break;
         case 400: case 401: case 403: case 404:
@@ -104,11 +104,11 @@ var post = function(url, data, callback) {
           res.resume();
           return; 
         case 500: case 503:
-          process.stdout.write('x');
+          //process.stdout.write('x');
           post(url, data, callback);
           break;
         default:
-          process.stdout.write('?');
+          //process.stdout.write('?');
           post(url, data, callback);
           break;
       }

@@ -5,14 +5,175 @@ var log = require('../utils/logutils');
 var enc = require('../utils/encutils');
 var htp = require('../utils/netutils');
 
-// YAHOO! Auction WebAPI
+// YAHOO! Auction WebAPI.
 var v1 = 'htps://auctions.yahooapis.jp/AuctionWebService/V1/'
 var v2 = 'htps://auctions.yahooapis.jp/AuctionWebService/V2/'
+
+/**
+ * Log4js functions Object.
+ *
+ */
+var apd = 'console';
+var lyt = 'color';
+var app = 'watch-app';
+var flv = 'DEBUG';
+
+log.config(apd, lyt, app, flv);
+
+var logs = {
+  server:       R.curry(log.logger)(   app, 'INFO'          )
+  , fatal:      R.curry(log.logger)(   app, 'FATAL'         )
+  , error:      R.curry(log.logger)(   app, 'ERROR'         )
+  , warn:       R.curry(log.logger)(   app, 'WARN'          )
+  , info:       R.curry(log.logger)(   app, 'INFO'          )
+  , debug:      R.curry(log.logger)(   app, 'DEBUG'         )
+  , trace:      R.curry(log.logger)(   app, 'TRACE'         )
+  , mark:       R.curry(log.logger)(   app, 'MARK'          )
+  , count:      R.curry(log.counter)(  app, 'INFO', 'count' )
+  , countEnd:   R.curry(log.counter)(  app, 'INFO', 'print' )
+  , time:       R.curry(log.timer)(    app, 'INFO', 'count' )
+  , timeEnd:    R.curry(log.timer)(    app, 'INFO', 'print' )
+  , profile:    R.curry(log.profiler)( app, 'INFO', 'count' )
+  , profileEnd: R.curry(log.profiler)( app, 'INFO', 'print' )
+  , exit:       function(cb) { return log.exit(cb); }
+};
+module.exports.logs = logs;
+
+/**
+ * get result of the 'YAHOO! Search'.
+ * options : { appid: String, query: String, page: Integer }
+ *
+ * @param options {object}
+ * @param callback {function}
+ */
+var YHsearch = function(options, callback) {
+  var uri = v2 + 'search?' + enc.encodeFormData(options);
+  htp.get(uri, function(stat, head, body) {
+    var head = { 
+      search: options.query
+      , page: options.page
+      , request: uri
+      , status: stat
+      , header: head };
+
+    xml.parseString( body
+      , { attrkey: 'root'
+        , charkey: 'sub'
+        , trim: true
+        , explicitArray: false }
+      , function(err, result) {
+      if (err) {
+          logs.error(err.message);
+          throw err;
+      }
+
+      var obj = std.merge(head, { body: result });
+      var str = JSON.stringify(obj);
+      var ids = [];
+      if (obj.body.hasOwnProperty('ResultSet')) {
+        var set = obj.body.ResultSet;
+        if (set.Result !== undefined
+          && set.Result.hasOwnProperty('Item')) {
+          if (Array.isArray(set.Result.Item)) { 
+            set.Result.Item.forEach(function(item){
+              ids.push(item.AuctionID);
+            });
+          } else {
+            ids.push(set.Result.Item.AuctionID);  
+          }
+        }
+      } else if (obj.body.hasOwnProperty('Error')) {
+        logs.error(YHerror(obj));
+      }
+
+      if(callback) callback(err, ids, obj, str);
+    });
+  });
+};
+module.exports.YHsearch = YHsearch;
+
+/**
+ *  get result of the 'YAHOO! Auction item'.
+ *  options : { appid: String, auctionID: String }
+ *
+ * @param options {object}
+ * @param callback {function}
+ */
+var YHauctionItem = function(options, callback) {
+  var uri = v2 + 'auctionItem?' + enc.encodeFormData(options);
+  htp.get(uri, function(stat, head, body) {
+    var head = { auctionID: options.auctionID
+      , request: uri
+      , status: stat
+      , header: head };
+
+    xml.parseString( body
+      , { attrkey: 'root'
+        , charkey: 'sub'
+        , trim: true
+        , explicitArray: false } 
+      , function(err, result) {
+      if (err) {
+          logs.error(err.message);
+          throw err;
+      }
+
+      var obj = std.merge(head, { body: result });
+      var str = JSON.stringify(obj);
+      if(obj.body.hasOwnProperty('Error')) {
+        logs.error(YHerror(obj));
+      }
+
+      if(callback) callback(err, obj, str);
+    });
+  });
+};
+module.exports.YHauctionItem = YHauctionItem;
+
+/**
+ * get result of the 'YAHOO! Bids History'.
+ * options : { appid: String, auctionID: String }
+ *
+ * @param options {object}
+ * @param callback {function}
+ */
+var YHbidHistory = function(options, callback) {
+  var uri = v1 + 'BidHistory?' + enc.encodeFormData(options);
+  htp.get(uri, function(stat, head, body) {
+    var head = { 
+      auctionID: options.auctionID
+      , request: uri
+      , status: stat
+      , header: head };
+
+    xml.parseString( body
+      , { attrkey: 'root'
+        , charkey: 'sub'
+        , trim: true
+        , explicitArray: false }
+      , function(err, result) {
+      if (err) {
+          logs.error(err.message);
+          throw err;
+      }
+
+      var obj = std.merge(head, { body: result });
+      var str = JSON.stringify(obj);
+      if(obj.body.hasOwnProperty('Error')) {
+        logs.error(YHerror(obj));
+      }
+
+      if(callback) callback(err, obj, str);
+    });
+  });
+};
+module.exports.YHbidHistory = YHbidHistory;
 
 /**
  * YAHOO! WebAPI ERROR Code
  *
  * @param obj {object}
+ * @return {string}
  */
 function YHerror(obj) {
   var err = [];
@@ -47,182 +208,10 @@ function YHerror(obj) {
     description: '内部的な問題によってデータを返すことができない場合に返されます。' 
   };
 
-  return new Error(
-    'Yahoo! WebAPI error. '
+  return ('Yahoo! WebAPI error. '
     + 'Http code is ['      + err[obj.status].code        + ']'
     + ', Your request was ' + err[obj.status].message
-    + ' (説明：'            + err[obj.status].description + ')'
-  );
+    + ' (説明：'            + err[obj.status].description + ')');
 }
 module.exports.YHerror = YHerror;
 
-/**
- * get result of the 'YAHOO! Search'.
- * options : { appid: String, query: String, page: Integer }
- *
- * @param options {object}
- * @param callback {function}
- */
-var YHsearch = function(options, callback) {
-  var uri = v2 + 'search?' + enc.encodeFormData(options);
-  htp.get(uri, function(stat, head, body) {
-    var head = { 
-      search: options.query
-      , page: options.page
-      , request: uri
-      , status: stat
-      , header: head };
-
-    xml.parseString( body
-      , { attrkey: 'root'
-        , charkey: 'sub'
-        , trim: true
-        , explicitArray: false }
-      , function(err, result) {
-      if (err) {
-          console.error(err.message);
-          throw err;
-      }
-
-      try {
-        var obj = std.merge(head, { body: result });
-        var str = JSON.stringify(obj);
-        var ids = [];
-        if (obj.body.hasOwnProperty('ResultSet')) {
-          var set = obj.body.ResultSet;
-          if (set.Result !== undefined
-            && set.Result.hasOwnProperty('Item')) {
-            if (Array.isArray(set.Result.Item)) { 
-              set.Result.Item.forEach(function(item){
-                ids.push(item.AuctionID);
-              });
-            } else {
-              ids.push(set.Result.Item.AuctionID);  
-            }
-          }
-        } else if (obj.body.hasOwnProperty('Error')) {
-          //throw YHerror(obj);
-        }
-      } catch(e) {
-        console.dir(obj
-          , { showHidden: false, depth: 10, colors: true });
-        console.error('%s [ERR] %s: %s'
-          , std.getTimeStamp(), e.name, e.message);
-      }
-
-      if(callback) callback(err, ids, obj, str);
-    });
-  });
-};
-module.exports.YHsearch = YHsearch;
-
-/**
- *  get result of the 'YAHOO! Auction item'.
- *  options : { appid: String, auctionID: String }
- *
- * @param options {object}
- * @param callback {function}
- */
-var YHauctionItem = function(options, callback) {
-  var uri = v2 + 'auctionItem?' + enc.encodeFormData(options);
-  htp.get(uri, function(stat, head, body) {
-    var head = { auctionID: options.auctionID
-      , request: uri
-      , status: stat
-      , header: head };
-
-    xml.parseString( body
-      , { attrkey: 'root'
-        , charkey: 'sub'
-        , trim: true
-        , explicitArray: false } 
-      , function(err, result) {
-      if (err) {
-          console.error(err.message);
-          throw err;
-      }
-
-      try {
-        var obj = std.merge(head, { body: result });
-        var str = JSON.stringify(obj);
-        if(obj.body.hasOwnProperty('Error')) {
-          //throw YHerror(obj);
-        }
-      } catch(e) {
-        console.dir(obj
-          , { showHidden: false, depth: 10, colors: true });
-        console.error('%s [ERR] %s: %s'
-          , std.getTimeStamp(), e.name, e.message);
-      }
-
-      if(callback) callback(err, obj, str);
-    });
-  });
-};
-module.exports.YHauctionItem = YHauctionItem;
-
-/**
- * get result of the 'YAHOO! Bids History'.
- * options : { appid: String, auctionID: String }
- *
- * @param options {object}
- * @param callback {function}
- */
-var YHbidHistory = function(options, callback) {
-  var uri = v1 + 'BidHistory?' + enc.encodeFormData(options);
-  htp.get(uri, function(stat, head, body) {
-    var head = { 
-      auctionID: options.auctionID
-      , request: uri
-      , status: stat
-      , header: head };
-
-    xml.parseString( body
-      , { attrkey: 'root'
-        , charkey: 'sub'
-        , trim: true
-        , explicitArray: false }
-      , function(err, result) {
-      if (err) {
-          console.error(err.message);
-          throw err;
-      }
-
-      try {
-        var obj = std.merge(head, { body: result });
-        var str = JSON.stringify(obj);
-        if(obj.body.hasOwnProperty('Error')) {
-          //throw YHerror(obj);
-        }
-      } catch(e) {
-        console.dir(obj
-          , { showHidden: false, depth: 10, colors: true} );
-        console.error('%s [ERR] %s: %s'
-          , std.getTimeStamp(), e.name, e.message);
-      }
-
-      if(callback) callback(err, obj, str);
-    });
-  });
-};
-module.exports.YHbidHistory = YHbidHistory;
-
-var cat = 'scheduler';
-var apd = 'console';
-var lyt = 'color';
-var flv = 'ALL';
-var logs = {
-  server: R.curry(log.logger)(apd, lyt, cat, flv, 'INFO')
-  ,trace: R.curry(log.logger)(apd, lyt, cat, flv, 'TRACE')
-  ,debug: R.curry(log.logger)(apd, lyt, cat, flv, 'DEBUG')
-  ,info:  R.curry(log.logger)(apd, lyt, cat, flv, 'INFO')
-  ,warn:  R.curry(log.logger)(apd, lyt, cat, flv, 'WARN')
-  ,error: R.curry(log.logger)(apd, lyt, cat, flv, 'ERROR')
-  ,fatal: R.curry(log.logger)(apd, lyt, cat, flv, 'FATAL')
-  ,mark:  R.curry(log.logger)(apd, lyt, cat, flv, 'MARK')
-  ,counter: R.curry(log.counter)(apd, lyt, cat, flv, 'INFO')
-  ,timer:   R.curry(log.counter)(apd, lyt, cat, flv, 'INFO')
-  ,profile: R.curry(log.counter)(apd, lyt, cat, flv, 'INFO')
-  ,exit:  function(cb) { return log.exit(cb); }
-};
-module.exports.logs = logs;

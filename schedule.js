@@ -5,17 +5,18 @@ var mps = require('child_process');
 var std = require('./utils/stdutils');
 var dbs = require('./utils/dbsutils');
 var log = require('./utils/apputils').logs;
+var pspid = `main(${process.pid})`;
 
 /**
  * init
  *
  */
 var init = function() {
-  // Log4js Server Start.
-  log.server('main> Log4js Server stated.');
+  // Start Log4js server.
+  log.server(`${pspid}> Log4js Server stated.`);
 
   var psver = process.version;
-  log.info(`main> nodejs Version: ${psver}`);
+  log.info(`${pspid}> Nodejs Version: ${psver}`);
 
   // Add Mongoose module Event Listener.
   var dburl = process.env.mongodb;
@@ -26,12 +27,12 @@ var init = function() {
   });
 
   mongoose.connection.on('error', function () {
-    log.error(`main> connection error: ${arguments}`);
+    log.error(`${pspid}> connection error: ${arguments}`);
   });
 
   mongoose.connection.once('open', function() {
     var dbver = mongoose.version;
-    log.info(`main> mongoose Version: v${dbver}`);
+    log.info(`${pspid}> Mongoose Version: v${dbver}`);
   });
   
   // Add Node process Event Listener.
@@ -48,7 +49,24 @@ var init = function() {
   });
 
   process.on('exit', function(code, signal) {
-    log.debug(`main> About to exit with c/s: ${signal || code}`);
+    log.info(`${pspid}> Terminated main pid: ${pspid}`);
+    log.debug(`${pspid}> About to exit with c/s:`
+    , signal || code);
+  });
+};
+
+/**
+ * shutdown
+ *
+ * @param callback
+ */
+var shutdown = function(callback) {
+  mongoose.connection.close(function() {
+    log.info(`${pspid}> Mongoose was disconnected.`);
+    log.exit(function() {
+      log.info(`${pspid}> Log4js was disconnected.`);
+      if(callback) callback();
+    });
   });
 };
 
@@ -62,35 +80,20 @@ var fork = function() {
   var cps = mps.fork(mod);
 
   cps.on('message', function(req) {
-    log.info(`main> parent got message: ${req}`);
+    log.info(`${pspid}> parent got message:`, req);
   });
 
   cps.on('exit', function(code, signal) {
-    log.info('main> child process terminated.' 
-      + `code/signal: ${signal || code}`);
+    log.info(`${pspid}> child process terminated.`
+      , `code/signal: ${signal || code}`);
   });
 
   cps.on('disconnect', function() {
-    log.info('main> child process disconnected.');
+    log.info(`${pspid}> child process disconnected.`);
   });
 
-  log.info(`main> Forked child pid: ${cps.pid}`);
+  log.info(`${pspid}> Forked child pid: ${cps.pid}`);
   return cps;
-};
-
-/**
- * shutdown
- *
- * @param callback
- */
-var shutdown = function(callback) {
-  mongoose.connection.close(function() {
-    log.info('main> Mongoose was disconnected.');
-    log.exit(function() {
-      log.info('main> Log4js was disconnected.');
-      if(callback) callback();
-    });
-  });
 };
 
 /**
@@ -112,7 +115,7 @@ var main = (function() {
   }, cpu);
 
   queue.drain = function() {
-    log.info('main> all items have been processed.');
+    log.info(`${pspid}> all items have been processed.`);
   };
 
   var intvl = process.env.interval;
@@ -124,16 +127,16 @@ var main = (function() {
       , dbs.findNotes
     ], function(err, req, res) {
       if(err) {
-        log.error('main> ', err.stack);
+        log.error(`${pspid}>`, err.stack);
         throw err;
       }
-      log.trace('main> results: ', res);
+      //log.trace(`${pspid}> results:`, res);
       res.notes.forEach( function(note) {
         queue.push(note, function() {
-          log.info('main> finished processing.');
+          log.info(`${pspid}> finished processing.`);
         });
       });
-      log.info(`main> ${monit} min. interval...`);
+      log.info(`${pspid}> ${monit} min. interval...`);
     });
   }, 0, 1000*60*monit);
 })();

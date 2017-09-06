@@ -1,13 +1,13 @@
 var mongoose = require('mongoose');
 var async = require('async');
 var std = require('../utils/stdutils');
-var log = require('../utils/logutils');
 var app = require('../utils/apputils');
-var User = require('../models/models').User;
-var Note = require('../models/models').Note;
-var History = require('../models/models').History;
-
+var log = require('../utils/apputils').logs;
+var User = require('../models').User;
+var Note = require('../models').Note;
+var History = require('../models').History;
 var ObjectId = mongoose.Types.ObjectId;
+var pspid = `common(${process.pid})`;
 
 /**
  * Find User Object from user collection.
@@ -20,12 +20,11 @@ var findUser = function(req, res, callback) {
   var username = req.body.user;
   User.findOne({ username }).exec(function(err, user) {
     if (err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
-    //console.log(user);
-    console.log(`%s [INFO] find User done.`
-      , std.getTimeStamp());
+    //log.trace(user);
+    log.info(`${pspid}> find User done.`);
     if(callback) callback(err, req, std.extend(res, { user }));
   });
 };
@@ -43,12 +42,11 @@ var findNote = function(req, res, callback) {
   var id = req.body.id;
   Note.findOne({ userid, id }).exec(function (err, note) {
     if (err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
-    //console.log(note);
-    console.log(`%s [INFO] find Note done.`
-      , std.getTimeStamp());
+    //log.trace(note);
+    log.info(`${pspid}> find Note done.`);
     if(callback) callback(err, req, std.extend(res, { note }));
   });
 };
@@ -65,11 +63,10 @@ var removeHistorys = function(req, res, callback) {
   var noteid = ObjectId(res.note._id);
   History.remove({ noteid }).exec(function(err) {
     if(err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] remove Historys done.`
-      , std.getTimeStamp());
+    log.info(`${pspid}> remove Historys done.`);
     if(callback) callback(err, req, res);
   });
 };
@@ -87,11 +84,10 @@ var removeNote = function(req, res, callback) {
   var id = req.body.id;
   Note.remove({ userid, id }, function(err) {
     if (err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] remove Note done.`
-      , std.getTimeStamp());
+    log.info(`${pspid}> remove Note done.`);
     if(callback) callback(err, req, res);
   });
 };
@@ -149,7 +145,7 @@ var createNote = function(req, res, callback){
     , updated:   Date.now()
   }, function(err) {
     if(err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
     if(callback) callback(err, req, res);
@@ -168,16 +164,15 @@ var findUsers = function(req, res, callback) {
   User.find()
   .exec(function(err, docs) {
     if(err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
     var users=[];
     docs.forEach(function(doc) {
       users.push(doc);
     });
-    //console.log(users);
-    console.log(`%s [INFO] find Users done.`
-      , std.getTimeStamp());
+    //log.trace(users);
+    log.info(`${pspid}> find Users done.`);
     if(callback) callback(err, req, std.extend(res, { users }));
   });
 };
@@ -207,16 +202,16 @@ var findNotes = function(req, res, callback) {
       userid: ObjectId(user._id) 
     }).exec(function(err, docs) {
       if(err) {
-        console.error(err.message);
+        log.error(err.message);
         return cbk(err);
       }
       try {
         docs.forEach(function(doc) {
           var updated = doc.updated;
           var isMon = ((nowMon - updated) % int) < mon;
-          //console.log('updated? : %d, %d, %d, %d'
-          //  , updated, now, (now-updated)%int, mon);
-          //console.log(isMon);
+          //log.trace('updated? :'
+          //, updated, nowMon, (nowMon-updated)%int, mon);
+          log.debug(isMon);
           if (isMon 
             && ((updated < nowMon) || (updated < pstMon))
           ) notes.push(doc);
@@ -228,12 +223,11 @@ var findNotes = function(req, res, callback) {
     });
   }, function (err) {
     if(err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
-    //console.log(notes);
-    console.log(`%s [INFO] find Notes done.`
-      , std.getTimeStamp());
+    //log.trace(notes);
+    log.info(`${pspid}> find Notes done.`);
     if(callback) callback(err, req, std.extend(res, { notes }));
   });
 };
@@ -261,7 +255,7 @@ var findHistorys = function(req, res, callback) {
       , updated: { $gte: oldDay, $lt: nowDay } 
     }).exec(function(err, docs) {
       if(err) {
-        console.error(err.message);
+        log.error(err.message);
         return cbk(err);
       }
       try {
@@ -275,12 +269,11 @@ var findHistorys = function(req, res, callback) {
     });
   }, function (err) {
     if(err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
-    //console.log(historys);
-    console.log(`%s [INFO] find Historys done.`
-      , std.getTimeStamp());
+    //log.trace(historys);
+    log.info(`${pspid}> find Historys done.`);
     if(callback) 
       callback(err, req, std.extend(res, { historys }));
   });
@@ -300,11 +293,9 @@ var getResultSet = function(req, res, callback) {
     ? req.body.body : res.note.search;
   var page = req.hasOwnProperty('body') ? 1 : maxPage;
 
-  var c = log.counter();
-  var t = log.timer();
-  var m = log.heapused();
-  var p = log.cpuused();
-
+  //log.count('getResultSet ');
+  //log.time('getResultSet ');
+  //log.profile('getResultSet ');
   app.YHsearch({ 
     appid:    req.appid
     , query
@@ -312,7 +303,7 @@ var getResultSet = function(req, res, callback) {
     , order:  'a' 
   }, function(err, ids, obj){
     if (err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
     var opt = obj.body.ResultSet.root;
@@ -322,22 +313,18 @@ var getResultSet = function(req, res, callback) {
       if(i>=page) break;
       pages[i]=i+1;
     }
-    //console.log(`%s [INFO] Number of pages : %s`
-    //  , std.getTimeStamp(), pages.length);
-    //console.log(`%s [INFO] Avail: %s, Return: %s, position: %s`
-    //  , std.getTimeStamp()
+    log.debug(`Number of pages :`, pages.length);
+    //log.trace(`Avail, Return, position :`
     //  , opt.totalResultsAvailable
     //  , opt.totalResultsReturned
     //  , opt.firstResultPosition
     //);
     
-    c.count();  c.print();
-    t.count();  t.print();
-    m.count();  m.print();
-    p.count();  p.print();
+    //log.countEnd('getResultSet ');
+    //log.timeEnd('getResultSet ');
+    //log.profileEnd('getResultSet ');
 
-    console.log(`%s [INFO] get ResultSet done.`
-      , std.getTimeStamp());
+    log.info(`${pspid}> get ResultSet done.`);
     if(callback) callback(err, req, std.extend(res, { pages }));
   });
 };
@@ -359,14 +346,11 @@ var getAuctionIds = function(req, res, callback) {
   var historys = res.hasOwnProperty('historys')
     ? res.historys : null;
 
-  var c = log.counter();
-  var t = log.timer();
-  var m = log.heapused();
-  var p = log.cpuused();
-
+  //log.count('getAuctionIds');
+  //log.time('getAuctionIds');
+  //log.profile('getAuctionIds');
   async.forEachSeries(res.pages, function(page, cbk) {
-    //console.log(`%s [INFO] page: %s`
-    //, std.getTimeStamp(), page);
+    //log.trace(`page:`, page);
     app.YHsearch({ 
       appid:    req.appid
       , query
@@ -375,33 +359,31 @@ var getAuctionIds = function(req, res, callback) {
       , page:   page 
     }, function(err, ids, obj){
       if (err) {
-        console.error(err.message);
+        log.error(err.message);
         return cbk(err);
       }
       try {
         if (ids.length > 0) newIds=newIds.concat(ids);
-        //console.dir(ids);
+        //log.trace(ids);
       } catch(e) {
         return cbk(e);
       }
-      c.count();
+      //log.count();
       cbk();
     });
   }, function(err) {
     if (err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
-    //console.dir(newIds);
+    //log.trace(newIds);
     Ids = helperIds(oldIds, newIds);
     
-    c.print();
-    t.count();  t.print();
-    m.count();  m.print();
-    p.count();  p.print();
+    //log.countEnd('getAuctionIds');
+    //log.timeEnd('getAuctionIds');
+    //log.profileEnd('getAuctionIds');
 
-    console.log(`%s [INFO] get AuctionIDs done.`
-      , std.getTimeStamp());
+    log.info(`${pspid}> get AuctionIDs done.`);
     if(callback) callback(err, req, std.extend(res, { Ids }));
   });
 };
@@ -414,7 +396,7 @@ var helperIds = function(o, p) {
   a.forEach(function(id){ ret.push({ id, status: 1 }); });
   var d = std.del(o, p);
   d.forEach(function(id){ ret.push({ id, status: 2 }); });
-  //console.dir(ret);
+  //log.trace(ret);
   return ret;
 };
 module.exports.getAuctionIds = getAuctionIds;
@@ -430,42 +412,34 @@ module.exports.getAuctionIds = getAuctionIds;
 var getAuctionItems = function(req, res, callback) {
   var Items=[];
 
-  var c = log.counter();
-  var t = log.timer();
-  var m = log.heapused();
-  var p = log.cpuused();
-
+  //log.count('getAuctionItems');
+  //log.time('getAuctionItems');
+  //log.profile('getAuctionItems');
   async.forEachSeries(res.Ids, function(Id, cbk) {
-    //console.log(`%s [INFO] auction_id: %s, status: %s`
-    //  , std.getTimeStamp()
-    //  , Id.id
-    //  , Id.status
-    //);
+    //log.trace(`auction_id, status :`, Id.id, Id.status);
     app.YHauctionItem({ appid: req.appid, auctionID: Id.id }
     , function(err, obj){
       if(err) {
-        console.error(err.message);
+        log.error(err.message);
         return cbk(err);
       }
       Items[Id.id]={ item: obj, status: Id.status };
-      //console.dir(Items[Id.id]);
-      c.count();
+      //log.trace(Items[Id.id]);
+      //log.count();
       cbk();
     });
   }, function(err) {
     if(err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
-    //console.dir(Items);
+    //log.trace(Items);
     
-    c.print();
-    t.count();  t.print();
-    m.count();  m.print();
-    p.count();  p.print();
+    //log.countEnd('getAuctionItems');
+    //log.timeEnd('getAuctionItems');
+    //log.profileEnd('getAuctionItems');
 
-    console.log(`%s [INFO] get AuctionItems done.`
-      , std.getTimeStamp());
+    log.info(`${pspid}> get AuctionItems done.`);
     if(callback) callback(err, req, std.extend(res, { Items }));
   });
 };
@@ -482,42 +456,34 @@ module.exports.getAuctionItems = getAuctionItems;
 var getBidHistorys = function(req, res, callback) {
   var Bids=[];
 
-  var c = log.counter();
-  var t = log.timer();
-  var m = log.heapused();
-  var p = log.cpuused();
-
+  //log.count('getBidHistorys');
+  //log.time('getBidHistorys');
+  //log.profile('getBidHistorys');
   async.forEachSeries(res.Ids, function(Id, cbk) {
-    //console.log(`%s [INFO] auction_id: %s, status: %s`
-    //  , std.getTimeStamp()
-    //  , Id.id
-    //  , Id.status
-    //);
+    //log.trace(`auction_id, status :`, Id.id, Id.status);
     app.YHbidHistory({ appid: req.appid, auctionID: Id.id }
     , function(err, obj){
       if(err) {
-        console.error(err.message);
+        log.error(err.message);
         return cbk(err);
       }
       Bids[Id.id]={ bids: obj, status: Id.status };
-      //console.dir(Bids[Id.id]);
-      c.count();
+      //log.trace(Bids[Id.id]);
+      //log.count();
       cbk();
     });
   },function(err) {
     if(err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
-    //console.dir(Bids);
+    //log.trace(Bids);
     
-    c.print();
-    t.count();  t.print();
-    m.count();  m.print();
-    p.count();  p.print();
+    //log.countEnd('getBidHistorys');
+    //log.timeEnd('getBidHistorys');
+    //log.profileEnd('getBidHistorys');
 
-    console.log(`%s [INFO] get BidsHistorys done.`
-      , std.getTimeStamp());
+    log.info(`${pspid}> get BidsHistorys done.`);
     if(callback) callback(err, req, std.extend(res, { Bids }));
   });
 };
@@ -553,7 +519,7 @@ var updateHistorys = function(req, res, callback) {
       opt   = { upsert: false, multi: true };
       History.update(where, set, opt, function(err) {
         if(err) {
-          console.error(err.message);
+          log.error(err.message);
           return cbk(err);
         }
         cbk();
@@ -570,7 +536,7 @@ var updateHistorys = function(req, res, callback) {
       historyIds.push(historyId);
       History.create(obj, function(err) {
         if(err) {
-          console.error(err.message);
+          log.error(err.message);
           return cbk(err);
         }
         cbk();
@@ -578,11 +544,10 @@ var updateHistorys = function(req, res, callback) {
     }
   }, function(err) {
     if(err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] update Historys done.`
-      , std.getTimeStamp());
+    log.info(`${pspid}> update Historys done.`);
     if(callback) 
       callback(err, req, std.extend(res, { historyIds }));
   });
@@ -634,11 +599,10 @@ var updateNote = function(req, res, callback) {
   opt   = { upsert: false, multi: true };
   Note.update(where, set, opt, function(err) {
     if(err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
-    console.log(`%s [INFO] update Note done.`
-      , std.getTimeStamp());
+    log.info(`${pspid}> update Note done.`);
     if(callback) callback(err, req, res);
   });
 };
@@ -656,12 +620,12 @@ var getNotes = function(req, res, callback){
   Note.find({ userid }).populate('historyid')
   .exec(function (err, docs) {
     if(err) {
-      console.error(err.message);
+      log.error(err.message);
       throw err;
     }
     var newNotes = [];
     docs.forEach(function(doc) {
-      //console.log(JSON.stringify(doc, null, 4));
+      //log.trace(doc);
       newNotes.push({
         user:       req.body.user
         , id:       doc.id
@@ -673,7 +637,7 @@ var getNotes = function(req, res, callback){
         , updated:  doc.updated
       });
     });
-    console.log(`%s [INFO] get Notes done.`, std.getTimeStamp());
+    log.info(`${pspid}> get Notes done.`);
     if(callback) 
       callback(err, req, std.extend(res, { newNotes }));
   });

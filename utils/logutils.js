@@ -1,20 +1,29 @@
 var log4js = require('log4js');
 var std = require('./stdutils');
-var pid = process.pid;
+
+var lvls = { 
+  'ALL':      'all'
+  , 'AUTO':   'auto'
+  , 'OFF':    'off'
+  , 'FATAL':  'fatal'
+  , 'ERROR':  'error'
+  , 'WARN':   'warn'
+  , 'INFO':   'info'
+  , 'DEBUG':  'debug'
+  , 'TRACE':  'trace'
+  , 'MARK':   'mark'
+};
 
 /**
  * logger
  *
- * @param apd {string} - appender name.
- * @param lyt {string} - layout name.
  * @param nam {string} - file/category name.
- * @param flv {string} - filter level.
  * @param mlv {string} - message level.
- * @param mss {object|string} - message object/string.
+ * @param msg {object|string} - message object/string.
  */
-var logger = function(apd, lyt, nam, flv, mlv, msg)  {
+var logger = function(nam, mlv, msg)  {
   var _msg = [];
-  for(var i=5; i<arguments.length; i++) {
+  for(var i=2; i<arguments.length; i++) {
     if(typeof arguments[i] === 'object') {
       _msg.push(JSON.stringify(arguments[i], null, 4));
     } else {
@@ -22,10 +31,80 @@ var logger = function(apd, lyt, nam, flv, mlv, msg)  {
     }
   }
   msg = _msg.join(' ');
-  config(apd, lyt, nam, flv);
   log(nam, mlv, msg);
 };
 module.exports.logger = logger;
+
+/**
+ * counter
+ *
+ * @param nam {string} - file/category name.
+ * @param mlv {string} - message level.
+ * @param cmd {string} - function command.
+ * @param msg {string} - message title.
+ * @returns {function}
+ */
+var counter = function(nam, mlv, cmd, ttl) {
+  var _fn = {
+    count: function() {
+      _counter.count(ttl);
+    },
+    print: function() {
+      var _cnt = _counter.stop(ttl)
+      log(nam, mlv, _cnt);
+    }
+  }
+  return _fn[cmd];
+};
+module.exports.counter = counter;
+
+/**
+ * timer
+ *
+ * @param nam {string} - file/category name.
+ * @param mlv {string} - message level.
+ * @param cmd {string} - function command.
+ * @param ttl {string} - message title.
+ * @returns {function}
+ */
+var timer = function(nam, mlv, cmd, ttl) {
+  var _fn = {
+    count: function() {
+      _timer.count(ttl);
+    },
+    print: function() {
+      var _tim = _timer.stop(ttl);
+      log(nam, mlv, _tim);
+    }
+  }
+  return _fn[cmd];
+};
+module.exports.timer = timer;
+
+/**
+ * profiler
+ *
+ * @param nam {string} - file/category name.
+ * @param mlv {string} - message level.
+ * @param cmd {string} - function command.
+ * @param msg {string} - message title.
+ * @returns {function}
+ */
+var profiler = function(nam, mlv, cmd, ttl) {
+  var _fn = {
+    count: function() {
+      _heapusage.count(ttl);
+      _cpuusage.count(ttl);
+    },
+    stop: function() {
+      var _mem = _heapusage.stop(ttl);
+      var _cpu = _cpuusage.stop(ttl);
+      log(nam, mlv, _cpu + ', ' + _mem);
+    }
+  }
+  return _fn[cmd];
+};
+module.exports.profiler = profiler;
 
 /**
  * config
@@ -33,39 +112,48 @@ module.exports.logger = logger;
  * @param apd {string} - appender name.
  * @param lyt {string} - layout name.
  * @param nam {string} - file/category name.
- * @param lvl {string} - filter level.
+ * @param flv {string} - filter level.
  */
-var config = function(apd, lyt, nam, lvl)  {
+var config = function(apd, lyt, nam, flv)  {
   var appenders = addAppender(apd, lyt, nam);
-  var categories = addCategory(nam, lvl);
+  var categories = addCategory(nam, flv);
   log4js.configure({ appenders, categories });
 };
+module.exports.config = config;
 
 /**
  * log
  *
  * @param nam {string} - category name.
- * @param lvl {string} - message level.
- * @param mss {string} - message string.
+ * @param mlv {string} - message level.
+ * @param msg {string} - message string.
  */
-var log = function(nam, lvl, mss) {
-  var lvls = { 
-    'FATAL':  'fatal'
-    , 'ERROR':  'error'
-    , 'WARN':   'warn'
-    , 'INFO':   'info'
-    , 'DEBUG':  'debug'
-    , 'TRACE':  'trace'
-    , 'MARK':   'mark'
-  };
+var log = function(nam, mlv, msg) {
   var logger = log4js.getLogger(nam);
-  logger.log(lvls[lvl], mss);
+  logger.log(lvls[mlv], msg);
 }
+
+/**
+ * connect
+ *
+ * @param nam {string} - category name.
+ * @param mlv {string} - message level.
+ * @return {object}
+ */
+var connect = function(nam, mlv) {
+  var logger = log4js.getLogger(nam);
+  var level = lvls[mlv];
+  var format = ':method :url';
+  var nolog = '\\.(gif\|jpe?g\|png)$';
+  return log4js.connectLogger(logger, { level, format, nolog });
+}
+module.exports.connect = connect;
 
 /**
  * exit
  *
- * @param callback {function} - log4js is shutdown by callback function.
+ * @param callback {function} - log4js is shutdown by callback
+ *                              function.
  */
 var exit = function(callback) {
   return log4js.shutdown(callback);
@@ -140,64 +228,45 @@ var addLayout = function(lyt) {
  * addCategory
  *
  * @param nam {string} - category name.
- * @param lvl {string} - filter level.
+ * @param flv {string} - filter level.
  * @returns {object} - category object.
  */
-var addCategory =function(nam, lvl) {
+var addCategory =function(nam, flv) {
   var categories  = {};
-  var lvls = { 
-    'ALL':      'all'
-    , 'FATAL':  'fatal'
-    , 'ERROR':  'error'
-    , 'WARN':   'warn'
-    , 'INFO':   'info'
-    , 'DEBUG':  'debug'
-    , 'TRACE':  'trace'
-    , 'MARK':   'mark'
-    , 'OFF':    'off'
-  };
-  var level       = lvls[lvl];
+  var level = lvls[flv];
   categories['default'] = { appenders: [nam], level };
   return categories;
 };
 
-var _counter = (function(){
+/**
+ * _counter
+ *
+ * @returns {function}
+ */
+var _counter = function(){
   var _s = 'count';
   var _n = {};
   return {
     count: function(s) {
       _s = s || _s;
+      if(_n.hasOwnProperty(_s))  _n[_s] = 0;
       return _n[_s]++;
     },
-    reset: function(s) {
-      _s = s || _s;
-      _n[_s] = 0;
-    },
-    stop: function(s) {
+    print: function(s) {
       var _s = s || _s;
       var msg =  `${_s}: ${_n[_s]}`;
+      delete _n[_s];
       return msg;
     }
   }
-})();
-
-var counter = function(apd, lyt, nam, flv, mlv, msg) {
-  return {
-    count: function(msg) {
-      _counter.count(msg);
-    },
-    reset: function(msg) {
-      _counter.reset(msg);
-    },
-    stop: function(apd, lyt, nam, flv, mlv, msg) {
-      config(apd, lyt, nam, flv);
-      log(nam, mlv, _counter.stop(msg));
-    }
-  }
 };
-module.exports.counter = counter;
 
-var _timer = (function() {
+/**
+ * _timer
+ *
+ * @returns {function}
+ */
+var _timer = function() {
   var _s = 'rapTime';
   var _b = {};
   var _e = {};
@@ -218,49 +287,28 @@ var _timer = (function() {
     return ret;
   };
   return {
-    start: function(s) {
-      _s = s || _s;
-      _b[_s] = Date.now();
-      _e[_s] = 0;
-    },
     count: function(s) { 
       _s = s || _s;
+      if(_b.hasOwnProperty(_s))  _b[_s] = Date.now();
       _e[_s] = Date.now(); 
       _r[_s].push(size(_b[_s], _e[_s])); 
       return _r[_s].join();
     },
-    reset: function(s) {
-      _s = s || _s;
-      _b[_s] = Date.now();
-    },
-    result: function(s) {
+    print: function(s) {
       _s = s || _s;
       var msg =  `${_s}: ${_r[_s].join()}`;
+      delete _b[_s], _e[_s], _r[_s];
       return msg;
     }
   }
-})();
-
-var timer = function(apd, lyt, nam, flv, mlv, msg) {
-  return {
-    start: function(msg) {
-      _timer.start(msg);
-    },
-    count: function(msg) {
-      _timer.count(msg);
-    },
-    reset: function(msg) {
-      _timer.reset(msg);
-    },
-    stop: function(apd, lyt, nam, flv, mlv, msg) {
-      config(apd, lyt, nam, flv);
-      log(nam, mlv, _timer.stop(msg));
-    }
-  }
 };
-module.exports.timer = timer;
 
-var _heapusage = (function() {
+/**
+ * _heapusage
+ *
+ * @returns {function}
+ */
+var _heapusage = function() {
   var _s = 'heapUsed';
   var _b = {};
   var _e = {};
@@ -276,30 +324,29 @@ var _heapusage = (function() {
     return ret; 
   };
   return {
-    start: function(s) {
-      _s = s || _s;
-      _b[_s] = process.memoryUsage().heapUsed;
-      _e[_s] = 0;
-    },
     count: function(s) {
       _s = s || _s;
+      if(_b.hasOwnProperty(_s))
+        _b[_s] = process.memoryUsage().heapUsed;
       _e[_s] = process.memoryUsage().heapUsed
       _r[_s].push(size(_e[_s], 3));
       return _r[_s].join();
     },
-    reset: function(s) {
-      _s = s || _s;
-      _b[_s] = process.memoryUsage().heapUsed;
-    },
-    result: function(s) {
+    print: function(s) {
       _s = s || _s;
       var msg =  `${_s}: ${size(_b[_s], 3)} ${_r[_s].join()}`;
+      delete _b[_s], _e[_s], _r[_s];
       return msg;
     }
   }
-})();
+};
 
-var _cpuusage = (function() {
+/**
+ * _cpuusage
+ *
+ * @returns {function}
+ */
+var _cpuusage = function() {
   var _s = 'cpuUsed';
   var _b = {}; 
   var _e = {};
@@ -313,51 +360,22 @@ var _cpuusage = (function() {
     return ret;
   };
   return {
-    start: function(s) {
-      _s = s || _s;
-      _b[_s] = process.cpuUsage();
-      _e[_s] = 0;
-      _t[_s] = Date.now();
-    },
     count: function(s) {
       _s = s || _s;
+      if(_b.hasOwnProperty(_s)) {
+        _b[_s] = process.cpuUsage();
+        _t[_s] = Date.now();
+      }
       _e[_s] = process.cpuUsage(_b[_s]);
       _r[_s].push(size(_e[_s].user, Date.now()-_t[_s], 2));
       return _r[_s].join();
     },
-    reset: function(s) {
-      _s = s || _s;
-      _b[_s] = process.cpuUsage();
-    },
-    result: function(s) {
+    print: function(s) {
       _s = s || _s;
       var msg =  `${_s}: ${_r[_s].join()}`;
+      delete _b[_s], _e[_s], _r[_s], _t[_s];
       return msg;
     }
   }
-})();
-
-var profiler = function(apd, lyt, nam, flv, mlv, msg) {
-  return {
-    start: function(msg) {
-      _heapusage.start(msg);
-      _cpuusage.start(msg);
-    },
-    count: function(msg) {
-      _heapusage.count(msg);
-      _cpuusage.count(msg);
-    },
-    reset: function(msg) {
-      _heapusage.reset(msg);
-      _cpuusage.reset(msg);
-    },
-    stop: function(apd, lyt, nam, flv, mlv, msg) {
-      config(apd, lyt, nam, flv);
-      var _mem = _heapusage.stop(msg);
-      var _cpu = _cpuusage.stop(msg);
-      log(nam, mlv, _cpu + ', ' + _mem);
-    }
-  }
 };
-module.exports.profiler = profiler;
 
