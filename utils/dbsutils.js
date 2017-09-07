@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var async = require('async');
 var std = require('../utils/stdutils');
 var app = require('../utils/apputils');
-var log = require('../utils/apputils').logs;
+var log = require('../utils/logutils').logs;
 var User = require('../models').User;
 var Note = require('../models').Note;
 var History = require('../models').History;
@@ -313,7 +313,7 @@ var getResultSet = function(req, res, callback) {
       if(i>=page) break;
       pages[i]=i+1;
     }
-    log.debug(`Number of pages :`, pages.length);
+    log.debug(`Number of pages: ${pages.length}`);
     //log.trace(`Avail, Return, position :`
     //  , opt.totalResultsAvailable
     //  , opt.totalResultsReturned

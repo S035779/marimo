@@ -3,7 +3,7 @@ var async = require('async');
 var mongoose = require('mongoose');
 var std = require('../utils/stdutils');
 var dbs = require('../utils/dbsutils');
-var log = require('../utils/apputils').logs;
+var log = require('../utils/logutils').logs;
 var pspid = `sub(${process.pid})`;
 
 /**
@@ -12,6 +12,8 @@ var pspid = `sub(${process.pid})`;
  */
 var init = function() {
   var psver = process.version;
+  // Start Log4js.
+  log.config('console', 'color', 'note-app', 'DEBUG');
   log.info(`${pspid}> Nodejs Version: ${psver}`);
 
   // Add Mongoose module Event Listener.
@@ -33,20 +35,28 @@ var init = function() {
 
   // Add Node process Event Listener.
   process.once('SIGUSR2', function() {
+    log.info(`${pspid}> Got SIGUSR2!`);
     shutdown(process.exit);
   });
 
   process.on('SIGINT', function() {
+    log.info(`${pspid}> Got Ctrl-C!`);
     shutdown(process.exit);
   });
 
   process.on('SIGTERM', function() {
+    log.info(`${pspid}> Got SIGTERM!`);
     shutdown(process.exit); 
   });
 
+  process.on('uncaughtException', function(err) {
+    log.error(`${pspid}> Got uncaught exception: ${err.message}`);
+    process.exit(1); 
+  });
+
   process.on('exit', function(code, signal) {
-    log.info(`${pspid}> Terminated child pid: ${pspid}`);
-    log.debug(`${pspid}> About to exit with c/s:`
+    console.log(`${pspid}> Terminated child pid: ${pspid}`);
+    console.log(`${pspid}> About to exit with c/s:`
       , signal || code);
   });
 };
@@ -59,9 +69,9 @@ var init = function() {
 var shutdown = function(callback) {
   mongoose.connection.close(function() {
     log.info(`${pspid}> Mongoose was disconnected.`);
-    log.exit(function() {
-      log.info(`${pspid}> Log4js was disconnected.`);
-      if(callback) callback();
+    log.close(function() {
+      console.log(`${pspid}> Log4js was terminated.`);
+      callback();
     });
   });
 };

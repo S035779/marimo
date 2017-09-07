@@ -11,7 +11,10 @@ var passport = require('passport');
 var strategy = require('passport-local').Strategy;
 var routes = require('./routes');
 var User = require('./models').User;
-var log = require('./utils/webutils').logs;
+var log = require('./utils/logutils').logs;
+var pspid = `web(${process.pid})`;
+
+var server;
 
 /**
  * init
@@ -19,7 +22,9 @@ var log = require('./utils/webutils').logs;
  */
 var init = function() {
   var psver = process.version;
-  log.info(`Nodejs Version: ${psver}`);
+  // Start Log4js.
+  log.config('console', 'color', 'note-web', 'DEBUG');
+  log.info(`${pspid}> Nodejs Version: ${psver}`);
 
   // Add Mongoose module Event Listener.
   var dburl = process.env.mongodb
@@ -30,30 +35,39 @@ var init = function() {
   });
 
   mongoose.connection.on('error', function () {
-    log.error(`connection error: ${arguments}`)
+    log.error(`${pspid}> connection error: ${arguments}`)
   });
 
   mongoose.connection.once('open', function() {
     var dbver = mongoose.version;
-    log.info(`Mongoose Version: v${dbver}`);
+    log.info(`${pspid}> Mongoose Version: v${dbver}`);
   });
 
   // Add Node process Event Listener.
   process.once('SIGUSR2', function() {
+    log.info(`${pspid}> Got SIGUSR2!`);
     shutdown(process.exit);
   });
 
   process.on('SIGINT', function() {
+    log.info(`${pspid}> Got Ctrl-C!`);
     shutdown(process.exit);
   });
 
   process.on('SIGTERM', function() {
-    shutdown(process.exit); 
+    log.info(`${pspid}> Got SIGTERM!`);
+    shutdown(process.exit);
+  });
+
+  process.on('uncaughtException', function(err) {
+    log.error(`${pspid}> Got uncaught exception: ${err.message}`);
+    process.exit(1);
   });
 
   process.on('exit', function(code, signal) {
-    log.info(`Terminated main pid: ${pspid}`);
-    log.debug(`About to exit with c/s:`, signal || code);
+    console.log(`${pspid}> Terminated main pid: ${pspid}`);
+    console.log(`${pspid}> About to exit with c/s:`
+      , signal || code);
   });
 };
 
@@ -64,10 +78,13 @@ var init = function() {
  */
 var shutdown = function(callback) {
   mongoose.connection.close(function() {
-    log.info(`Mongoose was disconnected.`);
-    log.exit(function() {
-      log.info(`Log4js was disconnected.`);
-      if(callback) callback();
+    log.info(`${pspid}> Mongoose was disconnected.`);
+    server.close(function() {
+      log.info(`${pspid}> Http was terminated.`);
+      log.close(function() {
+        console.log(`${pspid}> Log4js was terminated.`);
+        callback();
+      });
     });
   });
 };
@@ -113,9 +130,9 @@ var main = (function() {
     app.use(errorHandler());
   };
 
-  var server = http.createServer(app);
+  server = http.createServer(app);
   server.listen(app.get('port'), function() {
     var port = app.get('port');
-    log.info(`Express server listening on port ${port}`);
+    log.info(`${pspid}> Express server listening on port ${port}`);
   });
 })();

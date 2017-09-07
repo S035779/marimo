@@ -1,43 +1,11 @@
-var R = require('ramda');
 var xml = require('xml2js');
 var std = require('../utils/stdutils');
-var log = require('../utils/logutils');
 var enc = require('../utils/encutils');
 var htp = require('../utils/netutils');
 
 // YAHOO! Auction WebAPI.
 var v1 = 'htps://auctions.yahooapis.jp/AuctionWebService/V1/'
 var v2 = 'htps://auctions.yahooapis.jp/AuctionWebService/V2/'
-
-/**
- * Log4js functions Object.
- *
- */
-var apd = 'console';
-var lyt = 'color';
-var app = 'watch-app';
-var flv = 'DEBUG';
-
-log.config(apd, lyt, app, flv);
-
-var logs = {
-  server:       R.curry(log.logger)(   app, 'INFO'          )
-  , fatal:      R.curry(log.logger)(   app, 'FATAL'         )
-  , error:      R.curry(log.logger)(   app, 'ERROR'         )
-  , warn:       R.curry(log.logger)(   app, 'WARN'          )
-  , info:       R.curry(log.logger)(   app, 'INFO'          )
-  , debug:      R.curry(log.logger)(   app, 'DEBUG'         )
-  , trace:      R.curry(log.logger)(   app, 'TRACE'         )
-  , mark:       R.curry(log.logger)(   app, 'MARK'          )
-  , count:      R.curry(log.counter)(  app, 'INFO', 'count' )
-  , countEnd:   R.curry(log.counter)(  app, 'INFO', 'print' )
-  , time:       R.curry(log.timer)(    app, 'INFO', 'count' )
-  , timeEnd:    R.curry(log.timer)(    app, 'INFO', 'print' )
-  , profile:    R.curry(log.profiler)( app, 'INFO', 'count' )
-  , profileEnd: R.curry(log.profiler)( app, 'INFO', 'print' )
-  , exit:       function(cb) { return log.exit(cb); }
-};
-module.exports.logs = logs;
 
 /**
  * get result of the 'YAHOO! Search'.

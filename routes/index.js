@@ -10,7 +10,7 @@ var Note = require('../models').Note;
 var History = require('../models').History;
 var std = require('../utils/stdutils');
 var dbs = require('../utils/dbsutils');
-var log = require('../utils/webutils').logs;
+var log = require('../utils/logutils').logs;
 var ObjectId = mongoose.Types.ObjectId;
 var router = express.Router();
 

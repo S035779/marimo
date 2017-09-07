@@ -1,6 +1,5 @@
 var log4js = require('log4js');
 var std = require('./stdutils');
-
 var lvls = { 
   'ALL':      'all'
   , 'AUTO':   'auto'
@@ -13,6 +12,64 @@ var lvls = {
   , 'TRACE':  'trace'
   , 'MARK':   'mark'
 };
+
+/**
+ * Log4js functions Object.
+ *
+ */
+var logs = {
+  app: '',
+  config: function(apd, lyt, nam, flv) {
+    this.app = nam;
+    config(apd, lyt, nam, flv);
+  },
+  connect: function() {
+    return connect(this.app, 'AUTO');
+  },
+  close: function(cb) {
+    close(cb);
+  },
+  fatal: function(msg) {
+    logger(this.app, 'FATAL', msg);
+  },
+  error: function(msg) {
+    logger(this.app, 'ERROR', msg);
+  },
+  warn: function(msg) {
+    logger(this.app, 'WARN', msg);
+  },
+  info: function(msg) {
+    logger(this.app, 'INFO', msg);
+  },
+  debug: function(msg) {
+    logger(this.app, 'DEBUG', msg);
+  },
+  trace: function(msg) {
+    logger(this.app, 'TRACE', msg); 
+  },
+  mark: function(msg) {
+    logger(this.app, 'MARK', msg);
+  },
+  count: function(msg) {
+    counter(this.app, 'INFO', 'count', msg);
+  },
+  countEnd: function(msg) {
+    counter(this.app, 'INFO', 'print', msg);
+  },
+  time: function(msg) {
+    timer(this.app, 'INFO', 'count', msg);
+  },
+  timeEnd: function(msg) {
+    timer(this.app, 'INFO', 'print', msg);
+  },
+  profile: function(msg) {
+    profiler(this.app, 'INFO', 'count', msg);
+  },
+  profileEnd: function(msg) {
+    profiler(this.app, 'INFO', 'print', msg);
+  }
+};
+module.exports.logs = logs;
 
 /**
  * logger
@@ -115,8 +172,9 @@ module.exports.profiler = profiler;
  * @param flv {string} - filter level.
  */
 var config = function(apd, lyt, nam, flv)  {
-  var appenders = addAppender(apd, lyt, nam);
-  var categories = addCategory(nam, flv);
+  var appenders = _appender(apd, lyt, nam);
+  var categories = _category(nam, flv);
+  _layout(lyt);
   log4js.configure({ appenders, categories });
 };
 module.exports.config = config;
@@ -155,20 +213,22 @@ module.exports.connect = connect;
  * @param callback {function} - log4js is shutdown by callback
  *                              function.
  */
-var exit = function(callback) {
-  return log4js.shutdown(callback);
+var close = function(callback) {
+  log4js.shutdown(function() {
+    if(callback) callback();
+  });
 };
-module.exports.exit = exit;
+module.exports.close = close;
 
 /**
- * addAppender
+ * _appender
  *
  * @param apd {string} - appender name.
  * @param lyt {string} - layout name.
  * @param nam {string} - file/category/appender name.
  * @returns {object} - appender object.
  */
-var addAppender = function(apd, lyt, nam)  {
+var _appender = function(apd, lyt, nam)  {
   var apds = { 
     'console':  { type: 'console' }
     , 'file':   { type: 'dateFile', filename: 'logs/' + nam  }
@@ -182,7 +242,6 @@ var addAppender = function(apd, lyt, nam)  {
     , 'basic':    { type: 'basic' }
     , 'json':     { type: 'json', separator: ',' }
   };
-  addLayout(lyt);
   var appenders   = {};
   var layout      = lyts[lyt];
   switch(apd) {
@@ -192,7 +251,7 @@ var addAppender = function(apd, lyt, nam)  {
       break;
     case 'server':
       appenders[nam] = std.merge(apds['file'], { layout });
-      appenders[apd] = apds[apd];
+      appenders['_'+nam] = apds[apd];
       break
     case 'client':
       appenders[nam] = apds[apd];
@@ -206,11 +265,25 @@ var addAppender = function(apd, lyt, nam)  {
 };
 
 /**
- * addLayout
+ * _category
+ *
+ * @param nam {string} - category name.
+ * @param flv {string} - filter level.
+ * @returns {object} - category object.
+ */
+var _category =function(nam, flv) {
+  var categories  = {};
+  var level = lvls[flv];
+  categories['default'] = { appenders: [nam], level };
+  return categories;
+};
+
+/**
+ * _layout
  *
  * @param lyt {string} - custom layout name.
  */
-var addLayout = function(lyt) {
+var _layout = function(lyt) {
   switch(lyt) {
     case 'json':
       log4js.addLayout(lyt, function(cfg) {
@@ -225,25 +298,11 @@ var addLayout = function(lyt) {
 };
 
 /**
- * addCategory
- *
- * @param nam {string} - category name.
- * @param flv {string} - filter level.
- * @returns {object} - category object.
- */
-var addCategory =function(nam, flv) {
-  var categories  = {};
-  var level = lvls[flv];
-  categories['default'] = { appenders: [nam], level };
-  return categories;
-};
-
-/**
  * _counter
  *
  * @returns {function}
  */
-var _counter = function(){
+var _counter = (function(){
   var _s = 'count';
   var _n = {};
   return {
@@ -259,14 +318,14 @@ var _counter = function(){
       return msg;
     }
   }
-};
+})();
 
 /**
  * _timer
  *
  * @returns {function}
  */
-var _timer = function() {
+var _timer = (function() {
   var _s = 'rapTime';
   var _b = {};
   var _e = {};
@@ -301,14 +360,14 @@ var _timer = function() {
       return msg;
     }
   }
-};
+})();
 
 /**
  * _heapusage
  *
  * @returns {function}
  */
-var _heapusage = function() {
+var _heapusage = (function() {
   var _s = 'heapUsed';
   var _b = {};
   var _e = {};
@@ -339,14 +398,14 @@ var _heapusage = function() {
       return msg;
     }
   }
-};
+})();
 
 /**
  * _cpuusage
  *
  * @returns {function}
  */
-var _cpuusage = function() {
+var _cpuusage = (function() {
   var _s = 'cpuUsed';
   var _b = {}; 
   var _e = {};
@@ -377,5 +436,5 @@ var _cpuusage = function() {
       return msg;
     }
   }
-};
+})();
 
