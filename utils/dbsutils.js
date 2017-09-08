@@ -6,6 +6,7 @@ var log = require('../utils/logutils').logs;
 var User = require('../models').User;
 var Note = require('../models').Note;
 var History = require('../models').History;
+
 var ObjectId = mongoose.Types.ObjectId;
 var pspid = `common(${process.pid})`;
 
@@ -293,9 +294,9 @@ var getResultSet = function(req, res, callback) {
     ? req.body.body : res.note.search;
   var page = req.hasOwnProperty('body') ? 1 : maxPage;
 
-  //log.count('getResultSet ');
-  //log.time('getResultSet ');
-  //log.profile('getResultSet ');
+  log.count('getResultSet');
+  log.time('getResultSet');
+  log.profile('getResultSet');
   app.YHsearch({ 
     appid:    req.appid
     , query
@@ -320,9 +321,9 @@ var getResultSet = function(req, res, callback) {
     //  , opt.firstResultPosition
     //);
     
-    //log.countEnd('getResultSet ');
-    //log.timeEnd('getResultSet ');
-    //log.profileEnd('getResultSet ');
+    log.countEnd('getResultSet');
+    log.timeEnd('getResultSet');
+    log.profileEnd('getResultSet');
 
     log.info(`${pspid}> get ResultSet done.`);
     if(callback) callback(err, req, std.extend(res, { pages }));
@@ -346,9 +347,9 @@ var getAuctionIds = function(req, res, callback) {
   var historys = res.hasOwnProperty('historys')
     ? res.historys : null;
 
-  //log.count('getAuctionIds');
-  //log.time('getAuctionIds');
-  //log.profile('getAuctionIds');
+  log.count('getAuctionIds');
+  log.time('getAuctionIds');
+  log.profile('getAuctionIds');
   async.forEachSeries(res.pages, function(page, cbk) {
     //log.trace(`page:`, page);
     app.YHsearch({ 
@@ -379,9 +380,9 @@ var getAuctionIds = function(req, res, callback) {
     //log.trace(newIds);
     Ids = helperIds(oldIds, newIds);
     
-    //log.countEnd('getAuctionIds');
-    //log.timeEnd('getAuctionIds');
-    //log.profileEnd('getAuctionIds');
+    log.countEnd('getAuctionIds');
+    log.timeEnd('getAuctionIds');
+    log.profileEnd('getAuctionIds');
 
     log.info(`${pspid}> get AuctionIDs done.`);
     if(callback) callback(err, req, std.extend(res, { Ids }));
@@ -412,9 +413,9 @@ module.exports.getAuctionIds = getAuctionIds;
 var getAuctionItems = function(req, res, callback) {
   var Items=[];
 
-  //log.count('getAuctionItems');
-  //log.time('getAuctionItems');
-  //log.profile('getAuctionItems');
+  log.count('getAuctionItems');
+  log.time('getAuctionItems');
+  log.profile('getAuctionItems');
   async.forEachSeries(res.Ids, function(Id, cbk) {
     //log.trace(`auction_id, status :`, Id.id, Id.status);
     app.YHauctionItem({ appid: req.appid, auctionID: Id.id }
@@ -435,9 +436,9 @@ var getAuctionItems = function(req, res, callback) {
     }
     //log.trace(Items);
     
-    //log.countEnd('getAuctionItems');
-    //log.timeEnd('getAuctionItems');
-    //log.profileEnd('getAuctionItems');
+    log.countEnd('getAuctionItems');
+    log.timeEnd('getAuctionItems');
+    log.profileEnd('getAuctionItems');
 
     log.info(`${pspid}> get AuctionItems done.`);
     if(callback) callback(err, req, std.extend(res, { Items }));
@@ -456,9 +457,9 @@ module.exports.getAuctionItems = getAuctionItems;
 var getBidHistorys = function(req, res, callback) {
   var Bids=[];
 
-  //log.count('getBidHistorys');
-  //log.time('getBidHistorys');
-  //log.profile('getBidHistorys');
+  log.count('getBidHistorys');
+  log.time('getBidHistorys');
+  log.profile('getBidHistorys');
   async.forEachSeries(res.Ids, function(Id, cbk) {
     //log.trace(`auction_id, status :`, Id.id, Id.status);
     app.YHbidHistory({ appid: req.appid, auctionID: Id.id }
@@ -479,9 +480,9 @@ var getBidHistorys = function(req, res, callback) {
     }
     //log.trace(Bids);
     
-    //log.countEnd('getBidHistorys');
-    //log.timeEnd('getBidHistorys');
-    //log.profileEnd('getBidHistorys');
+    log.countEnd('getBidHistorys');
+    log.timeEnd('getBidHistorys');
+    log.profileEnd('getBidHistorys');
 
     log.info(`${pspid}> get BidsHistorys done.`);
     if(callback) callback(err, req, std.extend(res, { Bids }));

@@ -4,7 +4,9 @@ var mongoose = require('mongoose');
 var std = require('../utils/stdutils');
 var dbs = require('../utils/dbsutils');
 var log = require('../utils/logutils').logs;
+
 var pspid = `sub(${process.pid})`;
+var psenv = process.env.NODE_ENV;
 
 /**
  * init
@@ -12,8 +14,16 @@ var pspid = `sub(${process.pid})`;
  */
 var init = function() {
   var psver = process.version;
+  if(psenv === 'development')
+    log.config('console', 'color', 'note-app', 'TRACE');
+
+  if(psenv === 'staging')
+    log.config('client', 'localhost', 'note-app', 'DEBUG');
+
+  if(psenv === 'production')
+    log.config('client', 'localhost', 'note-app', 'INFO');
+
   // Start Log4js.
-  log.config('console', 'color', 'note-app', 'DEBUG');
   log.info(`${pspid}> Nodejs Version: ${psver}`);
 
   // Add Mongoose module Event Listener.
@@ -26,6 +36,7 @@ var init = function() {
 
   mongoose.connection.on('error', function () {
     log.error(`${pspid}> connection error: ${arguments}`);
+    shutdown(process.exit);
   });
 
   mongoose.connection.once('open', function() {
@@ -50,14 +61,23 @@ var init = function() {
   });
 
   process.on('uncaughtException', function(err) {
-    log.error(`${pspid}> Got uncaught exception: ${err.message}`);
-    process.exit(1); 
+    log.error(`${pspid}> Got uncaught exception: ${err.name}`);
+    log.error(`${pspid}> ${err.message}`);
+    log.error(`${pspid}> ${err.stack}`);
+    shutdown(process.exit);
+  });
+
+  process.on('warning', function(err) {
+    log.warn(`${pspid}> Got warning: ${err.name}`);
+    log.warn(`${pspid}> ${err.message}`);
+    log.warn(`${pspid}> ${err.stack}`);
   });
 
   process.on('exit', function(code, signal) {
-    console.log(`${pspid}> Terminated child pid: ${pspid}`);
-    console.log(`${pspid}> About to exit with c/s:`
-      , signal || code);
+    console.log(
+      `${pspid}> Terminated child pid: ${process.pid}`);
+    console.log(
+      `${pspid}> about to exit with c/s: ${signal || code}`);
   });
 };
 
@@ -111,11 +131,15 @@ var main = (function() {
     shutdown(process.exit); 
   };
 
-  // Add Node process Event Listener.
+  // Add Node IPC Event Listener.
   process.on('message', function(req) {
-    log.trace(`${pspid}>  child got message:`, req);
+    log.trace(`${pspid}> Child got message:`, req);
     queue.push(req, function() {
       log.info(`${pspid}> finished processing note object.`);
     });
+  });
+
+  process.on('disconnect', function() {
+    log.error(`${pspid}> IPC channel disconnected.`);
   });
 })();

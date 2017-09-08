@@ -1,5 +1,4 @@
 require('dotenv').config();
-var R = require('ramda');
 var mongoose = require('mongoose');
 var async = require('async');
 var express = require('express');
@@ -11,24 +10,28 @@ var History = require('../models').History;
 var std = require('../utils/stdutils');
 var dbs = require('../utils/dbsutils');
 var log = require('../utils/logutils').logs;
+
+var pspid = `web(${process.pid})`
 var ObjectId = mongoose.Types.ObjectId;
 var router = express.Router();
 
 router.get('/auth', function(request, response) {
-  log.info('===getAuth===');
-  response.render('index.jade', { user: request.user });
-  log.info(`getAuth all done.`);
+  var user = request.user;
+  log.info(`${pspid}> ===getAuth===`);
+  response.render('index.jade', { user });
+  log.info(`${pspid}> getAuth all done.`);
 });
 
 router.get('/register', function(request, response) {
-  log.info('===getRegister===');
+  log.info(`${pspid}> ===getRegister===`);
   response.render('register.jade', { });
-  log.info(`getRegister all done.`);
+  log.info(`${pspid}> getRegister all done.`);
 });
 
 router.post('/register', function(request, response) {
-  log.info('===postRegister===');
-  User.register(new User({ username : request.body.username })
+  log.info(`${pspid}> ===postRegister===`);
+  var username = request.body.username;
+  User.register(new User({ username })
   , request.body.password, function(err, account) {
     if (err) { 
       return response.render('register', { account : account });
@@ -36,29 +39,30 @@ router.post('/register', function(request, response) {
     passport.authenticate('local')(request, response
     , function () {
       response.redirect('/auth'); 
-      log.info(`postRegister all done.`);
+      log.info(`${pspid}> postRegister all done.`);
     });
   });
 });
 
 router.get('/login', function(request, response) {
-  log.info('===getLogin===');
-  response.render('login.jade', { user : request.user });
-    log.info(`getLogin all done.`);
+  var user = request.user;
+  log.info(`${pspid}> ===getLogin===`);
+  response.render('login.jade', { user });
+    log.info(`${pspid}> getLogin all done.`);
 });
 
 router.post('/login', passport.authenticate('local')
 , function(request, response) {
-  log.info('===postLogin===');
+  log.info(`${pspid}> ===postLogin===`);
   response.redirect('/auth');
-  log.info(`postLogin all done.`);
+  log.info(`${pspid}> postLogin all done.`);
 });
 
 router.get('/logout', function(request, response) {
-  log.info('===getLogout===');
+  log.info(`${pspid}> ===getLogout===`);
   request.logout();
   response.redirect('/auth');
-  log.info(`getLogout all done.`);
+  log.info(`${pspid}> getLogout all done.`);
 });
 
 /**
@@ -68,7 +72,7 @@ router.get('/logout', function(request, response) {
  * @param response {object}
  */
 router.get('/api/note', function(request, response){
-  log.info('===getNotes===');
+  log.info(`${pspid}> ===getNotes===`);
   var body = request.query;
   var appid = process.env.app_id;
   async.waterfall([
@@ -81,7 +85,7 @@ router.get('/api/note', function(request, response){
       response.status(404).send(err.message);
     }
     response.json(res.newNotes); 
-    log.info(`getNotes all done.`);
+    log.info(`${pspid}> getNotes all done.`);
   });
 });
 
@@ -92,7 +96,7 @@ router.get('/api/note', function(request, response){
  * @param response {object}
  */
 router.post('/api/note', function(request, response){
-  log.info('===postNote===');
+  log.info(`${pspid}> ===postNote===`);
   var body = request.body;
   var appid = process.env.app_id;
   async.waterfall([ 
@@ -106,7 +110,7 @@ router.post('/api/note', function(request, response){
       response.status(404).send(err.message);
     }
     response.json(res.newNotes); 
-    log.info(`postNote all done.`);
+    log.info(`${pspid}> postNote all done.`);
   });
 });
 
@@ -117,7 +121,7 @@ router.post('/api/note', function(request, response){
  * @param response {object}
  */
 router.post('/api/note/search', function(request, response){
-  log.info('===postHistory===');
+  log.info(`${pspid}> ===postHistory===`);
   var body = request.body;
   var appid = process.env.app_id;
   var intvl = process.env.interval;
@@ -139,7 +143,7 @@ router.post('/api/note/search', function(request, response){
       response.status(404).send(err.message);
     }
     response.json(res.newNotes);
-    log.info(`postHistory all done.`);
+    log.info(`${pspid}> postHistory all done.`);
   });
 });
 
@@ -150,7 +154,7 @@ router.post('/api/note/search', function(request, response){
  * @param response {object}
  */
 router.post('/api/note/delete', function(request, response){
-  log.info(`===deleteNote===`);
+  log.info(`${pspid}> ===deleteNote===`);
   var appid = process.env.app_id;
   var body = request.body;
   async.waterfall([
@@ -166,7 +170,7 @@ router.post('/api/note/delete', function(request, response){
       response.status(404).send(err.message);
     }
     response.json(res.newNotes);
-    log.info(`deleteNote all done.`);
+    log.info(`${pspid}> deleteNote all done.`);
   });
 });
 
@@ -177,7 +181,7 @@ router.post('/api/note/delete', function(request, response){
  * @param response {object}
  */
 router.post('/api/note/create', function(request, response) {
-  log.info('===createNote===');
+  log.info(`${pspid}> ===createNote===`);
   var appid = process.env.app_id;
   var body = request.body;
   async.waterfall([
@@ -191,7 +195,7 @@ router.post('/api/note/create', function(request, response) {
       response.status(404).send(err.message);
     }
     response.json(res.newNotes); 
-    log.info(`createNote all done.`);
+    log.info(`${pspid}> createNote all done.`);
   });
 });
 

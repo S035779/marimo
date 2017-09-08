@@ -1,18 +1,5 @@
 var log4js = require('log4js');
 var std = require('./stdutils');
-var lvls = { 
-  'ALL':      'all'
-  , 'AUTO':   'auto'
-  , 'OFF':    'off'
-  , 'FATAL':  'fatal'
-  , 'ERROR':  'error'
-  , 'WARN':   'warn'
-  , 'INFO':   'info'
-  , 'DEBUG':  'debug'
-  , 'TRACE':  'trace'
-  , 'MARK':   'mark'
-};
-
 /**
  * Log4js functions Object.
  *
@@ -30,67 +17,93 @@ var logs = {
     close(cb);
   },
   fatal: function(msg) {
-    logger(this.app, 'FATAL', msg);
+    var args = Array.prototype.slice.call(arguments);
+    logger(this.app, 'FATAL', args);
   },
   error: function(msg) {
-    logger(this.app, 'ERROR', msg);
+    var args = Array.prototype.slice.call(arguments);
+    logger(this.app, 'ERROR', args);
   },
   warn: function(msg) {
-    logger(this.app, 'WARN', msg);
+    var args = Array.prototype.slice.call(arguments);
+    logger(this.app, 'WARN', args);
   },
   info: function(msg) {
-    logger(this.app, 'INFO', msg);
+    var args = Array.prototype.slice.call(arguments);
+    logger(this.app, 'INFO', args);
   },
   debug: function(msg) {
-    logger(this.app, 'DEBUG', msg);
+    var args = Array.prototype.slice.call(arguments);
+    logger(this.app, 'DEBUG', args);
   },
   trace: function(msg) {
-    logger(this.app, 'TRACE', msg); 
+    var args = Array.prototype.slice.call(arguments);
+    logger(this.app, 'TRACE', args); 
   },
   mark: function(msg) {
-    logger(this.app, 'MARK', msg);
+    var args = Array.prototype.slice.call(arguments);
+    logger(this.app, 'MARK', args);
   },
   count: function(msg) {
-    counter(this.app, 'INFO', 'count', msg);
+    var args = Array.prototype.slice.call(arguments);
+    counter(this.app, 'INFO', 'count', args);
   },
   countEnd: function(msg) {
-    counter(this.app, 'INFO', 'print', msg);
+    var args = Array.prototype.slice.call(arguments);
+    counter(this.app, 'INFO', 'print', args);
   },
   time: function(msg) {
-    timer(this.app, 'INFO', 'count', msg);
+    var args = Array.prototype.slice.call(arguments);
+    timer(this.app, 'INFO', 'count', args);
   },
   timeEnd: function(msg) {
-    timer(this.app, 'INFO', 'print', msg);
+    var args = Array.prototype.slice.call(arguments);
+    timer(this.app, 'INFO', 'print', args);
   },
   profile: function(msg) {
-    profiler(this.app, 'INFO', 'count', msg);
+    var args = Array.prototype.slice.call(arguments);
+    profiler(this.app, 'INFO', 'count', args);
   },
   profileEnd: function(msg) {
-    profiler(this.app, 'INFO', 'print', msg);
+    var args = Array.prototype.slice.call(arguments);
+    profiler(this.app, 'INFO', 'print', args);
   }
 };
 module.exports.logs = logs;
+
+var lvls = { 
+  'ALL':      'all'
+  , 'AUTO':   'auto'
+  , 'OFF':    'off'
+  , 'FATAL':  'fatal'
+  , 'ERROR':  'error'
+  , 'WARN':   'warn'
+  , 'INFO':   'info'
+  , 'DEBUG':  'debug'
+  , 'TRACE':  'trace'
+  , 'MARK':   'mark'
+};
 
 /**
  * logger
  *
  * @param nam {string} - file/category name.
  * @param mlv {string} - message level.
- * @param msg {object|string} - message object/string.
+ * @param msg {object|string|array}
+ *                     - message object/string/array.
  */
 var logger = function(nam, mlv, msg)  {
-  var _msg = [];
-  for(var i=2; i<arguments.length; i++) {
-    if(typeof arguments[i] === 'object') {
-      _msg.push(JSON.stringify(arguments[i], null, 4));
+  var _msg = msg.map(function(val) {
+    if(typeof val === 'object') {
+      return JSON.stringify(val, null, 4);
+    } else if(val == null) {
+      return '?';
     } else {
-      _msg.push(arguments[i]);
+      return val;
     }
-  }
-  msg = _msg.join(' ');
-  log(nam, mlv, msg);
+  });
+  log(nam, mlv, _msg.join(' '));
 };
-module.exports.logger = logger;
 
 /**
  * counter
@@ -113,7 +126,6 @@ var counter = function(nam, mlv, cmd, ttl) {
   }
   return _fn[cmd];
 };
-module.exports.counter = counter;
 
 /**
  * timer
@@ -136,7 +148,6 @@ var timer = function(nam, mlv, cmd, ttl) {
   }
   return _fn[cmd];
 };
-module.exports.timer = timer;
 
 /**
  * profiler
@@ -156,18 +167,17 @@ var profiler = function(nam, mlv, cmd, ttl) {
     stop: function() {
       var _mem = _heapusage.stop(ttl);
       var _cpu = _cpuusage.stop(ttl);
-      log(nam, mlv, _cpu + ', ' + _mem);
+      log(nam, mlv, _cpu + ',' + _mem);
     }
   }
   return _fn[cmd];
 };
-module.exports.profiler = profiler;
 
 /**
  * config
  *
  * @param apd {string} - appender name.
- * @param lyt {string} - layout name.
+ * @param lyt {string} - layout name or server(apd=client only).
  * @param nam {string} - file/category name.
  * @param flv {string} - filter level.
  */
@@ -177,7 +187,6 @@ var config = function(apd, lyt, nam, flv)  {
   _layout(lyt);
   log4js.configure({ appenders, categories });
 };
-module.exports.config = config;
 
 /**
  * log
@@ -205,7 +214,6 @@ var connect = function(nam, mlv) {
   var nolog = '\\.(gif\|jpe?g\|png)$';
   return log4js.connectLogger(logger, { level, format, nolog });
 }
-module.exports.connect = connect;
 
 /**
  * exit
@@ -218,13 +226,12 @@ var close = function(callback) {
     if(callback) callback();
   });
 };
-module.exports.close = close;
 
 /**
  * _appender
  *
  * @param apd {string} - appender name.
- * @param lyt {string} - layout name.
+ * @param lyt {string} - layout name or server(apd=client only).
  * @param nam {string} - file/category/appender name.
  * @returns {object} - appender object.
  */
@@ -235,7 +242,7 @@ var _appender = function(apd, lyt, nam)  {
     , 'server': { type: 'multiprocess', mode: 'master'
                       , appender: nam, loggerHost: '0.0.0.0' }
     , 'client': { type: 'multiprocess', mode: 'worker'
-                                     , loggerHost: '0.0.0.0' }
+                                     , loggerHost: lyt }
   };
   var lyts = {
     'color':      { type: 'coloured' }

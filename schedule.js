@@ -5,7 +5,9 @@ var mps = require('child_process');
 var std = require('./utils/stdutils');
 var dbs = require('./utils/dbsutils');
 var log = require('./utils/logutils').logs;
+
 var pspid = `main(${process.pid})`;
+var psenv = process.env.NODE_ENV;
 
 /**
  * init
@@ -13,8 +15,16 @@ var pspid = `main(${process.pid})`;
  */
 var init = function() {
   var psver = process.version;
-  // Start Log4js server.
-  log.config('console', 'color', 'note-app', 'DEBUG');
+  if(psenv === 'development')
+    log.config('console', 'color', 'note-app', 'TRACE');
+
+  if(psenv === 'staging')
+    log.config('server', 'json', 'note-app', 'DEBUG');
+
+  if(psenv === 'production')
+    log.config('server', 'json', 'note-app', 'INFO');
+
+  // Start Log4js.
   log.info(`${pspid}> Nodejs Version: ${psver}`);
 
   // Add Mongoose module Event Listener.
@@ -27,6 +37,7 @@ var init = function() {
 
   mongoose.connection.on('error', function () {
     log.error(`${pspid}> connection error: ${arguments}`);
+    shutdown(process.exit); 
   });
 
   mongoose.connection.once('open', function() {
@@ -51,14 +62,22 @@ var init = function() {
   });
 
   process.on('uncaughtException', function(err) {
-    log.error(`${pspid}> Got uncaught exception: ${err.message}`);
-    process.exit(1);
+    log.error(`${pspid}> Got uncaught exception: ${err.name}`);
+    log.error(`${pspid}> ${err.message}`);
+    log.error(`${pspid}> ${err.stack}`);
+    shutdown(process.exit); 
+  });
+
+  process.on('warning', function(err) {
+    log.warn(`${pspid}> Got warning!: ${err.name}`);
+    log.warn(`${pspid}> ${err.message}`);
+    log.warn(`${pspid}> ${err.stack}`);
   });
 
   process.on('exit', function(code, signal) {
-    console.log(`${pspid}> Terminated main pid: ${pspid}`);
-    console.log(`${pspid}> About to exit with c/s:`
-    , signal || code);
+    console.log(`${pspid}> Terminated main pid: ${process.pid}`);
+    console.log(
+      `${pspid}> about to exit with c/s: ${signal || code}`);
   });
 };
 
@@ -87,16 +106,29 @@ var fork = function() {
   var cps = mps.fork(mod);
 
   cps.on('message', function(req) {
-    log.info(`${pspid}> parent got message:`, req);
+    log.info(`${pspid}> Parent got message:`, req);
   });
 
-  cps.on('exit', function(code, signal) {
-    log.info(`${pspid}> child process terminated.`
-      , `code/signal: ${signal || code}`);
+  cps.on('error', function(err) {
+    log.error(`${pspid}> Got error: ${err.name}`);
+    log.error(`${pspid}> ${err.message}`);
+    log.error(`${pspid}> ${err.stack}`);
   });
 
   cps.on('disconnect', function() {
-    log.info(`${pspid}> child process disconnected.`);
+    log.info(`${pspid}> IPC channel disconnected.`);
+  });
+
+  cps.on('exit', function(code, signal) {
+    log.info(`${pspid}> Child process terminated.`);
+    log.info(
+      `${pspid}> about to exit with c/s: ${signal || code}`);
+  });
+
+  cps.on('close', function(code, signal) {
+    log.info(`${pspid}> Child process closed.`);
+    log.info(
+      `${pspid}> about to close with c/s: ${signal || code}`);
   });
 
   log.info(`${pspid}> Forked child pid: ${cps.pid}`);
