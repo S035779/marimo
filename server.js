@@ -27,10 +27,10 @@ var init = function() {
     log.config('console', 'color', 'note-web', 'TRACE');
 
   if(psenv === 'staging')
-    log.config('server', 'json', 'note-web', 'DEBUG');
+    log.config('file', 'basic', 'note-web', 'DEBUG');
 
   if(psenv === 'production')
-    log.config('server', 'json', 'note-web', 'INFO');
+    log.config('file', 'json', 'note-web', 'INFO');
 
   // Start Log4js.
   log.info(`${pspid}> Nodejs Version: ${psver}`);

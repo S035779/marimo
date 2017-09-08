@@ -15,6 +15,10 @@ export default class NoteEdit extends React.Component {
     this.setState({ note: Object.assign({}, props.note) });
   }
 
+  handleFetch(){
+    NoteAction.fetchMyNotes();
+  }
+
   handleSave() {
     const { id, title, body, category } = this.state.note;
     NoteAction.update(id, { title, body, category });
@@ -73,6 +77,8 @@ export default class NoteEdit extends React.Component {
             Delete</Button>
           <Button onClick={this.handleShow.bind(this)}>
             Show</Button>
+          <Button onClick={this.handleFetch.bind(this)}>
+            Update</Button>
         </div>
       </div>
       <div className="page-NoteEdit-body">

@@ -23,7 +23,6 @@ class Dashboard extends React.Component {
   handleClickNew() {
     NoteAction.create();
   }
-
   // ５．選択したidを元にノートを特定し、NoteEditに表示
   render() {
     const note = this.state.notes.find(note => note.id === Number(this.props.params.id));

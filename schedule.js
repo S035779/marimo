@@ -19,7 +19,7 @@ var init = function() {
     log.config('console', 'color', 'note-app', 'TRACE');
 
   if(psenv === 'staging')
-    log.config('server', 'json', 'note-app', 'DEBUG');
+    log.config('server', 'basic', 'note-app', 'DEBUG');
 
   if(psenv === 'production')
     log.config('server', 'json', 'note-app', 'INFO');
