@@ -143,15 +143,17 @@ var fork = function() {
  */
 var main = (function() {
   init();
-  var cpu = require('os').cpus().length;
+  //var cpu = require('os').cpus().length;
+  var cpu = 1;
   var cps = [];
   var idx=0;
   var queue = async.queue(function (req, callback) {
-    if(cps.length >= cpu) idx=0;
-    if(cps[idx] === undefined
-      || !cps[idx].connected) cps[idx] = fork();
-    cps[idx].send(req);
-    idx++;
+    if(cps[idx] === undefined || !cps[idx].connected)
+      cps[idx] = fork();
+    cps[idx].send(req, function(err) {
+      if(err) throw err;
+    });
+    if(idx >= cpu) idx=0; else idx++;
     if(callback) callback();
   }, cpu);
 
@@ -167,10 +169,7 @@ var main = (function() {
         dbs.findUsers, { intvl, monit }, {})
       , dbs.findNotes
     ], function(err, req, res) {
-      if(err) {
-        log.error(`${pspid}>`, err.stack);
-        throw err;
-      }
+      if(err) throw err;
       //log.trace(`${pspid}> results:`, res);
       res.notes.forEach( function(note) {
         queue.push(note, function() {

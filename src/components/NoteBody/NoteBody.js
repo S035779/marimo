@@ -3,17 +3,19 @@ import std from '../../../utils/stdutils';
 
 export default class NoteBody extends React.Component {
   renderStatus(s) {
+    var styles;
     switch(s) {
       case 0:
-        return 'Now available.'
+        styles = { fontWeight:'bold', color: 'green' };
+        return <div style={styles}>Now available</div>;
         break;
       case 1:
-        return 'New added.'
+        styles = { fontWeight:'bold', color: 'blue' };
+        return <div style={styles}>New added.</div>;
         break;
       case 2:
-        return 'Removed.'
-        break;
-      default:
+        styles = { fontWeight:'bold', color: 'red' };
+        return <div style={styles}>Removed.</div>;
         break;
     }
   };
@@ -22,22 +24,22 @@ export default class NoteBody extends React.Component {
   renderItem(item) {
     const isResult = item.item.body.hasOwnProperty('ResultSet');
     if(!isResult) return(null);
-    const status        = this.renderStatus(item.status);
-    const updated       = std.getLocalTimeStamp(item.updated);
-    const obj           = item.item.body.ResultSet.Result;
-    const Img           = obj.Img.Image1 
+    const status       = this.renderStatus(item.status);
+    const updated      = std.getLocalTimeStamp(item.updated);
+    const obj          = item.item.body.ResultSet.Result;
+    const Img          = obj.Img.Image1 
                             ? obj.Img.Image1.sub : '';
-    const Url           = obj.AuctionItemUrl;
-    const Price         = obj.Price;
-    const AuctionID     = obj.AuctionID;
-    const CategoryPath  = obj.CategoryPath;
-    const Title         = obj.Title;
-    const SellerId      = obj.Seller.Id;
-    const StartTime     = std.getLocalTimeStamp(obj.StartTime);
-    const EndTime       = std.getLocalTimeStamp(obj.EndTime);
-    const Bids          = obj.Bids;
-    const Condition     = obj.ItemStatus.Condition;
-    const Status        = obj.Status;
+    const Url          = obj.AuctionItemUrl;
+    const Price        = parseInt(obj.Price,10).toLocaleString();
+    const AuctionID    = obj.AuctionID;
+    const CategoryPath = obj.CategoryPath;
+    const Title        = obj.Title;
+    const SellerId     = obj.Seller.Id;
+    const StartTime    = std.getLocalTimeStamp(obj.StartTime);
+    const EndTime      = std.getLocalTimeStamp(obj.EndTime);
+    const Bids         = obj.Bids;
+    const Condition    = obj.ItemStatus.Condition;
+    const Status       = obj.Status;
 
     return <li className='NoteBody-item' key={item.auctionID}>
       <table width="100%"><tbody>
@@ -57,9 +59,9 @@ export default class NoteBody extends React.Component {
         Category : {CategoryPath}<br />
       </span>
       </td><td width="10%">
-      <span className='NoteBody-text'>{Price}yen</span>
+      <span className='NoteBody-text'>{Price} yen</span>
       </td><td width="10%">
-      <span className='NoteBody-text'>{Bids}bids</span>
+      <span className='NoteBody-text'>{Bids} bids</span>
       </td><td width="10%">
       <span className='NoteBody-text'>{Status}</span>
       </td><td width="10%">

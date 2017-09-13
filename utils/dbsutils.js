@@ -210,7 +210,7 @@ var findNotes = function(req, res, callback) {
           var isMon = ((now - doc.updated) % int) < mon;
           //log.trace('updated? :'
           //, updated, nowMon, (nowMon-updated)%int, mon);
-          log.debug(doc._id, isMon);
+          log.debug(doc.id, isMon);
           if (isMon) notes.push(doc);
         });
       } catch(e) {

@@ -118,14 +118,11 @@ var main = (function() {
       , dbs.updateHistorys
       , dbs.updateNote
     ], function(err, req, res) {
-      if (err) {
-        log.error(`${pspid}>`, err.stack);
-        throw err;
-      }
+      if (err) throw err;
       //log.trace(`${pspid}> results:`, res);
       process.send({
         appid: req.appid
-        , noteid: res.note._id
+        , noteid: res.note.id
         , pid: process.pid
       });
       if(callback) callback();
@@ -139,7 +136,7 @@ var main = (function() {
 
   // Add Node IPC Event Listener.
   process.on('message', function(req) {
-    //log.trace(`${pspid}> Child got message:`, req);
+    log.trace(`${pspid}> Child got message:`,{ noteid: req.id });
     queue.push(req, function() {
       log.info(`${pspid}> finished processing note object.`);
     });

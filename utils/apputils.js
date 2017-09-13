@@ -2,6 +2,7 @@ var xml = require('xml2js');
 var std = require('../utils/stdutils');
 var enc = require('../utils/encutils');
 var htp = require('../utils/netutils');
+var log = require('../utils/logutils').logs;
 
 // YAHOO! Auction WebAPI.
 var v1 = 'htps://auctions.yahooapis.jp/AuctionWebService/V1/'
@@ -31,7 +32,7 @@ var YHsearch = function(options, callback) {
         , explicitArray: false }
       , function(err, result) {
       if (err) {
-          logs.error(err.message);
+          log.error(err.message);
           throw err;
       }
 
@@ -51,7 +52,7 @@ var YHsearch = function(options, callback) {
           }
         }
       } else if (obj.body.hasOwnProperty('Error')) {
-        logs.error(YHerror(obj));
+        log.error(YHerror(obj));
       }
 
       if(callback) callback(err, ids, obj, str);
@@ -82,14 +83,14 @@ var YHauctionItem = function(options, callback) {
         , explicitArray: false } 
       , function(err, result) {
       if (err) {
-          logs.error(err.message);
+          log.error(err.message);
           throw err;
       }
 
       var obj = std.merge(head, { body: result });
       var str = JSON.stringify(obj);
       if(obj.body.hasOwnProperty('Error')) {
-        logs.error(YHerror(obj));
+        log.error(YHerror(obj));
       }
 
       if(callback) callback(err, obj, str);
@@ -121,14 +122,14 @@ var YHbidHistory = function(options, callback) {
         , explicitArray: false }
       , function(err, result) {
       if (err) {
-          logs.error(err.message);
+          log.error(err.message);
           throw err;
       }
 
       var obj = std.merge(head, { body: result });
       var str = JSON.stringify(obj);
       if(obj.body.hasOwnProperty('Error')) {
-        logs.error(YHerror(obj));
+        log.error(YHerror(obj));
       }
 
       if(callback) callback(err, obj, str);

@@ -1,3 +1,5 @@
+var log = require('../utils/logutils').logs;
+var std = require('../utils/stdutils');
 /*
  * An 'netutils' module for Node.
  */
@@ -27,16 +29,15 @@ var get = function(url, callback) {
     res.on('end', function() {
       switch (stat) {
         case 200:
-          //process.stdout.write('-');
+          process.stdout.write('-');
           if (callback) callback(stat, head, body);
           break;
         case 400: case 401: case 403: case 404:
-          console.error('HTTP Request Failed. ' 
-            + `Status Code: ${stat}`);
+          log.error(`HTTP Request Failed. Status Code: ${stat}`);
           res.resume();
           return; 
         case 500: case 503:
-          //process.stdout.write('x');
+          process.stdout.write('x');
           get(url, callback);
           break;
         default:
@@ -48,8 +49,9 @@ var get = function(url, callback) {
   });
 
   req.on('error', function(err) {
-    console.error('Problem with HTTP Request. '
-      + `${err.code}: ${err.message}`);
+    log.error(`Problem with HTTP Request: ${err.code}`);
+    log.error(`${err.message}`);
+    log.error(`${err.stack}`);
   });
 };
 module.exports.get = get;
@@ -95,20 +97,19 @@ var post = function(url, data, callback) {
     res.on('end', function() {
       switch (stat) {
         case 200:
-          //process.stdout.write('-');
+          process.stdout.write('-');
           if (callback) callback(stat, head, body);
           break;
         case 400: case 401: case 403: case 404:
-          console.error('HTTP Request Failed. ' 
-            + `Status Code: ${stat}`);
+          log.error(`HTTP Request Failed. Status Code: ${stat}`);
           res.resume();
           return; 
         case 500: case 503:
-          //process.stdout.write('x');
+          process.stdout.write('x');
           post(url, data, callback);
           break;
         default:
-          //process.stdout.write('?');
+          process.stdout.write('?');
           post(url, data, callback);
           break;
       }
@@ -116,8 +117,9 @@ var post = function(url, data, callback) {
   });
 
   req.on('error', function(err) {
-    console.error('Problem with HTTP Request. '
-      + `${err.code}: ${err.message}`);
+    log.error(`Problem with HTTP Request: ${err.code}`);
+    log.error(`${err.message}`);
+    log.error(`${err.stack}`);
   });
 
   req.write(data);

@@ -1,6 +1,7 @@
 import enc from '../../utils/encutils';
 import std from '../../utils/stdutils';
 import xhr from '../../utils/xhrutils';
+import str from '../../utils/strutils';
 
 const LATENCY = 200;
 let username = ''
