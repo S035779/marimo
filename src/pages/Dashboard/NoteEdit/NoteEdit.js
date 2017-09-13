@@ -15,10 +15,6 @@ export default class NoteEdit extends React.Component {
     this.setState({ note: Object.assign({}, props.note) });
   }
 
-  handleFetch(){
-    NoteAction.fetchMyNotes();
-  }
-
   handleSave() {
     const { id, title, body, category } = this.state.note;
     NoteAction.update(id, { title, body, category });
@@ -28,6 +24,9 @@ export default class NoteEdit extends React.Component {
     if (window.confirm('Are you sure?')) {
       NoteAction.delete(this.state.note.id);
     }
+  }
+  handleFetch() {
+    NoteAction.fetchMyNotes();
   }
 
   handleShow() {

@@ -4,12 +4,17 @@ import std from '../../../utils/stdutils';
 export default class NoteBody extends React.Component {
   renderStatus(s) {
     switch(s) {
-    case 0:
-      return 'Now available.'
-    case 1:
-      return 'New added.'
-    case 2:
-      return 'Removed.'
+      case 0:
+        return 'Now available.'
+        break;
+      case 1:
+        return 'New added.'
+        break;
+      case 2:
+        return 'Removed.'
+        break;
+      default:
+        break;
     }
   };
 

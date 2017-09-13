@@ -1,14 +1,20 @@
 var log4js = require('log4js');
 var std = require('./stdutils');
+
 /**
  * Log4js functions Object.
  *
  */
 var logs = {
   app: '',
+  cache: {},
   config: function(apd, lyt, nam, flv) {
     this.app = nam;
     config(apd, lyt, nam, flv);
+    this.cache['counter'] = counter();
+    this.cache['timer'] = timer();
+    this.cache['heapusage'] = heapusage();
+    this.cache['cpuusage'] = cpuusage();
   },
   connect: function() {
     return connect(this.app, 'AUTO');
@@ -44,29 +50,28 @@ var logs = {
     var args = Array.prototype.slice.call(arguments);
     logger(this.app, 'MARK', args);
   },
-  count: function(msg) {
-    var args = Array.prototype.slice.call(arguments);
-    counter(this.app, 'INFO', 'count', args);
+  count: function(ttl) {
+    this.cache.counter.count(ttl);
   },
-  countEnd: function(msg) {
-    var args = Array.prototype.slice.call(arguments);
-    counter(this.app, 'INFO', 'print', args);
+  countEnd: function(ttl) {
+    var cnt = this.cache.counter.print(ttl)
+    log(this.app, 'DEBUG', cnt);
   },
-  time: function(msg) {
-    var args = Array.prototype.slice.call(arguments);
-    timer(this.app, 'INFO', 'count', args);
+  time: function(ttl) {
+    this.cache.timer.count(ttl);
   },
-  timeEnd: function(msg) {
-    var args = Array.prototype.slice.call(arguments);
-    timer(this.app, 'INFO', 'print', args);
+  timeEnd: function(ttl) {
+    var tim = this.cache.timer.print(ttl);
+    log(this.app, 'DEBUG', tim);
   },
-  profile: function(msg) {
-    var args = Array.prototype.slice.call(arguments);
-    profiler(this.app, 'INFO', 'count', args);
+  profile: function(ttl) {
+    this.cache.heapusage.count(ttl);
+    this.cache.cpuusage.count(ttl);
   },
-  profileEnd: function(msg) {
-    var args = Array.prototype.slice.call(arguments);
-    profiler(this.app, 'INFO', 'print', args);
+  profileEnd: function(ttl) {
+    var mem = this.cache.heapusage.print(ttl);
+    var cpu = this.cache.cpuusage.print(ttl);
+    log(this.app, 'DEBUG', cpu + ', ' + mem);
   }
 };
 module.exports.logs = logs;
@@ -103,74 +108,6 @@ var logger = function(nam, mlv, msg)  {
     }
   });
   log(nam, mlv, _msg.join(' '));
-};
-
-/**
- * counter
- *
- * @param nam {string} - file/category name.
- * @param mlv {string} - message level.
- * @param cmd {string} - function command.
- * @param msg {string} - message title.
- * @returns {function}
- */
-var counter = function(nam, mlv, cmd, ttl) {
-  var _fn = {
-    count: function() {
-      _counter.count(ttl);
-    },
-    print: function() {
-      var _cnt = _counter.stop(ttl)
-      log(nam, mlv, _cnt);
-    }
-  }
-  return _fn[cmd];
-};
-
-/**
- * timer
- *
- * @param nam {string} - file/category name.
- * @param mlv {string} - message level.
- * @param cmd {string} - function command.
- * @param ttl {string} - message title.
- * @returns {function}
- */
-var timer = function(nam, mlv, cmd, ttl) {
-  var _fn = {
-    count: function() {
-      _timer.count(ttl);
-    },
-    print: function() {
-      var _tim = _timer.stop(ttl);
-      log(nam, mlv, _tim);
-    }
-  }
-  return _fn[cmd];
-};
-
-/**
- * profiler
- *
- * @param nam {string} - file/category name.
- * @param mlv {string} - message level.
- * @param cmd {string} - function command.
- * @param msg {string} - message title.
- * @returns {function}
- */
-var profiler = function(nam, mlv, cmd, ttl) {
-  var _fn = {
-    count: function() {
-      _heapusage.count(ttl);
-      _cpuusage.count(ttl);
-    },
-    stop: function() {
-      var _mem = _heapusage.stop(ttl);
-      var _cpu = _cpuusage.stop(ttl);
-      log(nam, mlv, _cpu + ',' + _mem);
-    }
-  }
-  return _fn[cmd];
 };
 
 /**
@@ -305,34 +242,34 @@ var _layout = function(lyt) {
 };
 
 /**
- * _counter
+ * counter
  *
- * @returns {function}
+ * @returns {object}
  */
-var _counter = (function(){
+var counter = function(){
   var _s = 'count';
   var _n = {};
   return {
     count: function(s) {
       _s = s || _s;
-      if(_n.hasOwnProperty(_s))  _n[_s] = 0;
+      if(!_n.hasOwnProperty(_s))  _n[_s] = 0;
       return _n[_s]++;
     },
     print: function(s) {
-      var _s = s || _s;
+      _s = s || _s;
       var msg =  `${_s}: ${_n[_s]}`;
       delete _n[_s];
       return msg;
     }
   }
-})();
+};
 
 /**
- * _timer
+ * timer
  *
- * @returns {function}
+ * @returns {object}
  */
-var _timer = (function() {
+var timer = function() {
   var _s = 'rapTime';
   var _b = {};
   var _e = {};
@@ -345,7 +282,7 @@ var _timer = (function() {
     var hr = i%24;    i = (i-hr)/24;
     var dy = i;
     var ret =
-      (dy<10 ? '0' : '') + dy + ' ' + 
+      (dy<10 ? '0' : '') + dy + '-' + 
       (hr<10 ? '0' : '') + hr + ':' + 
       (mn<10 ? '0' : '') + mn + ':' + 
       (sc<10 ? '0' : '') + sc + '.' + 
@@ -353,66 +290,93 @@ var _timer = (function() {
     return ret;
   };
   return {
+    new: function(s) {
+      _b[s] = Date.now();
+      _r[s] = new Array();
+    },
+    add: function(s) {
+      _e[s] = Date.now(); 
+      _r[s].push(size(_b[s], _e[s]));
+    },
+    del: function(s) {
+      delete _b[s], _e[s], _r[s];
+    },
     count: function(s) { 
       _s = s || _s;
-      if(_b.hasOwnProperty(_s))  _b[_s] = Date.now();
-      _e[_s] = Date.now(); 
-      _r[_s].push(size(_b[_s], _e[_s])); 
-      return _r[_s].join();
+      if(!_b.hasOwnProperty(_s)) {
+        this.new(_s);
+      } else {
+        this.add(_s);
+      }
+      return _r[_s].join(' ');
     },
     print: function(s) {
       _s = s || _s;
-      var msg =  `${_s}: ${_r[_s].join()}`;
-      delete _b[_s], _e[_s], _r[_s];
+      this.add(_s);
+      var msg =  `${_s}: ${_r[_s].join(' ')}`;
+      this.del(_s);
       return msg;
     }
   }
-})();
+};
 
 /**
- * _heapusage
+ * heapusage
  *
- * @returns {function}
+ * @returns {object}
  */
-var _heapusage = (function() {
+var heapusage = function() {
   var _s = 'heapUsed';
   var _b = {};
   var _e = {};
   var _r = {};
   var size = function (a,b){
-    if(0 === a) return "0 Bytes";
-    var c = 1024;
-    var d = b || 3;
-    var e = ["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"];
-    var f = Math.floor(Math.log(a)/Math.log(c));
-    var ret =
-      parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f]
+    var i = a;
+    if(0 === i) return "0 Bytes";
+    var j = 1024;
+    var k = b || 3;
+    var l = ["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"];
+    var m = Math.floor(Math.log(i)/Math.log(j));
+    var ret = parseFloat(i/Math.pow(j,m)).toFixed(k)+l[m];
     return ret; 
   };
   return {
+    new: function(s) {
+      _b[s] = process.memoryUsage().heapUsed
+      _r[s] = new Array();
+    },
+    add: function(s) {
+      _e[s] = process.memoryUsage().heapUsed
+      _r[s].push(size(_e[_s], 3));
+    },
+    del: function(s) {
+      delete _b[s], _e[s], _r[s];
+    },
     count: function(s) {
       _s = s || _s;
-      if(_b.hasOwnProperty(_s))
-        _b[_s] = process.memoryUsage().heapUsed;
-      _e[_s] = process.memoryUsage().heapUsed
-      _r[_s].push(size(_e[_s], 3));
-      return _r[_s].join();
+      if(!_b.hasOwnProperty(_s)) {
+        this.new(_s);
+      } else {
+        this.add(_s);
+      }
+      return _r[_s].join(' ');
     },
     print: function(s) {
       _s = s || _s;
-      var msg =  `${_s}: ${size(_b[_s], 3)} ${_r[_s].join()}`;
-      delete _b[_s], _e[_s], _r[_s];
+      this.add(_s);
+      var msg = `${_s}: ${size(_b[_s],3)} -> ${_r[_s].join(' ')}`;
+      this.del(_s);
       return msg;
     }
   }
-})();
+};
 
 /**
- * _cpuusage
+ * cpuusage
  *
- * @returns {function}
+ * @returns {object}
  */
-var _cpuusage = (function() {
+var cpuusage = function() {
   var _s = 'cpuUsed';
   var _b = {}; 
   var _e = {};
@@ -421,27 +385,39 @@ var _cpuusage = (function() {
   var size = function(a,b,c) {
     if(0 === a) return "0 %";
     var i = b * 1000;
-    var d = c || 2;
-    var ret = parseFloat((a / i).toFixed(d))+" "+"%"; 
+    var j = c || 2;
+    var ret = parseFloat(a / i).toFixed(j)+"%"; 
     return ret;
   };
   return {
+    new: function(s) {
+      _b[s] = process.cpuUsage();
+      _r[s] = new Array();
+      _t[s] = Date.now();
+    },
+    add: function(s) {
+      _e[s] = process.cpuUsage(_b[s]);
+      _r[s].push(size(_e[s].user, Date.now()-_t[s], 2));
+    },
+    del: function(s) {
+      delete _b[_s], _e[_s], _r[_s], _t[_s];
+    },
     count: function(s) {
       _s = s || _s;
-      if(_b.hasOwnProperty(_s)) {
-        _b[_s] = process.cpuUsage();
-        _t[_s] = Date.now();
+      if(!_b.hasOwnProperty(_s)) {
+        this.new(_s);
+      } else {
+        this.add(_s);
       }
-      _e[_s] = process.cpuUsage(_b[_s]);
-      _r[_s].push(size(_e[_s].user, Date.now()-_t[_s], 2));
-      return _r[_s].join();
+      return _r[_s].join(' ');
     },
     print: function(s) {
       _s = s || _s;
-      var msg =  `${_s}: ${_r[_s].join()}`;
-      delete _b[_s], _e[_s], _r[_s], _t[_s];
+      this.add(_s);
+      var msg =  `${_s}: ${_r[_s].join(' ')}`;
+      this.del(_s);
       return msg;
     }
   }
-})();
+};
 

@@ -194,8 +194,7 @@ var findNotes = function(req, res, callback) {
   var int = int*1000*60*60;
   var mon = mon*1000*60;
   var date = new Date();
-  var nowMon = date.getTime();
-  var pstMon = date.setTime(nowMon - int)
+  var now = date.getTime();
 
   var notes=[];
   async.forEach(users, function(user, cbk) {
@@ -208,14 +207,11 @@ var findNotes = function(req, res, callback) {
       }
       try {
         docs.forEach(function(doc) {
-          var updated = doc.updated;
-          var isMon = ((nowMon - updated) % int) < mon;
+          var isMon = ((now - doc.updated) % int) < mon;
           //log.trace('updated? :'
           //, updated, nowMon, (nowMon-updated)%int, mon);
-          log.debug(isMon);
-          if (isMon 
-            && ((updated < nowMon) || (updated < pstMon))
-          ) notes.push(doc);
+          log.debug(doc._id, isMon);
+          if (isMon) notes.push(doc);
         });
       } catch(e) {
         return cbk(e);
@@ -242,18 +238,11 @@ module.exports.findNotes = findNotes;
  * @param callback {function}
  */
 var findHistorys = function(req, res, callback) {
-  var int = req.hasOwnProperty('intvl') ? req.intvl : 24;
   var historyids = res.note.historyid;
-
-  var date = new Date();
-  var nowDay = date.getTime();
-  var oldDay = date.setHours(date.getHours()-int);
-
   var historys=[];
   async.forEach(historyids, function(historyid, cbk) {
     History.find({
       _id: ObjectId(historyid)
-      , updated: { $gte: oldDay, $lt: nowDay } 
     }).exec(function(err, docs) {
       if(err) {
         log.error(err.message);
@@ -294,9 +283,9 @@ var getResultSet = function(req, res, callback) {
     ? req.body.body : res.note.search;
   var page = req.hasOwnProperty('body') ? 1 : maxPage;
 
-  log.count('getResultSet');
-  log.time('getResultSet');
-  log.profile('getResultSet');
+  log.count();
+  log.time();
+  log.profile();
   app.YHsearch({ 
     appid:    req.appid
     , query
@@ -321,9 +310,9 @@ var getResultSet = function(req, res, callback) {
     //  , opt.firstResultPosition
     //);
     
-    log.countEnd('getResultSet');
-    log.timeEnd('getResultSet');
-    log.profileEnd('getResultSet');
+    log.countEnd();
+    log.timeEnd();
+    log.profileEnd();
 
     log.info(`${pspid}> get ResultSet done.`);
     if(callback) callback(err, req, std.extend(res, { pages }));
@@ -339,17 +328,17 @@ module.exports.getResultSet = getResultSet;
  * @param callback {function}
  */
 var getAuctionIds = function(req, res, callback) {
-  var oldIds = res.note.items;
-  var newIds = [];
-  var Ids = [];
+  var int = req.hasOwnProperty('intvl') ? req.intvl : 24;
   var query = req.hasOwnProperty('body') 
     ? req.body.body : res.note.search;
   var historys = res.hasOwnProperty('historys')
     ? res.historys : null;
 
-  log.count('getAuctionIds');
-  log.time('getAuctionIds');
-  log.profile('getAuctionIds');
+  log.time();
+  log.profile();
+
+  var newIds = [];
+  var Ids = [];
   async.forEachSeries(res.pages, function(page, cbk) {
     //log.trace(`page:`, page);
     app.YHsearch({ 
@@ -369,7 +358,7 @@ var getAuctionIds = function(req, res, callback) {
       } catch(e) {
         return cbk(e);
       }
-      //log.count();
+      log.count();
       cbk();
     });
   }, function(err) {
@@ -378,29 +367,74 @@ var getAuctionIds = function(req, res, callback) {
       throw err;
     }
     //log.trace(newIds);
-    Ids = helperIds(oldIds, newIds);
+    Ids = helperIds(historys, newIds, int);
     
-    log.countEnd('getAuctionIds');
-    log.timeEnd('getAuctionIds');
-    log.profileEnd('getAuctionIds');
+    log.countEnd();
+    log.timeEnd();
+    log.profileEnd();
 
     log.info(`${pspid}> get AuctionIDs done.`);
     if(callback) callback(err, req, std.extend(res, { Ids }));
   });
 };
-
-var helperIds = function(o, p) {
-  var ret = [];
-  var n = std.and(o, p);
-  n.forEach(function(id){ ret.push({ id, status: 0 }); });
-  var a = std.add(o, p);
-  a.forEach(function(id){ ret.push({ id, status: 1 }); });
-  var d = std.del(o, p);
-  d.forEach(function(id){ ret.push({ id, status: 2 }); });
-  //log.trace(ret);
-  return ret;
-};
 module.exports.getAuctionIds = getAuctionIds;
+
+/**
+ * helperIds
+ *
+ * @param o {object} - Now History Objects.
+ * @param p {array} - New AuctionID's Array.
+ * @param q {number} - Interval times of Monitoring.
+ * @returns {array} - AuctionIDs Array.
+ */
+var helperIds = function(o, p, q) {
+  var result = [];
+  var date = new Date();
+  var old = date.setHours(date.getHours()-q);
+  var _o = std.keys(o);
+  // When the status is '0:now'.
+  var _x = std.and(_o, p);
+  _x.forEach(function(id){
+    result.push({
+      id
+      , _id: o[id]._id
+      , status: 0
+      , updated: Date.now()
+    });
+  });
+  // When the status is '1:new'.
+  var _y = std.add(_o, p);
+  _y.forEach(function(id){
+    var historyId = new ObjectId;
+    result.push({
+      id
+      , _id: historyId
+      , status: 1
+      , updated: Date.now()
+    });
+  });
+  // When the status is '2:del' or '3:old'.
+  var _z = std.del(_o, p);
+  _z.forEach(function(id){
+    if(o[id].updated > old) {
+      result.push({
+        id
+        , _id: o[id]._id
+        , status: 2
+        , updated: o[id].updated
+      });
+    } else {
+      result.push({
+        id
+        , _id: o[id]._id
+        , status: 3
+        , updated: o[id].updated
+      });
+    }
+  });
+  //log.trace(result);
+  return result;
+};
 
 /**
  * Get the 'YAHOO! Auction Items', 
@@ -411,12 +445,13 @@ module.exports.getAuctionIds = getAuctionIds;
  * @param callback {function}
  */
 var getAuctionItems = function(req, res, callback) {
-  var Items=[];
+  var Ids = res.Ids;
 
-  log.count('getAuctionItems');
-  log.time('getAuctionItems');
-  log.profile('getAuctionItems');
-  async.forEachSeries(res.Ids, function(Id, cbk) {
+  log.time();
+  log.profile();
+
+  var Items=[];
+  async.forEachSeries(Ids, function(Id, cbk) {
     //log.trace(`auction_id, status :`, Id.id, Id.status);
     app.YHauctionItem({ appid: req.appid, auctionID: Id.id }
     , function(err, obj){
@@ -424,9 +459,10 @@ var getAuctionItems = function(req, res, callback) {
         log.error(err.message);
         return cbk(err);
       }
-      Items[Id.id]={ item: obj, status: Id.status };
+      if(Id.status !== 3)
+        Items[Id.id]={ item: obj, status: Id.status };
       //log.trace(Items[Id.id]);
-      //log.count();
+      log.count();
       cbk();
     });
   }, function(err) {
@@ -436,9 +472,9 @@ var getAuctionItems = function(req, res, callback) {
     }
     //log.trace(Items);
     
-    log.countEnd('getAuctionItems');
-    log.timeEnd('getAuctionItems');
-    log.profileEnd('getAuctionItems');
+    log.countEnd();
+    log.timeEnd();
+    log.profileEnd();
 
     log.info(`${pspid}> get AuctionItems done.`);
     if(callback) callback(err, req, std.extend(res, { Items }));
@@ -455,12 +491,13 @@ module.exports.getAuctionItems = getAuctionItems;
  * @param callback {function}
  */
 var getBidHistorys = function(req, res, callback) {
-  var Bids=[];
+  var Ids = res.Ids;
 
-  log.count('getBidHistorys');
-  log.time('getBidHistorys');
-  log.profile('getBidHistorys');
-  async.forEachSeries(res.Ids, function(Id, cbk) {
+  log.time();
+  log.profile();
+
+  var Bids=[];
+  async.forEachSeries(Ids, function(Id, cbk) {
     //log.trace(`auction_id, status :`, Id.id, Id.status);
     app.YHbidHistory({ appid: req.appid, auctionID: Id.id }
     , function(err, obj){
@@ -468,9 +505,10 @@ var getBidHistorys = function(req, res, callback) {
         log.error(err.message);
         return cbk(err);
       }
-      Bids[Id.id]={ bids: obj, status: Id.status };
+      if(Id.status !== 3)
+        Bids[Id.id]={ bids: obj, status: Id.status };
       //log.trace(Bids[Id.id]);
-      //log.count();
+      log.count();
       cbk();
     });
   },function(err) {
@@ -480,9 +518,9 @@ var getBidHistorys = function(req, res, callback) {
     }
     //log.trace(Bids);
     
-    log.countEnd('getBidHistorys');
-    log.timeEnd('getBidHistorys');
-    log.profileEnd('getBidHistorys');
+    log.countEnd();
+    log.timeEnd();
+    log.profileEnd();
 
     log.info(`${pspid}> get BidsHistorys done.`);
     if(callback) callback(err, req, std.extend(res, { Bids }));
@@ -498,23 +536,23 @@ module.exports.getBidHistorys = getBidHistorys;
  * @param callback {function}
  */
 var updateHistorys = function(req, res, callback) {
+  var Ids = res.Ids;
   var userid = res.note.userid;
   var noteid = ObjectId(res.note._id);
-  var historyIds = res.note.historyid;
+  //var historyIds = res.note.historyid;
   var where = {};
   var set = {};
   var opt = {};
   var obj = {};
-  async.forEach(res.Ids, function(Id, cbk) {
-    obj = {
-      item:      res.Items[Id.id].item
-      , bids:    res.Bids[Id.id].bids
-      , status:  Id.status
-      , updated: Date.now()
-    };
-    if(Id.status === 0 || Id.status === 2) { 
+  async.forEach(Ids, function(Id, cbk) {
+    if(Id.status === 0) {
       // When the status is '0:now'.
-      // When the status is '2:del'.
+      obj = {
+        item:        res.Items[Id.id].item
+        , bids:      res.Bids[Id.id].bids
+        , status:    Id.status
+        , updated:   Id.updated
+      };
       where = { noteid, auctionID: Id.id };
       set   = { $set: obj };
       opt   = { upsert: false, multi: true };
@@ -525,16 +563,19 @@ var updateHistorys = function(req, res, callback) {
         }
         cbk();
       });
-    } else if(Id.status === 1) { 
+    } else if(Id.status === 1) {
       // When the status is '1:add'.
-      historyId = new ObjectId;
-      obj = std.merge(obj, {
-        _id: historyId
+      obj = {
+        _id: Id._id
         , userid
         , noteid
         , auctionID: Id.id
-      }); 
-      historyIds.push(historyId);
+        , item:      res.Items[Id.id].item
+        , bids:      res.Bids[Id.id].bids
+        , status:    Id.status
+        , updated:   Id.updated
+      };
+      //historyIds.push(historyId);
       History.create(obj, function(err) {
         if(err) {
           log.error(err.message);
@@ -542,6 +583,9 @@ var updateHistorys = function(req, res, callback) {
         }
         cbk();
       });
+    } else {
+      // When the status is '2:del' '3:old'.
+      cbk();
     }
   }, function(err) {
     if(err) {
@@ -549,8 +593,7 @@ var updateHistorys = function(req, res, callback) {
       throw err;
     }
     log.info(`${pspid}> update Historys done.`);
-    if(callback) 
-      callback(err, req, std.extend(res, { historyIds }));
+    if(callback) callback(err, req, res);
   });
 };
 module.exports.updateHistorys = updateHistorys;
@@ -587,11 +630,13 @@ var updateNote = function(req, res, callback) {
     id = res.note.id;
   }
 
-  if (res.hasOwnProperty('historyIds') 
-    && res.hasOwnProperty('Ids')) { 
+  //if (res.hasOwnProperty('historyIds') 
+  if(res.hasOwnProperty('Ids')) { 
     // isItem
-    historyid = res.historyIds;
-    items = res.Ids.map(function(Id){ return Id.id; });
+    //historyid = res.historyIds;
+    var Ids = res.Ids.filter(function(Id){return Id.status!==3;});
+    historyid = Ids.map(function(Id){ return Id._id; });
+    items     = Ids.map(function(Id){ return Id.id; });
     obj = std.merge(obj, { historyid, items });
   }
 

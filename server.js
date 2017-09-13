@@ -43,8 +43,10 @@ var init = function() {
     , promiseLibrary: global.Promise
   });
 
-  mongoose.connection.on('error', function () {
-    log.error(`${pspid}> connection error: ${arguments}`)
+  mongoose.connection.on('error', function (err) {
+    log.error(`${pspid}> Got Mongoose error: ${err.name}`);
+    log.error(`${pspid}> ${err.message}`);
+    log.error(`${pspid}> ${err.stack}`);
     shutdown(process.exit);
   });
 

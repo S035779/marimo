@@ -35,9 +35,11 @@ var init = function() {
     , promiseLibrary: global.Promise
   });
 
-  mongoose.connection.on('error', function () {
-    log.error(`${pspid}> connection error: ${arguments}`);
-    shutdown(process.exit); 
+  mongoose.connection.on('error', function (err) {
+    log.error(`${pspid}> Got Mongoose error: ${err.name}`);
+    log.error(`${pspid}> ${err.message}`);
+    log.error(`${pspid}> ${err.stack}`);
+    shutdown(process.exit);
   });
 
   mongoose.connection.once('open', function() {
@@ -106,7 +108,7 @@ var fork = function() {
   var cps = mps.fork(mod);
 
   cps.on('message', function(req) {
-    log.info(`${pspid}> Parent got message:`, req);
+    log.trace(`${pspid}> Parent got message:`, req);
   });
 
   cps.on('error', function(err) {

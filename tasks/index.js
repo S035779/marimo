@@ -34,8 +34,10 @@ var init = function() {
     , promiseLibrary: global.Promise
   });
 
-  mongoose.connection.on('error', function () {
-    log.error(`${pspid}> connection error: ${arguments}`);
+  mongoose.connection.on('error', function (err) {
+    log.error(`${pspid}> Got Mongoose error: ${err.name}`);
+    log.error(`${pspid}> ${err.message}`);
+    log.error(`${pspid}> ${err.stack}`);
     shutdown(process.exit);
   });
 
@@ -121,7 +123,11 @@ var main = (function() {
         throw err;
       }
       //log.trace(`${pspid}> results:`, res);
-      process.send({ request: req, pid: process.pid });
+      process.send({
+        appid: req.appid
+        , noteid: res.note._id
+        , pid: process.pid
+      });
       if(callback) callback();
     });
   }, 1);
@@ -133,7 +139,7 @@ var main = (function() {
 
   // Add Node IPC Event Listener.
   process.on('message', function(req) {
-    log.trace(`${pspid}> Child got message:`, req);
+    //log.trace(`${pspid}> Child got message:`, req);
     queue.push(req, function() {
       log.info(`${pspid}> finished processing note object.`);
     });

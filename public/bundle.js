@@ -3871,7 +3871,7 @@ module.exports = reactProdInvariant;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
+
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
@@ -3987,7 +3987,7 @@ module.exports.intersection = intersection;
  * @returns {array}
  */
 var keys = function keys(o) {
-  if ((typeof o === 'undefined' ? 'undefined' : _typeof(o)) !== "object") throw TypeError();
+  if ((typeof o === "undefined" ? "undefined" : _typeof(o)) !== "object") throw TypeError();
   // Object argument required
   var result = []; // The array we will return
   for (var prop in o) {
@@ -4163,140 +4163,9 @@ var getLocalTimeStamp = function getLocalTimeStamp(s) {
   var _mo = dt.getMonth() + 1;
   var _dy = dt.getDate();
   var _tm = dt.toTimeString().split(' ')[0];
-  return _yr + '-' + _mo + '-' + _dy + ' ' + _tm;
+  return _yr + "-" + _mo + "-" + _dy + " " + _tm;
 };
 module.exports.getLocalTimeStamp = getLocalTimeStamp;
-
-/**
- * counter
- *
- * @param {string} s
- * @returns {object}
- */
-var counter = function counter(s) {
-  var _n = 0;
-  var _s = s || 'count';
-  return {
-    count: function count() {
-      return _n++;
-    },
-    reset: function reset() {
-      _n = 0;
-    },
-    print: function print() {
-      return console.log(_s + ': ' + _n);
-    }
-  };
-};
-module.exports.counter = counter;
-
-/**
- * timer
- *
- * @param {string} s
- * @returns {object}
- */
-var timer = function timer(s) {
-  var _b = Date.now();
-  var _e = 0;
-  var _r = [];
-  var _s = s || 'rapTime';
-  var size = function size(a, b) {
-    var i = b - a;
-    var ms = i % 1000;i = (i - ms) / 1000;
-    var sc = i % 60;i = (i - sc) / 60;
-    var mn = i % 60;i = (i - mn) / 60;
-    var hr = i % 24;i = (i - hr) / 24;
-    var dy = i;
-    var ret = (dy < 10 ? '0' : '') + dy + ' ' + (hr < 10 ? '0' : '') + hr + ':' + (mn < 10 ? '0' : '') + mn + ':' + (sc < 10 ? '0' : '') + sc + '.' + (ms < 100 ? '0' : '') + (ms < 10 ? '0' : '') + ms;
-    return ret;
-  };
-  return {
-    count: function count() {
-      _e = Date.now();
-      _r.push(size(_b, _e));
-      return _r.join();
-    },
-    reset: function reset() {
-      _b = Date.now();
-    },
-    print: function print() {
-      return console.log(_s + ': ' + _r.join());
-    }
-  };
-};
-module.exports.timer = timer;
-
-/**
- * heapused
- *
- * @param {string} s
- * @returns {object}
- */
-var heapused = function heapused(s) {
-  var _b = process.memoryUsage().heapUsed;
-  var _e = 0;
-  var _r = [];
-  var _s = s || 'heapUsed';
-  var size = function size(a, b) {
-    if (0 === a) return "0 Bytes";
-    var c = 1024;
-    var d = b || 3;
-    var e = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-    var f = Math.floor(Math.log(a) / Math.log(c));
-    var ret = parseFloat((a / Math.pow(c, f)).toFixed(d)) + " " + e[f];
-    return ret;
-  };
-  return {
-    count: function count() {
-      _e = process.memoryUsage().heapUsed;
-      _r.push(size(_e));
-      return _r.join();
-    },
-    reset: function reset() {
-      _b = process.memoryUsage().heapUsed;
-    },
-    print: function print() {
-      return console.log(_s + ': ' + size(_b) + ' ' + _r.join());
-    }
-  };
-};
-module.exports.heapused = heapused;
-
-/**
- * cpuused
- *
- * @param {string} s
- * @returns {object}
- */
-var cpuused = function cpuused(s) {
-  var _b = process.cpuUsage();
-  var _e = 0;
-  var _t = Date.now();
-  var _r = [];
-  var _s = s || 'cpuUsed';
-  var size = function size(a, b, c) {
-    if (0 === a) return "0 %";
-    var i = (b - _t) * 1000;
-    var d = c || 2;
-    var ret = parseFloat((a / i).toFixed(d)) + " " + "%";
-    return ret;
-  };
-  return {
-    count: function count() {
-      _e = process.cpuUsage(_b);
-      _r.push(size(_e.user, Date.now()));
-      return _r.join();
-    },
-    reset: function reset() {
-      _b = process.cpuUsage();
-    },
-    print: function print() {
-      return console.log(_s + ': ' + _r.join());
-    }
-  };
-};
-module.exports.cpuused = cpuused;
 
 /**
  * Schedule an invocation or invovations of fn() in the future.
@@ -4327,7 +4196,6 @@ var invoke = function invoke(fn, s, i, e) {
   }
 };
 module.exports.invoke = invoke;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 34 */
@@ -9122,10 +8990,15 @@ var NoteBody = function (_React$Component) {
       switch (s) {
         case 0:
           return 'Now available.';
+          break;
         case 1:
           return 'New added.';
+          break;
         case 2:
           return 'Removed.';
+          break;
+        default:
+          break;
       }
     }
   }, {
@@ -16523,7 +16396,6 @@ var Dashboard = function (_React$Component) {
     value: function handleClickNew() {
       _NoteAction2.default.create();
     }
-
     // ５．選択したidを元にノートを特定し、NoteEditに表示
 
   }, {
@@ -16662,6 +16534,11 @@ var NoteEdit = function (_React$Component) {
       }
     }
   }, {
+    key: 'handleFetch',
+    value: function handleFetch() {
+      _NoteAction2.default.fetchMyNotes();
+    }
+  }, {
     key: 'handleShow',
     value: function handleShow() {
       _reactRouter.browserHistory.push('/notes/' + this.state.note.id);
@@ -16727,6 +16604,11 @@ var NoteEdit = function (_React$Component) {
               _Button2.default,
               { onClick: this.handleShow.bind(this) },
               'Show'
+            ),
+            _react2.default.createElement(
+              _Button2.default,
+              { onClick: this.handleFetch.bind(this) },
+              'Update'
             )
           )
         ),

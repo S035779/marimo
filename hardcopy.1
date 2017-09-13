@@ -1,0 +1,90 @@
+250   async.forEach(historyids, function(historyid, cbk) {²
+251     History.find({²
+252       _id: ObjectId(historyid)²
+253       , updated: { $gte: oldDay, $lt: nowDay }-²
+254     }).exec(function(err, docs) {²
+255       if(err) {²
+256         log.error(err.message);²
+257         return cbk(err);²
+258       }²
+259       try {²
+260         docs.forEach(function(doc) {²
+261           historys[doc.auctionID] = doc;²
+262         });²
+263       } catch(e) {²
+264         return cbk(e);²
+265       }²
+266       cbk();²
+267     });²
+268   }, function (err) {²
+269     if(err) {²
+270       log.error(err.message);²
+271       throw err;²
+272     }²
+273     //log.trace(historys);²
+274     log.info(`${pspid}> find Historys done.`);²
+275     if(callback)-²
+276       callback(err, req, std.extend(res, { historys }));²
+277   });²
+278 };²
+279 module.exports.findHistorys = findHistorys;²
+280 ²
+281 /**²
+282  * Get the 'YAHOO! Search Pages', using 'YAHOO! Search' utility.²
+283  *²
+284  * @param req {object}²
+285  * @param res {object}²
+286  * @param callback {function}²
+287  */²
+288 var getResultSet = function(req, res, callback) {²
+289   var maxPage = req.hasOwnProperty('pages') ? req.pages : 5;²
+290   var query = req.hasOwnProperty('body')-²
+291     ? req.body.body : res.note.search;²
+292   var page = req.hasOwnProperty('body') ? 1 : maxPage;²
+293 ²
+294   log.count();²
+295   log.time();²
+296   log.profile();²
+297   app.YHsearch({-²
+298     appid:    req.appid²
+299     , query²
+300     , sort:   'bids'²
+301     , order:  'a'-²
+302   }, function(err, ids, obj){²
+303     if (err) {²
+304       log.error(err.message);²
+305       throw err;²
+306     }²
+307     var opt = obj.body.ResultSet.root;²
+308     var pages = [];²
+309     for(var i=0; i<Math.ceil(²
+310       opt.totalResultsAvailable/opt.totalResultsReturned); i++){²
+311       if(i>=page) break;²
+312       pages[i]=i+1;²
+313     }²
+314     log.debug(`Number of pages: ${pages.length}`);²
+315     //log.trace(`Avail, Return, position :`²
+316     //  , opt.totalResultsAvailable²
+317     //  , opt.totalResultsReturned²
+318     //  , opt.firstResultPosition²
+319     //);²
+320 ----²
+321     log.countEnd();²
+322     log.timeEnd();²
+323     log.profileEnd();²
+324 ²
+325     log.info(`${pspid}> get ResultSet done.`);²
+326     if(callback) callback(err, req, std.extend(res, { pages }));²
+327   });²
+328 };²
+329 module.exports.getResultSet = getResultSet;²
+330 ²
+331 /**²
+332  * Get the 'YAHOO! Auction IDs', using 'YAHOO! Search' utility.²
+333  *²
+334  * @param req {object}²
+335  * @param res {object}²
+336  * @param callback {function}²
+337  */²
+338 var getAuctionIds = function(req, res, callback) {²
+"utils/dbsutils.js" 641L, 16067C øÿ¼ÿÿ              296,7         45%
