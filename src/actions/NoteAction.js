@@ -1,99 +1,106 @@
 import { dispatch } from '../dispatcher';
 import NoteApiClient from '../services/NoteApiClient';
+import Spinner from '../../utils/spin';
 
 export default {
   spinner() {
     //設定
     const opts = {
-      lines: 13, //線の数
-      length: 33, //線の長さ
-      width: 11, //線の幅
-      radius: 16, //スピナーの内側の広さ
-      corners: 1, //角の丸み
-      rotate: 74, //向き(あんまり意味が無い・・)
-      direction: 1, //1：時計回り -1：反時計回り
-      color: '#000', // 色
-      speed: 1.5, // 一秒間に回転する回数
-      trail: 71, //残像の長さ
-      shadow: true, // 影
-      hwaccel: true, // ？
-      className: 'spinner', // クラス名
-      zIndex: 2e9, // Z-index
-      top: '50%', // relative TOP
-      left: '30%', // relative LEFT
-      opacity: .25, //透明度
-      fps: 20 //fps
+        lines: 13 // The number of lines to draw
+      , length: 28 // The length of each line
+      , width: 14 // The line thickness
+      , radius: 42 // The radius of the inner circle
+      , scale: 1 // Scales overall size of the spinner
+      , corners: 1 // Corner roundness (0..1)
+      , color: '#000' // #rgb or #rrggbb or array of colors
+      , opacity: 0.25 // Opacity of the lines
+      , rotate: 0 // The rotation offset
+      , direction: 1 // 1: clockwise, -1: counterclockwise
+      , speed: 1 // Rounds per second
+      , trail: 60 // Afterglow percentage
+      , fps: 20 // Frames per second when using setTimeout() as
+                // a fallback for CSS
+      , zIndex: 2e9 // The z-index (defaults to 2000000000)
+      , className: 'spinner'  // The CSS class to assign to the
+                              //  spinner
+      , top: '49%' // Top position relative to parent
+      , left: '49%' // Left position relative to parent
+      , shadow: false // Whether to render a shadow
+      , hwaccel: false // Whether to use hardware acceleration
+      , position: 'absolute' // Element positioning
     };
     //スピナーオブジェクト
     return new Spinner(opts);
   },
 
-  target() {
-    return document.getElementById('app');
+  target(elm) {
+    return document.getElementById(elm);
   },
 
   fetchMyNotes() {
-    var spinner = this.spinner();
-    spinner.spin(this.target());
+    const spinner = this.spinner();
+    spinner.spin(this.target('app'));
     return NoteApiClient.fetchMyNotes().then(notes => {
+      spinner.stop();
       dispatch({ type: 'note/fetch/my', notes });
-      spinner.spin();
     });
   },
 
   fetchStarred() {
-    var spinner = this.spinner();
-    spinner.spin(this.target());
+    const spinner = this.spinner();
+    spinner.spin(this.target('app'));
     return NoteApiClient.fetchStarredNotes().then(notes => {
+      spinner.stop();
       dispatch({ type: 'note/fetch/starred', notes });
-      spinner.spin();
     });
   },
 
   fetch(id) {
-    var spinner = this.spinner();
-    spinner.spin(this.target());
+    const spinner = this.spinner();
+    spinner.spin(this.target('app'));
     dispatch({ type: 'note/fetch/before' });
     return NoteApiClient.fetchNote(id).then(note => {
+      spinner.stop();
       dispatch({ type: 'note/fetch', note });
-      spinner.spin();
     });
   },
 
   create() {
-    var spinner = this.spinner();
-    spinner.spin(this.target());
+    const spinner = this.spinner();
+    spinner.spin(this.target('app'));
     return NoteApiClient.createNote().then(note => {
+      spinner.stop();
       dispatch({ type: 'note/create', note });
-      spinner.spin();
     });
   },
 
   update(id, { title, body, category }) {
-    var spinner = this.spinner();
-    spinner.spin(this.target());
-    return NoteApiClient.updateNote(id, { title, body, category }).then(() => {
-      dispatch({ type: 'note/update', id, note: { title, body, category } });
-      spinner.spin();
+    const spinner = this.spinner();
+    spinner.spin(this.target('app'));
+    return
+      NoteApiClient.updateNote(id, { title, body, category })
+      .then(() => {
+        spinner.stop();
+        dispatch({ type: 'note/update', id
+          , note: { title, body, category } });
     });
   },
 
   delete(id) {
-    var spinner = this.spinner();
-    spinner.spin(this.target());
+    const spinner = this.spinner();
+    spinner.spin(this.target('app'));
     return NoteApiClient.deleteNote(id).then(() => {
+      spinner.stop();
       dispatch({ type: 'note/delete', id });
-      spinner.spin();
     });
   },
 
   getusername() {
-    var spinner = this.spinner();
-    spinner.spin(this.target());
+    const spinner = this.spinner();
+    spinner.spin(this.target('app'));
     return NoteApiClient.getUsername().then(username => {
-      //console.dir(username);
+      spinner.stop();
       dispatch({ type: 'note/username', username: username});
-      spinner.spin();
     });
   }
 };

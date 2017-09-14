@@ -148,12 +148,13 @@ var main = (function() {
   var cps = [];
   var idx=0;
   var queue = async.queue(function (req, callback) {
+    idx = (idx < cpu) ? idx : 0;
     if(cps[idx] === undefined || !cps[idx].connected)
       cps[idx] = fork();
     cps[idx].send(req, function(err) {
       if(err) throw err;
     });
-    if(idx >= cpu) idx=0; else idx++;
+    idx++;
     if(callback) callback();
   }, cpu);
 
