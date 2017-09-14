@@ -4792,62 +4792,66 @@ exports.default = {
   spinner: function spinner() {
     //設定
     var opts = {
-      lines: 13, //線の数
-      length: 33, //線の長さ
-      width: 11, //線の幅
-      radius: 16, //スピナーの内側の広さ
-      corners: 1, //角の丸み
-      rotate: 74, //向き(あんまり意味が無い・・)
-      direction: 1, //1：時計回り -1：反時計回り
-      color: '#000', // 色
-      speed: 1.5, // 一秒間に回転する回数
-      trail: 71, //残像の長さ
-      shadow: true, // 影
-      hwaccel: true, // ？
-      className: 'spinner', // クラス名
-      zIndex: 2e9, // Z-index
-      top: '50%', // relative TOP
-      left: '30%', // relative LEFT
-      opacity: .25, //透明度
-      fps: 20 //fps
+      lines: 13 // The number of lines to draw
+      , length: 28 // The length of each line
+      , width: 14 // The line thickness
+      , radius: 42 // The radius of the inner circle
+      , scale: 1 // Scales overall size of the spinner
+      , corners: 1 // Corner roundness (0..1)
+      , color: '#000' // #rgb or #rrggbb or array of colors
+      , opacity: 0.25 // Opacity of the lines
+      , rotate: 0 // The rotation offset
+      , direction: 1 // 1: clockwise, -1: counterclockwise
+      , speed: 1 // Rounds per second
+      , trail: 60 // Afterglow percentage
+      , fps: 20 // Frames per second when using setTimeout() as
+      // a fallback for CSS
+      , zIndex: 2e9 // The z-index (defaults to 2000000000)
+      , className: 'spinner' // The CSS class to assign to the
+      //  spinner
+      , top: '49%' // Top position relative to parent
+      , left: '49%' // Left position relative to parent
+      , shadow: false // Whether to render a shadow
+      , hwaccel: false // Whether to use hardware acceleration
+      , position: 'absolute' // Element positioning
     };
     //スピナーオブジェクト
     return new _spin2.default(opts);
   },
-  target: function target() {
-    return document.getElementById('app');
+  target: function target(elm) {
+    return document.getElementById(elm);
   },
   fetchMyNotes: function fetchMyNotes() {
     var spinner = this.spinner();
-    spinner.spin(this.target());
+    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.fetchMyNotes().then(function (notes) {
+      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/fetch/my', notes: notes });
-      spinner.spin();
     });
   },
   fetchStarred: function fetchStarred() {
     var spinner = this.spinner();
-    spinner.spin(this.target());
+    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.fetchStarredNotes().then(function (notes) {
+      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/fetch/starred', notes: notes });
-      spinner.spin();
     });
   },
   fetch: function fetch(id) {
     var spinner = this.spinner();
-    spinner.spin(this.target());
+    spinner.spin(this.target('app'));
     (0, _dispatcher.dispatch)({ type: 'note/fetch/before' });
     return _NoteApiClient2.default.fetchNote(id).then(function (note) {
+      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/fetch', note: note });
-      spinner.spin();
     });
   },
   create: function create() {
     var spinner = this.spinner();
-    spinner.spin(this.target());
+    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.createNote().then(function (note) {
+      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/create', note: note });
-      spinner.spin();
     });
   },
   update: function update(id, _ref) {
@@ -4856,27 +4860,28 @@ exports.default = {
         category = _ref.category;
 
     var spinner = this.spinner();
-    spinner.spin(this.target());
-    return _NoteApiClient2.default.updateNote(id, { title: title, body: body, category: category }).then(function () {
-      (0, _dispatcher.dispatch)({ type: 'note/update', id: id, note: { title: title, body: body, category: category } });
-      spinner.spin();
+    spinner.spin(this.target('app'));
+    return;
+    _NoteApiClient2.default.updateNote(id, { title: title, body: body, category: category }).then(function () {
+      spinner.stop();
+      (0, _dispatcher.dispatch)({ type: 'note/update', id: id,
+        note: { title: title, body: body, category: category } });
     });
   },
   delete: function _delete(id) {
     var spinner = this.spinner();
-    spinner.spin(this.target());
+    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.deleteNote(id).then(function () {
+      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/delete', id: id });
-      spinner.spin();
     });
   },
   getusername: function getusername() {
     var spinner = this.spinner();
-    spinner.spin(this.target());
+    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.getUsername().then(function (username) {
-      //console.dir(username);
+      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/username', username: username });
-      spinner.spin();
     });
   }
 };
@@ -9220,15 +9225,15 @@ var NoteBody = function (_React$Component) {
       var styles;
       switch (s) {
         case 0:
-          styles = { fontWeight: 'bold', color: 'green' };
+          styles = { fontWeight: 'bold', color: 'blue' };
           return _react2.default.createElement(
             'div',
             { style: styles },
-            'Now available'
+            'Now available.'
           );
           break;
         case 1:
-          styles = { fontWeight: 'bold', color: 'blue' };
+          styles = { fontWeight: 'bold', color: 'orange' };
           return _react2.default.createElement(
             'div',
             { style: styles },
