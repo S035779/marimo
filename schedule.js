@@ -143,17 +143,17 @@ var fork = function() {
  */
 var main = (function() {
   init();
+  var intvl = process.env.interval;
+  var monit = process.env.monitor;
   //var cpu = require('os').cpus().length;
-  var cpu = 1;
+  var cpu = 2;
   var cps = [];
   var idx=0;
   var queue = async.queue(function (req, callback) {
     idx = (idx < cpu) ? idx : 0;
     if(cps[idx] === undefined || !cps[idx].connected)
       cps[idx] = fork();
-    cps[idx].send(req, function(err) {
-      if(err) throw err;
-    });
+    cps[idx].send(req, function(err) { if(err) throw err; });
     idx++;
     if(callback) callback();
   }, cpu);
@@ -162,8 +162,6 @@ var main = (function() {
     log.info(`${pspid}> all items have been processed.`);
   };
 
-  var intvl = process.env.interval;
-  var monit = process.env.monitor;
   std.invoke(function() {
     async.waterfall([
       async.apply(

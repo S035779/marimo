@@ -104,9 +104,10 @@ var shutdown = function(callback) {
  */
 var main = (function() {
   init();
+  var intvl = process.env.interval;
+  var monit = process.env.monitor;
   var appid = process.env.app_id;
   var pages = process.env.pages;
-  var intvl = process.env.interval;
   var queue = async.queue(function (req, callback) {
     async.waterfall([
       async.apply(
@@ -125,7 +126,7 @@ var main = (function() {
         , noteid: res.note.id
         , pid: process.pid
       });
-      if(callback) callback();
+      if(callback) std.invoke(callback, 1000*60*monit);
     });
   }, 1);
 

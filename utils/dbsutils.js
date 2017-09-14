@@ -286,6 +286,7 @@ var getResultSet = function(req, res, callback) {
   log.count();
   log.time();
   log.profile();
+
   app.YHsearch({ 
     appid:    req.appid
     , query
@@ -453,18 +454,23 @@ var getAuctionItems = function(req, res, callback) {
   var Items=[];
   async.forEachSeries(Ids, function(Id, cbk) {
     //log.trace(`auction_id, status :`, Id.id, Id.status);
-    app.YHauctionItem({ appid: req.appid, auctionID: Id.id }
-    , function(err, obj){
-      if(err) {
-        log.error(err.message);
-        return cbk(err);
-      }
-      if(Id.status !== 3)
+    if(Id.status !== 3) {
+      // When the status is '0:now', '1:add', '2:del'.
+      app.YHauctionItem({ appid: req.appid, auctionID: Id.id }
+      , function(err, obj){
+        if(err) {
+          log.error(err.message);
+          return cbk(err);
+        }
         Items[Id.id]={ item: obj, status: Id.status };
-      //log.trace(Items[Id.id]);
-      log.count();
+        //log.trace(Items[Id.id]);
+        log.count();
+        cbk();
+      });
+    } else {
+      // When the status is '3:old'.
       cbk();
-    });
+    }
   }, function(err) {
     if(err) {
       log.error(err.message);
@@ -499,18 +505,23 @@ var getBidHistorys = function(req, res, callback) {
   var Bids=[];
   async.forEachSeries(Ids, function(Id, cbk) {
     //log.trace(`auction_id, status :`, Id.id, Id.status);
-    app.YHbidHistory({ appid: req.appid, auctionID: Id.id }
-    , function(err, obj){
-      if(err) {
-        log.error(err.message);
-        return cbk(err);
-      }
-      if(Id.status !== 3)
+    if(Id.status !== 3) {
+      // When the status is '0:now', '1:add', '2:del'.
+      app.YHbidHistory({ appid: req.appid, auctionID: Id.id }
+      , function(err, obj){
+        if(err) {
+          log.error(err.message);
+          return cbk(err);
+        }
         Bids[Id.id]={ bids: obj, status: Id.status };
-      //log.trace(Bids[Id.id]);
-      log.count();
+        //log.trace(Bids[Id.id]);
+        log.count();
+        cbk();
+      });
+    } else {
+      // When the status is '3:old'.
       cbk();
-    });
+    }
   },function(err) {
     if(err) {
       log.error(err.message);
@@ -539,14 +550,13 @@ var updateHistorys = function(req, res, callback) {
   var Ids = res.Ids;
   var userid = res.note.userid;
   var noteid = ObjectId(res.note._id);
-  //var historyIds = res.note.historyid;
   var where = {};
   var set = {};
   var opt = {};
   var obj = {};
   async.forEach(Ids, function(Id, cbk) {
-    if(Id.status === 0) {
-      // When the status is '0:now'.
+    if(Id.status === 0 || Id.status === 2) {
+      // When the status is '0:now', '2:del'.
       obj = {
         item:        res.Items[Id.id].item
         , bids:      res.Bids[Id.id].bids
@@ -575,7 +585,6 @@ var updateHistorys = function(req, res, callback) {
         , status:    Id.status
         , updated:   Id.updated
       };
-      //historyIds.push(historyId);
       History.create(obj, function(err) {
         if(err) {
           log.error(err.message);
@@ -584,7 +593,7 @@ var updateHistorys = function(req, res, callback) {
         cbk();
       });
     } else {
-      // When the status is '2:del' '3:old'.
+      // When the status is '3:old'.
       cbk();
     }
   }, function(err) {
@@ -633,8 +642,9 @@ var updateNote = function(req, res, callback) {
   //if (res.hasOwnProperty('historyIds') 
   if(res.hasOwnProperty('Ids')) { 
     // isItem
-    //historyid = res.historyIds;
-    var Ids = res.Ids.filter(function(Id){return Id.status!==3;});
+    var Ids = res.Ids.filter(function(Id){
+      return Id.status!==3;
+    });
     historyid = Ids.map(function(Id){ return Id._id; });
     items     = Ids.map(function(Id){ return Id.id; });
     obj = std.merge(obj, { historyid, items });

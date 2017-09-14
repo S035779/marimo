@@ -6,11 +6,11 @@ export default class NoteBody extends React.Component {
     var styles;
     switch(s) {
       case 0:
-        styles = { fontWeight:'bold', color: 'green' };
-        return <div style={styles}>Now available</div>;
+        styles = { fontWeight:'bold', color: 'blue' };
+        return <div style={styles}>Now available.</div>;
         break;
       case 1:
-        styles = { fontWeight:'bold', color: 'blue' };
+        styles = { fontWeight:'bold', color: 'orange' };
         return <div style={styles}>New added.</div>;
         break;
       case 2:
