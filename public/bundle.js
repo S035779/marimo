@@ -4861,11 +4861,13 @@ exports.default = {
 
     var spinner = this.spinner();
     spinner.spin(this.target('app'));
-    return;
-    _NoteApiClient2.default.updateNote(id, { title: title, body: body, category: category }).then(function () {
+    return _NoteApiClient2.default.updateNote(id, { title: title, body: body, category: category }).then(function () {
       spinner.stop();
-      (0, _dispatcher.dispatch)({ type: 'note/update', id: id,
-        note: { title: title, body: body, category: category } });
+      (0, _dispatcher.dispatch)({
+        type: 'note/update',
+        id: id,
+        note: { title: title, body: body, category: category }
+      });
     });
   },
   delete: function _delete(id) {
