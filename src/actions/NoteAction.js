@@ -40,70 +40,66 @@ export default {
   fetchMyNotes() {
     const spinner = this.spinner();
     spinner.spin(this.target('app'));
-    return NoteApiClient.fetchMyNotes().then(notes => {
+    return NoteApiClient.fetchMyNotes()
+    .then(notes => {
       spinner.stop();
-      dispatch({ type: 'note/fetch/my', notes });
-    });
+      dispatch({ type: 'note/fetch/my', notes }); });
   },
 
   fetchStarred() {
     const spinner = this.spinner();
     spinner.spin(this.target('app'));
-    return NoteApiClient.fetchStarredNotes().then(notes => {
+    return NoteApiClient.fetchStarredNotes()
+    .then(notes => {
       spinner.stop();
-      dispatch({ type: 'note/fetch/starred', notes });
-    });
+      dispatch({ type: 'note/fetch/starred', notes }); });
   },
 
   fetch(id) {
     const spinner = this.spinner();
     spinner.spin(this.target('app'));
     dispatch({ type: 'note/fetch/before' });
-    return NoteApiClient.fetchNote(id).then(note => {
+    return NoteApiClient.fetchNote(id)
+    .then(note => {
       spinner.stop();
-      dispatch({ type: 'note/fetch', note });
-    });
+      dispatch({ type: 'note/fetch', note }); });
   },
 
   create() {
     const spinner = this.spinner();
     spinner.spin(this.target('app'));
-    return NoteApiClient.createNote().then(note => {
+    return NoteApiClient.createNote()
+    .then(note => {
       spinner.stop();
-      dispatch({ type: 'note/create', note });
-    });
+      dispatch({ type: 'note/create', note }); });
   },
 
   update(id, { title, body, category }) {
     const spinner = this.spinner();
     spinner.spin(this.target('app'));
-    return NoteApiClient.updateNote(
-      id, { title, body, category }
-    ).then(() => {
+    return NoteApiClient.updateNote(id, { title, body, category })
+    .then(() => {
       spinner.stop();
-      dispatch({
-        type: 'note/update'
-        , id
-        , note: { title, body, category }
-      });
-    });
+      dispatch({ type: 'note/update'
+        , id, note: { title, body, category }}); })
+    .then(() => this.fetchMyNotes());
   },
 
   delete(id) {
     const spinner = this.spinner();
     spinner.spin(this.target('app'));
-    return NoteApiClient.deleteNote(id).then(() => {
+    return NoteApiClient.deleteNote(id)
+    .then(() => {
       spinner.stop();
-      dispatch({ type: 'note/delete', id });
-    });
+      dispatch({ type: 'note/delete', id }); });
   },
 
   getusername() {
     const spinner = this.spinner();
     spinner.spin(this.target('app'));
-    return NoteApiClient.getUsername().then(username => {
+    return NoteApiClient.getUsername()
+    .then(username => {
       spinner.stop();
-      dispatch({ type: 'note/username', username: username});
-    });
+      dispatch({ type: 'note/username', username: username}); });
   }
 };

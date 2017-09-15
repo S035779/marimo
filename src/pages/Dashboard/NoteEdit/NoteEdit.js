@@ -34,15 +34,18 @@ export default class NoteEdit extends React.Component {
   }
 
   onChangeTitle(e) {
-    this.setState({ note: Object.assign({}, this.state.note, { title: e.target.value }) });
+    this.setState({ note: Object.assign({}, this.state.note
+      , { title: e.target.value }) });
   }
 
   onChangeCategory(e) {
-    this.setState({ note: Object.assign({}, this.state.note, { category: e.target.value }) });
+    this.setState({ note: Object.assign({}, this.state.note
+      , { category: e.target.value }) });
   }
 
   onChangeBody(e) {
-    this.setState({ note: Object.assign({}, this.state.note, { body: e.target.value }) });
+    this.setState({ note: Object.assign({}, this.state.note
+      , { body: e.target.value }) });
   }
 
   render() {
