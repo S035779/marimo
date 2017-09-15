@@ -4855,6 +4855,8 @@ exports.default = {
     });
   },
   update: function update(id, _ref) {
+    var _this = this;
+
     var title = _ref.title,
         body = _ref.body,
         category = _ref.category;
@@ -4863,11 +4865,10 @@ exports.default = {
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.updateNote(id, { title: title, body: body, category: category }).then(function () {
       spinner.stop();
-      (0, _dispatcher.dispatch)({
-        type: 'note/update',
-        id: id,
-        note: { title: title, body: body, category: category }
-      });
+      (0, _dispatcher.dispatch)({ type: 'note/update',
+        id: id, note: { title: title, body: body, category: category } });
+    }).then(function () {
+      return _this.fetchMyNotes();
     });
   },
   delete: function _delete(id) {
