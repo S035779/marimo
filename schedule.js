@@ -145,8 +145,7 @@ var main = (function() {
   init();
   var intvl = process.env.interval;
   var monit = process.env.monitor;
-  //var cpu = require('os').cpus().length;
-  var cpu = 2;
+  var cpu = require('os').cpus().length;
   var cps = [];
   var idx=0;
   var queue = async.queue(function (req, callback) {

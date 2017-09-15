@@ -243,6 +243,7 @@ var findHistorys = function(req, res, callback) {
   async.forEach(historyids, function(historyid, cbk) {
     History.find({
       _id: ObjectId(historyid)
+      , status: { $in: [ 0, 1, 2 ] }
     }).exec(function(err, docs) {
       if(err) {
         log.error(err.message);
@@ -389,10 +390,12 @@ module.exports.getAuctionIds = getAuctionIds;
  * @returns {array} - AuctionIDs Array.
  */
 var helperIds = function(o, p, q) {
-  var result = [];
   var date = new Date();
-  var old = date.setHours(date.getHours()-q);
+  var oldDate = date.setHours(date.getHours()-q);
+  var result = [];
+
   var _o = std.keys(o);
+
   // When the status is '0:now'.
   var _x = std.and(_o, p);
   _x.forEach(function(id){
@@ -403,6 +406,7 @@ var helperIds = function(o, p, q) {
       , updated: Date.now()
     });
   });
+
   // When the status is '1:new'.
   var _y = std.add(_o, p);
   _y.forEach(function(id){
@@ -414,10 +418,11 @@ var helperIds = function(o, p, q) {
       , updated: Date.now()
     });
   });
+
   // When the status is '2:del' or '3:old'.
   var _z = std.del(_o, p);
   _z.forEach(function(id){
-    if(o[id].updated > old) {
+    if(o[id].updated > oldDate) {
       result.push({
         id
         , _id: o[id]._id
@@ -454,22 +459,27 @@ var getAuctionItems = function(req, res, callback) {
   var Items=[];
   async.forEachSeries(Ids, function(Id, cbk) {
     //log.trace(`auction_id, status :`, Id.id, Id.status);
-    if(Id.status !== 3) {
-      // When the status is '0:now', '1:add', '2:del'.
-      app.YHauctionItem({ appid: req.appid, auctionID: Id.id }
-      , function(err, obj){
-        if(err) {
-          log.error(err.message);
-          return cbk(err);
-        }
-        Items[Id.id]={ item: obj, status: Id.status };
-        //log.trace(Items[Id.id]);
-        log.count();
+    switch(Id.status) {
+      case 0:
+      case 1:
+      case 2:
+        // When the status is '0:now', '1:add', '2:del'.
+        app.YHauctionItem({ appid: req.appid, auctionID: Id.id }
+        , function(err, obj){
+          if(err) {
+            log.error(err.message);
+            return cbk(err);
+          }
+          Items[Id.id]={ item: obj, status: Id.status };
+          //log.trace(Items[Id.id]);
+          log.count();
+          cbk();
+        });
+        break;
+      case 3:
+      default:
         cbk();
-      });
-    } else {
-      // When the status is '3:old'.
-      cbk();
+        break;
     }
   }, function(err) {
     if(err) {
@@ -505,22 +515,27 @@ var getBidHistorys = function(req, res, callback) {
   var Bids=[];
   async.forEachSeries(Ids, function(Id, cbk) {
     //log.trace(`auction_id, status :`, Id.id, Id.status);
-    if(Id.status !== 3) {
-      // When the status is '0:now', '1:add', '2:del'.
-      app.YHbidHistory({ appid: req.appid, auctionID: Id.id }
-      , function(err, obj){
-        if(err) {
-          log.error(err.message);
-          return cbk(err);
-        }
-        Bids[Id.id]={ bids: obj, status: Id.status };
-        //log.trace(Bids[Id.id]);
-        log.count();
+    switch(Id.status) {
+      case 0:
+      case 1:
+      case 2:
+        // When the status is '0:now', '1:add', '2:del'.
+        app.YHbidHistory({ appid: req.appid, auctionID: Id.id }
+        , function(err, obj){
+          if(err) {
+            log.error(err.message);
+            return cbk(err);
+          }
+          Bids[Id.id]={ bids: obj, status: Id.status };
+          //log.trace(Bids[Id.id]);
+          log.count();
+          cbk();
+        });
+        break;
+      case 3:
+      default:
         cbk();
-      });
-    } else {
-      // When the status is '3:old'.
-      cbk();
+        break;
     }
   },function(err) {
     if(err) {
@@ -555,46 +570,67 @@ var updateHistorys = function(req, res, callback) {
   var opt = {};
   var obj = {};
   async.forEach(Ids, function(Id, cbk) {
-    if(Id.status === 0 || Id.status === 2) {
-      // When the status is '0:now', '2:del'.
-      obj = {
-        item:        res.Items[Id.id].item
-        , bids:      res.Bids[Id.id].bids
-        , status:    Id.status
-        , updated:   Id.updated
-      };
-      where = { noteid, auctionID: Id.id };
-      set   = { $set: obj };
-      opt   = { upsert: false, multi: true };
-      History.update(where, set, opt, function(err) {
-        if(err) {
-          log.error(err.message);
-          return cbk(err);
-        }
+    switch(Id.status) {
+      case 0:
+      case 2:
+        // When the status is '0:now', '2:del'.
+        obj = {
+          item:        res.Items[Id.id].item
+          , bids:      res.Bids[Id.id].bids
+          , status:    Id.status
+          , updated:   Id.updated
+        };
+        where = { noteid, auctionID: Id.id };
+        set   = { $set: obj };
+        opt   = { upsert: false, multi: true };
+        History.update(where, set, opt, function(err) {
+          if(err) {
+            log.error(err.message);
+            return cbk(err);
+          }
+          cbk();
+        });
+        break;
+      case 1:
+        // When the status is '1:add'.
+        obj = {
+          _id: Id._id
+          , userid
+          , noteid
+          , auctionID: Id.id
+          , item:      res.Items[Id.id].item
+          , bids:      res.Bids[Id.id].bids
+          , status:    Id.status
+          , updated:   Id.updated
+        };
+        History.create(obj, function(err) {
+          if(err) {
+            log.error(err.message);
+            return cbk(err);
+          }
+          cbk();
+        });
+        break;
+      case 3:
+        // When the status is '3:old'.
+        obj = {
+          status:    Id.status
+          , updated:   Id.updated
+        };
+        where = { noteid, auctionID: Id.id };
+        set   = { $set: obj };
+        opt   = { upsert: false, multi: true };
+        History.update(where, set, opt, function(err) {
+          if(err) {
+            log.error(err.message);
+            return cbk(err);
+          }
+          cbk();
+        });
+        break;
+      default:
         cbk();
-      });
-    } else if(Id.status === 1) {
-      // When the status is '1:add'.
-      obj = {
-        _id: Id._id
-        , userid
-        , noteid
-        , auctionID: Id.id
-        , item:      res.Items[Id.id].item
-        , bids:      res.Bids[Id.id].bids
-        , status:    Id.status
-        , updated:   Id.updated
-      };
-      History.create(obj, function(err) {
-        if(err) {
-          log.error(err.message);
-          return cbk(err);
-        }
-        cbk();
-      });
-    } else {
-      // When the status is '3:old'.
-      cbk();
+        break;
     }
   }, function(err) {
     if(err) {
@@ -615,14 +651,9 @@ module.exports.updateHistorys = updateHistorys;
  * @param callback {function}
  */
 var updateNote = function(req, res, callback) {
-  var userid,id,starred,historyid,items;
-  var where = {};
-  var set = {};
-  var opt = {};
+  var userid,id,starred;
   var obj = {};
-
-  if (req.hasOwnProperty('body')) { 
-    // isBody
+  if (req.hasOwnProperty('body')) { // isBody
     userid = ObjectId(res.user._id);
     id = req.body.id;
     starred = req.body.starred ? Boolean(1) : Boolean(0);
@@ -633,26 +664,34 @@ var updateNote = function(req, res, callback) {
       , starred:    starred
       , updated:    req.body.updated
     };
-  } else if (res.hasOwnProperty('note')) { 
-    // isNote
+  } else if (res.hasOwnProperty('note')) { // isNote
     userid = res.note.userid;
     id = res.note.id;
   }
 
   //if (res.hasOwnProperty('historyIds') 
-  if(res.hasOwnProperty('Ids')) { 
-    // isItem
-    var Ids = res.Ids.filter(function(Id){
-      return Id.status!==3;
+  if(res.hasOwnProperty('Ids')) { // isItem
+    var historyid = [];
+    var items = [];
+    res.Ids.forEach(function(Id){
+      switch(Id.status) {
+        case 0:
+        case 1:
+          historyid.push(Id._id);
+          items.push(Id.id);
+          break;
+        case 2:
+        case 3:
+        default:
+          break;
+      }
     });
-    historyid = Ids.map(function(Id){ return Id._id; });
-    items     = Ids.map(function(Id){ return Id.id; });
     obj = std.merge(obj, { historyid, items });
   }
 
-  where = { userid, id };
-  set   = { $set: obj };
-  opt   = { upsert: false, multi: true };
+  var where = { userid, id };
+  var set   = { $set: obj };
+  var opt   = { upsert: false, multi: true };
   Note.update(where, set, opt, function(err) {
     if(err) {
       log.error(err.message);
