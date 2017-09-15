@@ -77,12 +77,15 @@ export default {
   update(id, { title, body, category }) {
     const spinner = this.spinner();
     spinner.spin(this.target('app'));
-    return
-      NoteApiClient.updateNote(id, { title, body, category })
-      .then(() => {
-        spinner.stop();
-        dispatch({ type: 'note/update', id
-          , note: { title, body, category } });
+    return NoteApiClient.updateNote(
+      id, { title, body, category }
+    ).then(() => {
+      spinner.stop();
+      dispatch({
+        type: 'note/update'
+        , id
+        , note: { title, body, category }
+      });
     });
   },
 

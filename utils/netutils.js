@@ -34,14 +34,16 @@ var get = function(url, callback) {
           break;
         case 400: case 401: case 403: case 404:
           log.error(`HTTP Request Failed. Status Code: ${stat}`);
-          res.resume();
-          return; 
+          if (callback) callback(stat, head, body);
+          break; 
         case 500: case 503:
           process.stdout.write('x');
+          log.warn(`HTTP Request Failed. Status Code: ${stat}`);
           get(url, callback);
           break;
         default:
           process.stdout.write('?');
+          log.warn(`HTTP Request Failed. Status Code: ${stat}`);
           get(url, callback);
           break;
       }

@@ -22,7 +22,10 @@ export default {
             resolve(notes);
         });
       });
-    } else if(func === 'create' || func === 'delete' || func === 'search') {
+    } else
+    if(func === 'create'
+    || func === 'delete'
+    || func === 'search') {
       console.log(response);
       return new Promise( function(resolve, reject) {
         var uri = url + '/' + func;
@@ -30,7 +33,8 @@ export default {
             resolve(response);
         });
       });
-    } else if(func === 'post') {
+    } else
+    if(func === 'post') {
       console.log(response);
       return new Promise( function(resolve, reject) {
         var uri = url;
@@ -38,7 +42,8 @@ export default {
             resolve(response.id);
         });
       });
-    } else {
+    } else
+    {
       console.log(response);
       return new Promise(resolve => {
         setTimeout(() => resolve(response), LATENCY);
