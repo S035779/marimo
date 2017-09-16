@@ -122,9 +122,11 @@ var main = (function() {
       if (err) throw err;
       //log.trace(`${pspid}> results:`, res);
       process.send({
-        appid: req.appid
+        appid:    req.appid
+        , intvl:  req.intvl
+        , pages:  req.pages
         , noteid: res.note.id
-        , pid: process.pid
+        , pid:    process.pid
       });
       if(callback) std.invoke(callback, 1000*60*monit);
     });

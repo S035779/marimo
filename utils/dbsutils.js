@@ -399,43 +399,23 @@ var helperIds = function(o, p, q) {
   // When the status is '0:now'.
   var _x = std.and(_o, p);
   _x.forEach(function(id){
-    result.push({
-      id
-      , _id: o[id]._id
-      , status: 0
-      , updated: Date.now()
-    });
+    result.push({ id, _id: o[id]._id, status: 0 });
   });
 
   // When the status is '1:new'.
   var _y = std.add(_o, p);
   _y.forEach(function(id){
     var historyId = new ObjectId;
-    result.push({
-      id
-      , _id: historyId
-      , status: 1
-      , updated: Date.now()
-    });
+    result.push({ id, _id: historyId, status: 1 });
   });
 
   // When the status is '2:del' or '3:old'.
   var _z = std.del(_o, p);
   _z.forEach(function(id){
     if(o[id].updated > oldDate) {
-      result.push({
-        id
-        , _id: o[id]._id
-        , status: 2
-        , updated: o[id].updated
-      });
+      result.push({ id, _id: o[id]._id, status: 2 });
     } else {
-      result.push({
-        id
-        , _id: o[id]._id
-        , status: 3
-        , updated: o[id].updated
-      });
+      result.push({ id, _id: o[id]._id, status: 3 });
     }
   });
   //log.trace(result);
@@ -462,8 +442,7 @@ var getAuctionItems = function(req, res, callback) {
     switch(Id.status) {
       case 0:
       case 1:
-      case 2:
-        // When the status is '0:now', '1:add', '2:del'.
+        // When the status is '0:now', '1:add'.
         app.YHauctionItem({ appid: req.appid, auctionID: Id.id }
         , function(err, obj){
           if(err) {
@@ -476,8 +455,10 @@ var getAuctionItems = function(req, res, callback) {
           cbk();
         });
         break;
+      case 2:
       case 3:
       default:
+        // When the status is '2:del', '3:old'.
         cbk();
         break;
     }
@@ -518,8 +499,7 @@ var getBidHistorys = function(req, res, callback) {
     switch(Id.status) {
       case 0:
       case 1:
-      case 2:
-        // When the status is '0:now', '1:add', '2:del'.
+        // When the status is '0:now', '1:add'.
         app.YHbidHistory({ appid: req.appid, auctionID: Id.id }
         , function(err, obj){
           if(err) {
@@ -532,8 +512,10 @@ var getBidHistorys = function(req, res, callback) {
           cbk();
         });
         break;
+      case 2:
       case 3:
       default:
+        // When the status is '2:del', '3:old'.
         cbk();
         break;
     }
@@ -572,13 +554,12 @@ var updateHistorys = function(req, res, callback) {
   async.forEach(Ids, function(Id, cbk) {
     switch(Id.status) {
       case 0:
-      case 2:
-        // When the status is '0:now', '2:del'.
+        // When the status is '0:now'.
         obj = {
           item:        res.Items[Id.id].item
           , bids:      res.Bids[Id.id].bids
           , status:    Id.status
-          , updated:   Id.updated
+          , updated:   Date.now()
         };
         where = { noteid, auctionID: Id.id };
         set   = { $set: obj };
@@ -601,7 +582,7 @@ var updateHistorys = function(req, res, callback) {
           , item:      res.Items[Id.id].item
           , bids:      res.Bids[Id.id].bids
           , status:    Id.status
-          , updated:   Id.updated
+          , updated:   Date.now()
         };
         History.create(obj, function(err) {
           if(err) {
@@ -611,11 +592,11 @@ var updateHistorys = function(req, res, callback) {
           cbk();
         });
         break;
+      case 2:
       case 3:
-        // When the status is '3:old'.
+        // When the status is '2:del', '3:old'.
         obj = {
           status:    Id.status
-          , updated:   Id.updated
         };
         where = { noteid, auctionID: Id.id };
         set   = { $set: obj };
@@ -677,10 +658,10 @@ var updateNote = function(req, res, callback) {
       switch(Id.status) {
         case 0:
         case 1:
+        case 2:
           historyid.push(Id._id);
           items.push(Id.id);
           break;
-        case 2:
         case 3:
         default:
           break;
