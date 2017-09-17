@@ -152,9 +152,15 @@ var main = (function() {
     idx = (idx < cpu) ? idx : 0;
     if(cps[idx] === undefined || !cps[idx].connected)
       cps[idx] = fork();
-    cps[idx].send(req, function(err) { if(err) throw err; });
+    cps[idx].send(req, function(err) {
+      if(err) {
+        log.error(`${pspid}> Got error: ${err.name}`);
+        log.error(`${pspid}> ${err.message}`);
+        log.error(`${pspid}> ${err.stack}`);
+      }
+    });
     idx++;
-    if(callback) callback();
+    callback();
   }, cpu);
 
   queue.drain = function() {
@@ -167,13 +173,26 @@ var main = (function() {
         dbs.findUsers, { intvl, monit }, {})
       , dbs.findNotes
     ], function(err, req, res) {
-      if(err) throw err;
-      //log.trace(`${pspid}> results:`, res);
-      res.notes.forEach( function(note) {
-        queue.push(note, function() {
-          log.info(`${pspid}> finished processing.`);
+      if(err) {
+        log.error(`${pspid}> Got error: ${err.name}`);
+        log.error(`${pspid}> ${err.message}`);
+        log.error(`${pspid}> ${err.stack}`);
+        return;
+      }
+      try {
+        //log.trace(`${pspid}> results:`, res);
+        res.notes.forEach( function(note) {
+          queue.push(note, function(err) {
+            if(err) throw new Error(err);
+            log.info(`${pspid}> finished processing.`);
+          });
         });
-      });
+      } catch(err) {
+        log.error(`${pspid}> Got error: ${err.name}`);
+        log.error(`${pspid}> ${err.message}`);
+        log.error(`${pspid}> ${err.stack}`);
+        return;
+      }
       log.info(`${pspid}> ${monit} min. interval...`);
     });
   }, 0, 1000*60*monit);

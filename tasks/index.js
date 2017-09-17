@@ -119,7 +119,12 @@ var main = (function() {
       , dbs.updateHistorys
       , dbs.updateNote
     ], function(err, req, res) {
-      if (err) throw err;
+      if(err) {
+        log.error(`${pspid}> Got error: ${err.name}`);
+        log.error(`${pspid}> ${err.message}`);
+        log.error(`${pspid}> ${err.stack}`);
+        return callback();
+      }
       //log.trace(`${pspid}> results:`, res);
       process.send({
         appid:    req.appid
@@ -127,8 +132,14 @@ var main = (function() {
         , pages:  req.pages
         , noteid: res.note.id
         , pid:    process.pid
+      }, function(err) {
+        if(err) {
+          log.error(`${pspid}> Got error: ${err.name}`);
+          log.error(`${pspid}> ${err.message}`);
+          log.error(`${pspid}> ${err.stack}`);
+        }
       });
-      if(callback) std.invoke(callback, 1000*60*monit);
+      std.invoke(callback, 1000*60*monit);
     });
   }, 1);
 
@@ -140,7 +151,13 @@ var main = (function() {
   // Add Node IPC Event Listener.
   process.on('message', function(req) {
     log.trace(`${pspid}> Child got message:`,{ noteid: req.id });
-    queue.push(req, function() {
+    queue.push(req, function(err) {
+      if(err) {
+        log.error(`${pspid}> Got error: ${err.name}`);
+        log.error(`${pspid}> ${err.message}`);
+        log.error(`${pspid}> ${err.stack}`);
+        return;
+      }
       log.info(`${pspid}> finished processing note object.`);
     });
   });

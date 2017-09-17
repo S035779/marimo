@@ -2,7 +2,6 @@ var xml = require('xml2js');
 var std = require('../utils/stdutils');
 var enc = require('../utils/encutils');
 var htp = require('../utils/netutils');
-var log = require('../utils/logutils').logs;
 
 // YAHOO! Auction WebAPI.
 var v1 = 'htps://auctions.yahooapis.jp/AuctionWebService/V1/'
@@ -18,26 +17,22 @@ var v2 = 'htps://auctions.yahooapis.jp/AuctionWebService/V2/'
 var YHsearch = function(options, callback) {
   var uri = v2 + 'search?' + enc.encodeFormData(options);
   htp.get(uri, function(stat, head, body) {
-    var head = { 
-      search: options.query
-      , page: options.page
-      , request: uri
-      , status: stat
-      , header: head };
+    var head = { search: options.query, page: options.page
+      , request: uri, status: stat, header: head };
 
     xml.parseString( body
-      , { attrkey: 'root'
-        , charkey: 'sub'
-        , trim: true
-        , explicitArray: false }
-      , function(err, result) {
+    , { attrkey: 'root', charkey: 'sub'
+      , trim: true, explicitArray: false }
+    , function(err, result) {
       if (err) {
-          log.error(err.message);
-          throw err;
+        return callback(err);
       }
-
       var obj = std.merge(head, { body: result });
-      var str = JSON.stringify(obj);
+      try {
+        var str = JSON.stringify(obj);
+      } catch(err) {
+        return callback(err);
+      }
       var ids = [];
       if (obj.body.hasOwnProperty('ResultSet')) {
         var set = obj.body.ResultSet;
@@ -52,10 +47,13 @@ var YHsearch = function(options, callback) {
           }
         }
       } else if (obj.body.hasOwnProperty('Error')) {
-        log.error(YHerror(obj));
+        try {
+          throw new YHerror(obj);
+        } catch(err) {
+          return callback(err);
+        }
       }
-
-      if(callback) callback(err, ids, obj, str);
+      callback(err, ids, obj, str);
     });
   });
 };
@@ -71,29 +69,30 @@ module.exports.YHsearch = YHsearch;
 var YHauctionItem = function(options, callback) {
   var uri = v2 + 'auctionItem?' + enc.encodeFormData(options);
   htp.get(uri, function(stat, head, body) {
-    var head = { auctionID: options.auctionID
-      , request: uri
-      , status: stat
-      , header: head };
+    var head = { auctionID: options.auctionID, request: uri
+      , status: stat, header: head };
 
     xml.parseString( body
-      , { attrkey: 'root'
-        , charkey: 'sub'
-        , trim: true
-        , explicitArray: false } 
-      , function(err, result) {
+    , { attrkey: 'root', charkey: 'sub'
+      , trim: true, explicitArray: false } 
+    , function(err, result) {
       if (err) {
-          log.error(err.message);
-          throw err;
+        return callback(err);
       }
-
       var obj = std.merge(head, { body: result });
-      var str = JSON.stringify(obj);
-      if(obj.body.hasOwnProperty('Error')) {
-        log.error(YHerror(obj));
+      try {
+        var str = JSON.stringify(obj);
+      } catch(err) {
+        return callback(err);
       }
-
-      if(callback) callback(err, obj, str);
+      if(obj.body.hasOwnProperty('Error')) {
+        try {
+          throw new YHerror(obj);
+        } catch(err) {
+          return callback(err);
+        }
+      }
+      callback(err, obj, str);
     });
   });
 };
@@ -109,30 +108,29 @@ module.exports.YHauctionItem = YHauctionItem;
 var YHbidHistory = function(options, callback) {
   var uri = v1 + 'BidHistory?' + enc.encodeFormData(options);
   htp.get(uri, function(stat, head, body) {
-    var head = { 
-      auctionID: options.auctionID
-      , request: uri
-      , status: stat
-      , header: head };
-
+    var head = { auctionID: options.auctionID, request: uri
+      , status: stat, header: head };
     xml.parseString( body
-      , { attrkey: 'root'
-        , charkey: 'sub'
-        , trim: true
-        , explicitArray: false }
-      , function(err, result) {
+    , { attrkey: 'root', charkey: 'sub'
+      , trim: true, explicitArray: false }
+    , function(err, result) {
       if (err) {
-          log.error(err.message);
-          throw err;
+        return callback(err);
       }
-
       var obj = std.merge(head, { body: result });
-      var str = JSON.stringify(obj);
-      if(obj.body.hasOwnProperty('Error')) {
-        log.error(YHerror(obj));
+      try {
+        var str = JSON.stringify(obj);
+      } catch(err) {
+        return callback(err);
       }
-
-      if(callback) callback(err, obj, str);
+      if(obj.body.hasOwnProperty('Error')) {
+        try {
+          throw new YHerror(obj);
+        } catch(err) {
+          return callback(err);
+        }
+      }
+      callback(err, obj, str);
     });
   });
 };
@@ -142,45 +140,55 @@ module.exports.YHbidHistory = YHbidHistory;
  * YAHOO! WebAPI ERROR Code
  *
  * @param obj {object}
- * @return {string}
+ * @return {object}
  */
 function YHerror(obj) {
-  var err = [];
-  err[400] = { 
+  var _err = [];
+  _err[400] = { 
     code: 400, 
     message: 'Bad request.', 
     description: '渡されたパラメータがWeb APIで期待されたものと一致しない場合に返されます。このメッセージは何が間違っているか、何が正しくないかを伝えます。' 
   };
-  err[401] = { 
+  _err[401] = { 
     code: 401, 
     message: 'Unauthorized.', 
     description: '許可されていないアクセスであった場合に返されます。' 
   };
-  err[403] = { 
+  _err[403] = { 
     code: 403, 
     message: 'Forbidden.', 
     description: 'リソースへのアクセスを許されていないか、利用制限を超えている場合に適用されます。アプリケーションIDが削除された場合にも返されます。' 
   };
-  err[404] = { 
+  _err[404] = { 
     code: 404, 
     message: 'Not Found.', 
     description: '指定されたリソースが見つからない場合に返されます。' 
   };
-  err[500] = { 
+  _err[500] = { 
     code: 500, 
     message: 'Internal Server Error.', 
     description: '内部的な問題によってデータを返すことができない場合に返されます。' 
   };
-  err[503] = { 
+  _err[503] = { 
     code: 503, 
     message: 'Service unavailable.', 
     description: '内部的な問題によってデータを返すことができない場合に返されます。' 
   };
 
-  return ('Yahoo! WebAPI error. '
-    + 'Http code is ['      + err[obj.status].code        + ']'
-    + ', Your request was ' + err[obj.status].message
-    + ' (説明：'            + err[obj.status].description + ')');
+  var _YHerrror = function(status, request) {
+    this.message = ('Yahoo! WebAPI error. '
+    + 'Http code is ['      + _err[status].code        + ']'
+    + ', Your request was ' + _err[status].message
+    + ' (説明：'            + _err[status].description + ')');
+    this.stack = `${this.name} at ${request}`;
+  };
+  Object.setPrototypeOf(_YHerror, Error);
+  _YHerror.prototype = Object.create(Error.prototype);
+  _YHerror.prototype.name = "YHerror";
+  _YHerror.prototype.message = "";
+  _YHerror.prototype.constructor = _YHerror;
+
+  return new _YHerror(obj.status, obj.request);
 }
 module.exports.YHerror = YHerror;
 

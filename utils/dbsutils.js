@@ -22,11 +22,11 @@ var findUser = function(req, res, callback) {
   User.findOne({ username }).exec(function(err, user) {
     if (err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     //log.trace(user);
     log.info(`${pspid}> find User done.`);
-    if(callback) callback(err, req, std.extend(res, { user }));
+    callback(err, req, std.extend(res, { user }));
   });
 };
 module.exports.findUser = findUser;
@@ -44,11 +44,11 @@ var findNote = function(req, res, callback) {
   Note.findOne({ userid, id }).exec(function (err, note) {
     if (err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     //log.trace(note);
     log.info(`${pspid}> find Note done.`);
-    if(callback) callback(err, req, std.extend(res, { note }));
+    callback(err, req, std.extend(res, { note }));
   });
 };
 module.exports.findNote = findNote;
@@ -65,10 +65,10 @@ var removeHistorys = function(req, res, callback) {
   History.remove({ noteid }).exec(function(err) {
     if(err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     log.info(`${pspid}> remove Historys done.`);
-    if(callback) callback(err, req, res);
+    callback(err, req, res);
   });
 };
 module.exports.removeHistorys = removeHistorys;
@@ -86,10 +86,10 @@ var removeNote = function(req, res, callback) {
   Note.remove({ userid, id }, function(err) {
     if (err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     log.info(`${pspid}> remove Note done.`);
-    if(callback) callback(err, req, res);
+    callback(err, req, res);
   });
 };
 module.exports.removeNote = removeNote;
@@ -147,9 +147,9 @@ var createNote = function(req, res, callback){
   }, function(err) {
     if(err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
-    if(callback) callback(err, req, res);
+    callback(err, req, res);
   });
 };
 module.exports.createNote = createNote;
@@ -166,7 +166,7 @@ var findUsers = function(req, res, callback) {
   .exec(function(err, docs) {
     if(err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     var users=[];
     docs.forEach(function(doc) {
@@ -174,7 +174,7 @@ var findUsers = function(req, res, callback) {
     });
     //log.trace(users);
     log.info(`${pspid}> find Users done.`);
-    if(callback) callback(err, req, std.extend(res, { users }));
+    callback(err, req, std.extend(res, { users }));
   });
 };
 module.exports.findUsers = findUsers;
@@ -202,7 +202,6 @@ var findNotes = function(req, res, callback) {
       userid: ObjectId(user._id) 
     }).exec(function(err, docs) {
       if(err) {
-        log.error(err.message);
         return cbk(err);
       }
       try {
@@ -221,11 +220,11 @@ var findNotes = function(req, res, callback) {
   }, function (err) {
     if(err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     //log.trace(notes);
     log.info(`${pspid}> find Notes done.`);
-    if(callback) callback(err, req, std.extend(res, { notes }));
+    callback(err, req, std.extend(res, { notes }));
   });
 };
 module.exports.findNotes = findNotes;
@@ -246,7 +245,6 @@ var findHistorys = function(req, res, callback) {
       , status: { $in: [ 0, 1, 2 ] }
     }).exec(function(err, docs) {
       if(err) {
-        log.error(err.message);
         return cbk(err);
       }
       try {
@@ -261,12 +259,11 @@ var findHistorys = function(req, res, callback) {
   }, function (err) {
     if(err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     //log.trace(historys);
     log.info(`${pspid}> find Historys done.`);
-    if(callback) 
-      callback(err, req, std.extend(res, { historys }));
+    callback(err, req, std.extend(res, { historys }));
   });
 };
 module.exports.findHistorys = findHistorys;
@@ -296,7 +293,7 @@ var getResultSet = function(req, res, callback) {
   }, function(err, ids, obj){
     if (err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     var opt = obj.body.ResultSet.root;
     var pages = [];
@@ -317,7 +314,7 @@ var getResultSet = function(req, res, callback) {
     log.profileEnd();
 
     log.info(`${pspid}> get ResultSet done.`);
-    if(callback) callback(err, req, std.extend(res, { pages }));
+    callback(err, req, std.extend(res, { pages }));
   });
 };
 module.exports.getResultSet = getResultSet;
@@ -351,7 +348,6 @@ var getAuctionIds = function(req, res, callback) {
       , page:   page 
     }, function(err, ids, obj){
       if (err) {
-        log.error(err.message);
         return cbk(err);
       }
       try {
@@ -366,17 +362,21 @@ var getAuctionIds = function(req, res, callback) {
   }, function(err) {
     if (err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
-    //log.trace(newIds);
-    Ids = helperIds(historys, newIds, int);
+    try {
+      //log.trace(newIds);
+      Ids = helperIds(historys, newIds, int);
+    } catch(err) {
+      return callback(err);
+    }
     
     log.countEnd();
     log.timeEnd();
     log.profileEnd();
 
     log.info(`${pspid}> get AuctionIDs done.`);
-    if(callback) callback(err, req, std.extend(res, { Ids }));
+    callback(err, req, std.extend(res, { Ids }));
   });
 };
 module.exports.getAuctionIds = getAuctionIds;
@@ -446,7 +446,6 @@ var getAuctionItems = function(req, res, callback) {
         app.YHauctionItem({ appid: req.appid, auctionID: Id.id }
         , function(err, obj){
           if(err) {
-            log.error(err.message);
             return cbk(err);
           }
           Items[Id.id]={ item: obj, status: Id.status };
@@ -465,7 +464,7 @@ var getAuctionItems = function(req, res, callback) {
   }, function(err) {
     if(err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     //log.trace(Items);
     
@@ -474,7 +473,7 @@ var getAuctionItems = function(req, res, callback) {
     log.profileEnd();
 
     log.info(`${pspid}> get AuctionItems done.`);
-    if(callback) callback(err, req, std.extend(res, { Items }));
+    callback(err, req, std.extend(res, { Items }));
   });
 };
 module.exports.getAuctionItems = getAuctionItems;
@@ -503,7 +502,6 @@ var getBidHistorys = function(req, res, callback) {
         app.YHbidHistory({ appid: req.appid, auctionID: Id.id }
         , function(err, obj){
           if(err) {
-            log.error(err.message);
             return cbk(err);
           }
           Bids[Id.id]={ bids: obj, status: Id.status };
@@ -519,10 +517,10 @@ var getBidHistorys = function(req, res, callback) {
         cbk();
         break;
     }
-  },function(err) {
+  }, function(err) {
     if(err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     //log.trace(Bids);
     
@@ -531,7 +529,7 @@ var getBidHistorys = function(req, res, callback) {
     log.profileEnd();
 
     log.info(`${pspid}> get BidsHistorys done.`);
-    if(callback) callback(err, req, std.extend(res, { Bids }));
+    callback(err, req, std.extend(res, { Bids }));
   });
 };
 module.exports.getBidHistorys = getBidHistorys;
@@ -566,7 +564,6 @@ var updateHistorys = function(req, res, callback) {
         opt   = { upsert: false, multi: true };
         History.update(where, set, opt, function(err) {
           if(err) {
-            log.error(err.message);
             return cbk(err);
           }
           cbk();
@@ -586,7 +583,6 @@ var updateHistorys = function(req, res, callback) {
         };
         History.create(obj, function(err) {
           if(err) {
-            log.error(err.message);
             return cbk(err);
           }
           cbk();
@@ -603,7 +599,6 @@ var updateHistorys = function(req, res, callback) {
         opt   = { upsert: false, multi: true };
         History.update(where, set, opt, function(err) {
           if(err) {
-            log.error(err.message);
             return cbk(err);
           }
           cbk();
@@ -616,10 +611,10 @@ var updateHistorys = function(req, res, callback) {
   }, function(err) {
     if(err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     log.info(`${pspid}> update Historys done.`);
-    if(callback) callback(err, req, res);
+    callback(err, req, res);
   });
 };
 module.exports.updateHistorys = updateHistorys;
@@ -676,10 +671,10 @@ var updateNote = function(req, res, callback) {
   Note.update(where, set, opt, function(err) {
     if(err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     log.info(`${pspid}> update Note done.`);
-    if(callback) callback(err, req, res);
+    callback(err, req, res);
   });
 };
 module.exports.updateNote = updateNote;
@@ -697,7 +692,7 @@ var getNotes = function(req, res, callback){
   .exec(function (err, docs) {
     if(err) {
       log.error(err.message);
-      throw err;
+      return callback(err);
     }
     var newNotes = [];
     docs.forEach(function(doc) {
@@ -714,8 +709,7 @@ var getNotes = function(req, res, callback){
       });
     });
     log.info(`${pspid}> get Notes done.`);
-    if(callback) 
-      callback(err, req, std.extend(res, { newNotes }));
+    callback(err, req, std.extend(res, { newNotes }));
   });
 };
 module.exports.getNotes = getNotes;
