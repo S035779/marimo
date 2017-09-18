@@ -2,14 +2,13 @@ require('dotenv').config();
 var mongoose = require('mongoose');
 var async = require('async');
 var express = require('express');
-var path = require('path');
 var passport = require('passport');
-var User = require('../models').User;
-var Note = require('../models').Note;
-var History = require('../models').History;
 var std = require('../utils/stdutils');
 var dbs = require('../utils/dbsutils');
 var log = require('../utils/logutils').logs;
+var User = require('../models').User;
+var Note = require('../models').Note;
+var History = require('../models').History;
 
 var pspid = `web(${process.pid})`
 var ObjectId = mongoose.Types.ObjectId;
@@ -48,7 +47,7 @@ router.get('/login', function(request, response) {
   var user = request.user;
   log.info(`${pspid}> ===getLogin===`);
   response.render('login.jade', { user });
-    log.info(`${pspid}> getLogin all done.`);
+  log.info(`${pspid}> getLogin all done.`);
 });
 
 router.post('/login', passport.authenticate('local')
@@ -63,6 +62,18 @@ router.get('/logout', function(request, response) {
   request.logout();
   response.redirect('/auth');
   log.info(`${pspid}> getLogout all done.`);
+});
+
+router.get('/notes/:id([0-9]+)', function(request, response) {
+  response.redirect('/');
+});
+
+router.get('/notes/:id([0-9]+)/edit',function(request, response){
+  response.redirect('/');
+});
+
+router.get('/starred', function(request, response) {
+  response.redirect('/');
 });
 
 /**

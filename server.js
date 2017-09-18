@@ -119,6 +119,7 @@ var main = (function() {
   app.set('port', process.env.PORT || 8081);
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'jade');
+  app.set('case sensitive routeing', true);
   app.use(log.connect());
   app.use(favicon(__dirname + '/public/favicon.ico'));
   app.use(session({ secret: 'watch note!'

@@ -1363,7 +1363,7 @@ var CallbackQueue = __webpack_require__(93);
 var PooledClass = __webpack_require__(23);
 var ReactFeatureFlags = __webpack_require__(98);
 var ReactReconciler = __webpack_require__(27);
-var Transaction = __webpack_require__(48);
+var Transaction = __webpack_require__(49);
 
 var invariant = __webpack_require__(1);
 
@@ -2595,7 +2595,7 @@ var _assign = __webpack_require__(4);
 var ReactCurrentOwner = __webpack_require__(14);
 
 var warning = __webpack_require__(2);
-var canDefineProperty = __webpack_require__(51);
+var canDefineProperty = __webpack_require__(52);
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 var REACT_ELEMENT_TYPE = __webpack_require__(123);
@@ -2944,7 +2944,7 @@ var _warning2 = _interopRequireDefault(_warning);
 
 var _PathUtils = __webpack_require__(18);
 
-var _Actions = __webpack_require__(43);
+var _Actions = __webpack_require__(44);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3037,7 +3037,7 @@ var locationsAreEqual = exports.locationsAreEqual = function locationsAreEqual(a
 
 
 var DOMNamespaces = __webpack_require__(60);
-var setInnerHTML = __webpack_require__(50);
+var setInnerHTML = __webpack_require__(51);
 
 var createMicrosoftUnsafeLocalFunction = __webpack_require__(67);
 var setTextContent = __webpack_require__(112);
@@ -3719,7 +3719,7 @@ var cloneElement = ReactElement.cloneElement;
 
 if (process.env.NODE_ENV !== 'production') {
   var lowPriorityWarning = __webpack_require__(78);
-  var canDefineProperty = __webpack_require__(51);
+  var canDefineProperty = __webpack_require__(52);
   var ReactElementValidator = __webpack_require__(124);
   var didWarnPropTypesDeprecated = false;
   createElement = ReactElementValidator.createElement;
@@ -4216,7 +4216,7 @@ module.exports.invoke = invoke;
 
 var _prodInvariant = __webpack_require__(3);
 
-var EventPluginRegistry = __webpack_require__(45);
+var EventPluginRegistry = __webpack_require__(46);
 var EventPluginUtils = __webpack_require__(61);
 var ReactErrorUtils = __webpack_require__(65);
 
@@ -4778,51 +4778,22 @@ Object.defineProperty(exports, "__esModule", {
 
 var _dispatcher = __webpack_require__(22);
 
-var _NoteApiClient = __webpack_require__(52);
+var _NoteApiClient = __webpack_require__(53);
 
 var _NoteApiClient2 = _interopRequireDefault(_NoteApiClient);
 
-var _spin = __webpack_require__(148);
+var _webutils = __webpack_require__(41);
 
-var _spin2 = _interopRequireDefault(_spin);
+var _webutils2 = _interopRequireDefault(_webutils);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  spinner: function spinner() {
-    //設定
-    var opts = {
-      lines: 13 // The number of lines to draw
-      , length: 28 // The length of each line
-      , width: 14 // The line thickness
-      , radius: 42 // The radius of the inner circle
-      , scale: 1 // Scales overall size of the spinner
-      , corners: 1 // Corner roundness (0..1)
-      , color: '#000' // #rgb or #rrggbb or array of colors
-      , opacity: 0.25 // Opacity of the lines
-      , rotate: 0 // The rotation offset
-      , direction: 1 // 1: clockwise, -1: counterclockwise
-      , speed: 1 // Rounds per second
-      , trail: 60 // Afterglow percentage
-      , fps: 20 // Frames per second when using setTimeout() as
-      // a fallback for CSS
-      , zIndex: 2e9 // The z-index (defaults to 2000000000)
-      , className: 'spinner' // The CSS class to assign to the
-      //  spinner
-      , top: '49%' // Top position relative to parent
-      , left: '49%' // Left position relative to parent
-      , shadow: false // Whether to render a shadow
-      , hwaccel: false // Whether to use hardware acceleration
-      , position: 'absolute' // Element positioning
-    };
-    //スピナーオブジェクト
-    return new _spin2.default(opts);
-  },
   target: function target(elm) {
     return document.getElementById(elm);
   },
   fetchMyNotes: function fetchMyNotes() {
-    var spinner = this.spinner();
+    var spinner = _webutils2.default.spinner();
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.fetchMyNotes().then(function (notes) {
       spinner.stop();
@@ -4830,7 +4801,7 @@ exports.default = {
     });
   },
   fetchStarred: function fetchStarred() {
-    var spinner = this.spinner();
+    var spinner = _webutils2.default.spinner();
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.fetchStarredNotes().then(function (notes) {
       spinner.stop();
@@ -4838,7 +4809,7 @@ exports.default = {
     });
   },
   fetch: function fetch(id) {
-    var spinner = this.spinner();
+    var spinner = _webutils2.default.spinner();
     spinner.spin(this.target('app'));
     (0, _dispatcher.dispatch)({ type: 'note/fetch/before' });
     return _NoteApiClient2.default.fetchNote(id).then(function (note) {
@@ -4847,7 +4818,7 @@ exports.default = {
     });
   },
   create: function create() {
-    var spinner = this.spinner();
+    var spinner = _webutils2.default.spinner();
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.createNote().then(function (note) {
       spinner.stop();
@@ -4861,7 +4832,7 @@ exports.default = {
         body = _ref.body,
         category = _ref.category;
 
-    var spinner = this.spinner();
+    var spinner = _webutils2.default.spinner();
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.updateNote(id, { title: title, body: body, category: category }).then(function () {
       spinner.stop();
@@ -4872,7 +4843,7 @@ exports.default = {
     });
   },
   delete: function _delete(id) {
-    var spinner = this.spinner();
+    var spinner = _webutils2.default.spinner();
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.deleteNote(id).then(function () {
       spinner.stop();
@@ -4880,7 +4851,7 @@ exports.default = {
     });
   },
   getusername: function getusername() {
-    var spinner = this.spinner();
+    var spinner = _webutils2.default.spinner();
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.getUsername().then(function (username) {
       spinner.stop();
@@ -4954,6 +4925,216 @@ exports.default = Button;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+
+
+var Spinner = __webpack_require__(148);
+
+var spinner = function spinner() {
+    //設定
+    var opts = {
+        lines: 13 // The number of lines to draw
+        , length: 28 // The length of each line
+        , width: 14 // The line thickness
+        , radius: 42 // The radius of the inner circle
+        , scale: 1 // Scales overall size of the spinner
+        , corners: 1 // Corner roundness (0..1)
+        , color: '#000' // #rgb or #rrggbb or array of colors
+        , opacity: 0.25 // Opacity of the lines
+        , rotate: 0 // The rotation offset
+        , direction: 1 // 1: clockwise, -1: counterclockwise
+        , speed: 1 // Rounds per second
+        , trail: 60 // Afterglow percentage
+        , fps: 20 // Frames per second when using setTimeout() as
+        // a fallback for CSS
+        , zIndex: 2e9 // The z-index (defaults to 2000000000)
+        , className: 'spinner' // The CSS class to assign to the
+        //  spinner
+        , top: '49%' // Top position relative to parent
+        , left: '49%' // Left position relative to parent
+        , shadow: false // Whether to render a shadow
+        , hwaccel: false // Whether to use hardware acceleration
+        , position: 'absolute' // Element positioning
+    };
+    //スピナーオブジェクト
+    return new Spinner(opts);
+};
+module.exports.spinner = spinner;
+
+var setCookies = function setCookies(name, value, daysToLive) {
+    var cookie = name + "=" + encodeURIComponent(value);
+    if (typeof daysToLive === "number") cookie += "; max-age=" + daysToLive * 60 * 60 * 24;
+    document.cookie = cookie;
+};
+module.exports.setCookies = setCookies;
+
+// Return the document's cookies as an object of name/value pairs.
+// Assume that cookie values are encoded with encodeURIComponent().
+var getCookies = function getCookies() {
+    var cookies = {}; // The object we will return
+    var all = document.cookie; // Get all cookies in one big string
+    if (all === "") // If the property is the empty string
+        return cookies; // return an empty object
+    var list = all.split("; "); // Split into individual name=value pairs
+    for (var i = 0; i < list.length; i++) {
+        // For each cookie
+        var cookie = list[i];
+        var p = cookie.indexOf("="); // Find the first = sign
+        var name = cookie.substring(0, p); // Get cookie name
+        var value = cookie.substring(p + 1); // Get cookie value
+        value = decodeURIComponent(value); // Decode the value
+        cookies[name] = value; // Store name and value in object
+    }
+    return cookies;
+};
+module.exports.getCookies = getCookies;
+
+/*
+ * CookieStorage.js
+ * This class implements the Storage API that localStorage and sessionStorage
+ * do, but implements it on top of HTTP Cookies.
+ */
+var CookieStorage = function CookieStorage(maxage, path) {
+    // Arguments specify lifetime and scope
+
+    // Get an object that holds all cookies
+    var cookies = function () {
+        // The getCookies() function shown earlier
+        var cookies = {}; // The object we will return
+        var all = document.cookie; // Get all cookies in one big string
+        if (all === "") // If the property is the empty string
+            return cookies; // return an empty object
+        var list = all.split("; "); // Split into individual name=value pairs
+        for (var i = 0; i < list.length; i++) {
+            // For each cookie
+            var cookie = list[i];
+            var p = cookie.indexOf("="); // Find the first = sign
+            var name = cookie.substring(0, p); // Get cookie name
+            var value = cookie.substring(p + 1); // Get cookie value
+            value = decodeURIComponent(value); // Decode the value
+            cookies[name] = value; // Store name and value
+        }
+        return cookies;
+    }();
+
+    // Collect the cookie names in an array
+    var keys = [];
+    for (var key in cookies) {
+        keys.push(key);
+    } // Now define the public properties and methods of the Storage API
+
+    // The number of stored cookies
+    this.length = keys.length;
+
+    // Return the name of the nth cookie, or null if n is out of range
+    this.key = function (n) {
+        if (n < 0 || n >= keys.length) return null;
+        return keys[n];
+    };
+
+    // Return the value of the named cookie, or null.
+    this.getItem = function (name) {
+        return cookies[name] || null;
+    };
+
+    // Store a value
+    this.setItem = function (key, value) {
+        if (!(key in cookies)) {
+            // If no existing cookie with this name
+            keys.push(key); // Add key to the array of keys
+            this.length++; // And increment the length
+        }
+
+        // Store this name/value pair in the set of cookies.
+        cookies[key] = value;
+
+        // Now actually set the cookie.
+        // First encode value and create a name=encoded-value string
+        var cookie = key + "=" + encodeURIComponent(value);
+
+        // Add cookie attributes to that string
+        if (maxage) cookie += "; max-age=" + maxage;
+        if (path) cookie += "; path=" + path;
+
+        // Set the cookie through the magic document.cookie property
+        document.cookie = cookie;
+    };
+
+    // Remove the specified cookie
+    this.removeItem = function (key) {
+        if (!(key in cookies)) return; // If it doesn't exist, do nothing
+
+        // Delete the cookie from our internal set of cookies
+        delete cookies[key];
+
+        // And remove the key from the array of names, too.
+        // This would be easier with the ES5 array indexOf() method.
+        for (var i = 0; i < keys.length; i++) {
+            // Loop through all keys
+            if (keys[i] === key) {
+                // When we find the one we want
+                keys.splice(i, 1); // Remove it from the array.
+                break;
+            }
+        }
+        this.length--; // Decrement cookie length
+
+        // Finally actually delete the cookie by giving it an empty value
+        // and an immediate expiration date.
+        document.cookie = key + "=; max-age=0";
+    };
+
+    // Remove all cookies
+    this.clear = function () {
+        // Loop through the keys, removing the cookies
+        for (var i = 0; i < keys.length; i++) {
+            document.cookie = keys[i] + "=; max-age=0";
+        } // Reset our internal state
+        cookies = {};
+        keys = [];
+        this.length = 0;
+    };
+};
+module.exports.CookieStorage = CookieStorage;
+
+var UserDataStorage = function UserDataStorage(maxage) {
+    // Create a document element and install the special userData
+    // behavior on it so it gets save() and load() methods.
+    var memory = document.createElement("div"); // Create an element
+    memory.style.display = "none"; // Never display it
+    memory.style.behavior = "url('#default#userData')"; // Attach magic behavior
+    document.body.appendChild(memory); // Add to the document
+
+    // If maxage is specified, expire the userData in maxage seconds
+    if (maxage) {
+        var now = new Date().getTime(); // The current time
+        var expires = now + maxage * 1000; // maxage seconds from now
+        memory.expires = new Date(expires).toUTCString();
+    }
+
+    // Initialize memory by loading saved values.
+    // The argument is arbitrary, but must also be passed to save()
+    memory.load("UserDataStorage"); // Load any stored data
+
+    this.getItem = function (key) {
+        // Retrieve saved values from attributes
+        return memory.getAttribute(key) || null;
+    };
+    this.setItem = function (key, value) {
+        memory.setAttribute(key, value); // Store values as attributes
+        memory.save("UserDataStorage"); // Save state after any change
+    };
+    this.removeItem = function (key) {
+        memory.removeAttribute(key); // Remove stored value attribute
+        memory.save("UserDataStorage"); // Save new state
+    };
+};
+module.exports.UserDataStorage = UserDataStorage;
+
+/***/ }),
+/* 42 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/**
  * Copyright (c) 2013-present, Facebook, Inc.
  * All rights reserved.
@@ -4976,7 +5157,7 @@ module.exports = emptyObject;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5049,7 +5230,7 @@ function shallowEqual(objA, objB) {
 module.exports = shallowEqual;
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5077,7 +5258,7 @@ var REPLACE = exports.REPLACE = 'REPLACE';
 var POP = exports.POP = 'POP';
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5132,7 +5313,7 @@ var isExtraneousPopstateEvent = exports.isExtraneousPopstateEvent = function isE
 };
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5391,7 +5572,7 @@ module.exports = EventPluginRegistry;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5409,7 +5590,7 @@ module.exports = EventPluginRegistry;
 
 var _assign = __webpack_require__(4);
 
-var EventPluginRegistry = __webpack_require__(45);
+var EventPluginRegistry = __webpack_require__(46);
 var ReactEventEmitterMixin = __webpack_require__(219);
 var ViewportMetrics = __webpack_require__(104);
 
@@ -5720,7 +5901,7 @@ var ReactBrowserEventEmitter = _assign({}, ReactEventEmitterMixin, {
 module.exports = ReactBrowserEventEmitter;
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5797,7 +5978,7 @@ SyntheticUIEvent.augmentClass(SyntheticMouseEvent, MouseEventInterface);
 module.exports = SyntheticMouseEvent;
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6031,7 +6212,7 @@ module.exports = TransactionImpl;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6158,7 +6339,7 @@ function escapeTextContentForBrowser(text) {
 module.exports = escapeTextContentForBrowser;
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6261,7 +6442,7 @@ if (ExecutionEnvironment.canUseDOM) {
 module.exports = setInnerHTML;
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6293,7 +6474,7 @@ module.exports = canDefineProperty;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6315,86 +6496,90 @@ var _xhrutils = __webpack_require__(149);
 
 var _xhrutils2 = _interopRequireDefault(_xhrutils);
 
-var _strutils = __webpack_require__(53);
+var _webutils = __webpack_require__(41);
 
-var _strutils2 = _interopRequireDefault(_strutils);
+var _webutils2 = _interopRequireDefault(_webutils);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var LATENCY = 200;
-var username = '';
 var notes = [];
-var url = "/api/note";
 
 exports.default = {
   request: function request(func, response) {
-    if (func === 'get') {
-      console.log(response);
-      username = this.getName();
-      return new Promise(function (resolve, reject) {
-        var query = { user: username };
-        var uri = url;
-        _xhrutils2.default.get(uri, query, function (data) {
-          //console.log(data);
-          notes = data;
-          resolve(notes);
+    var _this = this;
+
+    var url = "/api/note";
+    var LATENCY = 200;
+    switch (func) {
+      case 'get':
+        return new Promise(function (resolve) {
+          console.log(response);
+          var username = _this.getName();
+          var query = { user: username };
+          var uri = url;
+          _xhrutils2.default.get(uri, query, function (data) {
+            //console.log(data);
+            notes = data;
+            resolve(notes);
+          });
         });
-      });
-    } else if (func === 'create' || func === 'delete' || func === 'search') {
-      console.log(response);
-      return new Promise(function (resolve, reject) {
-        var uri = url + '/' + func;
-        _xhrutils2.default.postJSON(uri, response, function (data) {
-          resolve(response);
+        break;
+      case 'create':
+      case 'delete':
+      case 'search':
+        return new Promise(function (resolve) {
+          console.log(response);
+          var uri = url + '/' + func;
+          _xhrutils2.default.postJSON(uri, response, function (data) {
+            resolve(response);
+          });
         });
-      });
-    } else if (func === 'post') {
-      console.log(response);
-      return new Promise(function (resolve, reject) {
-        var uri = url;
-        _xhrutils2.default.postJSON(uri, response, function (data) {
-          resolve(response.id);
+        break;
+      case 'post':
+        return new Promise(function (resolve) {
+          console.log(response);
+          var uri = url;
+          _xhrutils2.default.postJSON(uri, response, function (data) {
+            resolve(response.id);
+          });
         });
-      });
-    } else {
-      console.log(response);
-      return new Promise(function (resolve) {
-        setTimeout(function () {
-          return resolve(response);
-        }, LATENCY);
-      });
+        break;
+      default:
+        return new Promise(function (resolve) {
+          console.log(response);
+          setTimeout(function () {
+            return resolve(response);
+          }, LATENCY);
+        });
+        break;
     }
   },
-
 
   // 更新日付を生成
   getUpdated: function getUpdated() {
     return _stdutils2.default.getTimeStamp();
   },
   getName: function getName() {
-    var memory = window.localStorage || window.UserDataStorage && new _strutils2.default.UserDataStorage() || new _strutils2.default.CookieStorage();
+    var memory = window.localStorage || window.UserDataStorage && new _webutils2.default.UserDataStorage() || new _webutils2.default.CookieStorage();
     return memory.getItem("username");
   },
 
-
   // ユーザ名からノートを特定する
   myNotes: function myNotes() {
-    var _this = this;
+    var _this2 = this;
 
     return notes.filter(function (note) {
-      return note.user === _this.getName();
+      return note.user === _this2.getName();
     });
   },
   getUsername: function getUsername() {
     return this.request('getUser', this.getName());
   },
 
-
   // １．自分のノートをデータベースから全件取得する
   fetchMyNotes: function fetchMyNotes() {
     return this.request('get', this.myNotes());
   },
-
 
   // ２．お気に入りノートのみを表示
   fetchStarredNotes: function fetchStarredNotes() {
@@ -6404,7 +6589,6 @@ exports.default = {
     return this.request('fetchStar', starredNotes);
   },
 
-
   // ３．特定のノートをデータベースから取得
   fetchNote: function fetchNote(id) {
     var note = notes.find(function (note) {
@@ -6413,21 +6597,21 @@ exports.default = {
     return this.request('fetch', note);
   },
 
-
   // ４．新規のノートを作成する
   createNote: function createNote() {
     var id = _encutils2.default.makeRandInt(8);
     var updated = this.getUpdated();
     var user = this.getName();
-    var note = { user: user, id: id, title: 'Untitled', category: '', starred: false, body: '', updated: updated };
+    var note = { user: user, id: id, title: 'Untitled',
+      category: '', starred: false, body: '',
+      updated: updated };
     notes.unshift(note);
     return this.request('create', note);
   },
 
-
   // ５．特定のノートをアップデートする
   updateNote: function updateNote(id, _ref) {
-    var _this2 = this;
+    var _this3 = this;
 
     var title = _ref.title,
         body = _ref.body,
@@ -6435,7 +6619,8 @@ exports.default = {
 
     notes = notes.map(function (note) {
       if (note.id === id) {
-        return Object.assign({}, note, { title: title, body: body, category: category, updated: _this2.getUpdated() });
+        return Object.assign({}, note, { title: title, body: body, category: category,
+          updated: _this3.getUpdated() });
       } else {
         return note;
       }
@@ -6445,7 +6630,6 @@ exports.default = {
     });
     return this.request('search', note);
   },
-
 
   // ６．特定のノートを削除する
   deleteNote: function deleteNote(id) {
@@ -6458,7 +6642,6 @@ exports.default = {
     return this.request('delete', note);
   },
 
-
   // ７．特定のノートをお気に入りにする
   createStar: function createStar(id) {
     var note = notes.find(function (note) {
@@ -6468,7 +6651,6 @@ exports.default = {
     return this.request('post', note);
   },
 
-
   // ８．特定のノートのお気に入りを外す
   deleteStar: function deleteStar(id) {
     var note = notes.find(function (note) {
@@ -6477,179 +6659,6 @@ exports.default = {
     note.starred = Boolean(0);
     return this.request('post', note);
   }
-};
-
-/***/ }),
-/* 53 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-exports.setCookies = function (name, value, daysToLive) {
-    var cookie = name + "=" + encodeURIComponent(value);
-    if (typeof daysToLive === "number") cookie += "; max-age=" + daysToLive * 60 * 60 * 24;
-    document.cookie = cookie;
-};
-
-// Return the document's cookies as an object of name/value pairs.
-// Assume that cookie values are encoded with encodeURIComponent().
-exports.getCookies = function () {
-    var cookies = {}; // The object we will return
-    var all = document.cookie; // Get all cookies in one big string
-    if (all === "") // If the property is the empty string
-        return cookies; // return an empty object
-    var list = all.split("; "); // Split into individual name=value pairs
-    for (var i = 0; i < list.length; i++) {
-        // For each cookie
-        var cookie = list[i];
-        var p = cookie.indexOf("="); // Find the first = sign
-        var name = cookie.substring(0, p); // Get cookie name
-        var value = cookie.substring(p + 1); // Get cookie value
-        value = decodeURIComponent(value); // Decode the value
-        cookies[name] = value; // Store name and value in object
-    }
-    return cookies;
-};
-
-/*
- * CookieStorage.js
- * This class implements the Storage API that localStorage and sessionStorage
- * do, but implements it on top of HTTP Cookies.
- */
-exports.CookieStorage = function (maxage, path) {
-    // Arguments specify lifetime and scope
-
-    // Get an object that holds all cookies
-    var cookies = function () {
-        // The getCookies() function shown earlier
-        var cookies = {}; // The object we will return
-        var all = document.cookie; // Get all cookies in one big string
-        if (all === "") // If the property is the empty string
-            return cookies; // return an empty object
-        var list = all.split("; "); // Split into individual name=value pairs
-        for (var i = 0; i < list.length; i++) {
-            // For each cookie
-            var cookie = list[i];
-            var p = cookie.indexOf("="); // Find the first = sign
-            var name = cookie.substring(0, p); // Get cookie name
-            var value = cookie.substring(p + 1); // Get cookie value
-            value = decodeURIComponent(value); // Decode the value
-            cookies[name] = value; // Store name and value
-        }
-        return cookies;
-    }();
-
-    // Collect the cookie names in an array
-    var keys = [];
-    for (var key in cookies) {
-        keys.push(key);
-    } // Now define the public properties and methods of the Storage API
-
-    // The number of stored cookies
-    this.length = keys.length;
-
-    // Return the name of the nth cookie, or null if n is out of range
-    this.key = function (n) {
-        if (n < 0 || n >= keys.length) return null;
-        return keys[n];
-    };
-
-    // Return the value of the named cookie, or null.
-    this.getItem = function (name) {
-        return cookies[name] || null;
-    };
-
-    // Store a value
-    this.setItem = function (key, value) {
-        if (!(key in cookies)) {
-            // If no existing cookie with this name
-            keys.push(key); // Add key to the array of keys
-            this.length++; // And increment the length
-        }
-
-        // Store this name/value pair in the set of cookies.
-        cookies[key] = value;
-
-        // Now actually set the cookie.
-        // First encode value and create a name=encoded-value string
-        var cookie = key + "=" + encodeURIComponent(value);
-
-        // Add cookie attributes to that string
-        if (maxage) cookie += "; max-age=" + maxage;
-        if (path) cookie += "; path=" + path;
-
-        // Set the cookie through the magic document.cookie property
-        document.cookie = cookie;
-    };
-
-    // Remove the specified cookie
-    this.removeItem = function (key) {
-        if (!(key in cookies)) return; // If it doesn't exist, do nothing
-
-        // Delete the cookie from our internal set of cookies
-        delete cookies[key];
-
-        // And remove the key from the array of names, too.
-        // This would be easier with the ES5 array indexOf() method.
-        for (var i = 0; i < keys.length; i++) {
-            // Loop through all keys
-            if (keys[i] === key) {
-                // When we find the one we want
-                keys.splice(i, 1); // Remove it from the array.
-                break;
-            }
-        }
-        this.length--; // Decrement cookie length
-
-        // Finally actually delete the cookie by giving it an empty value
-        // and an immediate expiration date.
-        document.cookie = key + "=; max-age=0";
-    };
-
-    // Remove all cookies
-    this.clear = function () {
-        // Loop through the keys, removing the cookies
-        for (var i = 0; i < keys.length; i++) {
-            document.cookie = keys[i] + "=; max-age=0";
-        } // Reset our internal state
-        cookies = {};
-        keys = [];
-        this.length = 0;
-    };
-};
-
-exports.UserDataStorage = function (maxage) {
-    // Create a document element and install the special userData
-    // behavior on it so it gets save() and load() methods.
-    var memory = document.createElement("div"); // Create an element
-    memory.style.display = "none"; // Never display it
-    memory.style.behavior = "url('#default#userData')"; // Attach magic behavior
-    document.body.appendChild(memory); // Add to the document
-
-    // If maxage is specified, expire the userData in maxage seconds
-    if (maxage) {
-        var now = new Date().getTime(); // The current time
-        var expires = now + maxage * 1000; // maxage seconds from now
-        memory.expires = new Date(expires).toUTCString();
-    }
-
-    // Initialize memory by loading saved values.
-    // The argument is arbitrary, but must also be passed to save()
-    memory.load("UserDataStorage"); // Load any stored data
-
-    this.getItem = function (key) {
-        // Retrieve saved values from attributes
-        return memory.getAttribute(key) || null;
-    };
-    this.setItem = function (key, value) {
-        memory.setAttribute(key, value); // Store values as attributes
-        memory.save("UserDataStorage"); // Save state after any change
-    };
-    this.removeItem = function (key) {
-        memory.removeAttribute(key); // Remove stored value attribute
-        memory.save("UserDataStorage"); // Save new state
-    };
 };
 
 /***/ }),
@@ -6664,7 +6673,7 @@ exports.go = exports.replaceLocation = exports.pushLocation = exports.startListe
 
 var _LocationUtils = __webpack_require__(25);
 
-var _DOMUtils = __webpack_require__(44);
+var _DOMUtils = __webpack_require__(45);
 
 var _DOMStateStorage = __webpack_require__(87);
 
@@ -6784,7 +6793,7 @@ var _runTransitionHook = __webpack_require__(57);
 
 var _runTransitionHook2 = _interopRequireDefault(_runTransitionHook);
 
-var _Actions = __webpack_require__(43);
+var _Actions = __webpack_require__(44);
 
 var _LocationUtils = __webpack_require__(25);
 
@@ -7023,7 +7032,7 @@ var ReactDOMComponentTree = __webpack_require__(6);
 var ReactInstrumentation = __webpack_require__(11);
 
 var createMicrosoftUnsafeLocalFunction = __webpack_require__(67);
-var setInnerHTML = __webpack_require__(50);
+var setInnerHTML = __webpack_require__(51);
 var setTextContent = __webpack_require__(112);
 
 function getNodeAfter(parentNode, node) {
@@ -9429,7 +9438,7 @@ exports.default = NoteBody;
 
 var _assign = __webpack_require__(4);
 
-var emptyObject = __webpack_require__(41);
+var emptyObject = __webpack_require__(42);
 var _invariant = __webpack_require__(1);
 
 if (process.env.NODE_ENV !== 'production') {
@@ -12629,7 +12638,7 @@ var _prodInvariant = __webpack_require__(3);
 var DOMLazyTree = __webpack_require__(26);
 var DOMProperty = __webpack_require__(19);
 var React = __webpack_require__(31);
-var ReactBrowserEventEmitter = __webpack_require__(46);
+var ReactBrowserEventEmitter = __webpack_require__(47);
 var ReactCurrentOwner = __webpack_require__(14);
 var ReactDOMComponentTree = __webpack_require__(6);
 var ReactDOMContainerInfo = __webpack_require__(202);
@@ -12642,10 +12651,10 @@ var ReactReconciler = __webpack_require__(27);
 var ReactUpdateQueue = __webpack_require__(66);
 var ReactUpdates = __webpack_require__(13);
 
-var emptyObject = __webpack_require__(41);
+var emptyObject = __webpack_require__(42);
 var instantiateReactComponent = __webpack_require__(110);
 var invariant = __webpack_require__(1);
-var setInnerHTML = __webpack_require__(50);
+var setInnerHTML = __webpack_require__(51);
 var shouldUpdateReactComponent = __webpack_require__(72);
 var warning = __webpack_require__(2);
 
@@ -13759,8 +13768,8 @@ module.exports = isTextInputElement;
 
 
 var ExecutionEnvironment = __webpack_require__(7);
-var escapeTextContentForBrowser = __webpack_require__(49);
-var setInnerHTML = __webpack_require__(50);
+var escapeTextContentForBrowser = __webpack_require__(50);
+var setInnerHTML = __webpack_require__(51);
 
 /**
  * Set the textContent property of a node, ensuring that whitespace is preserved
@@ -14624,8 +14633,8 @@ var _prodInvariant = __webpack_require__(32),
 
 var ReactNoopUpdateQueue = __webpack_require__(125);
 
-var canDefineProperty = __webpack_require__(51);
-var emptyObject = __webpack_require__(41);
+var canDefineProperty = __webpack_require__(52);
+var emptyObject = __webpack_require__(42);
 var invariant = __webpack_require__(1);
 var lowPriorityWarning = __webpack_require__(78);
 
@@ -14806,7 +14815,7 @@ var ReactElement = __webpack_require__(24);
 
 var checkReactTypeSpec = __webpack_require__(281);
 
-var canDefineProperty = __webpack_require__(51);
+var canDefineProperty = __webpack_require__(52);
 var getIteratorFn = __webpack_require__(126);
 var warning = __webpack_require__(2);
 var lowPriorityWarning = __webpack_require__(78);
@@ -15258,7 +15267,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _dispatcher = __webpack_require__(22);
 
-var _NoteApiClient = __webpack_require__(52);
+var _NoteApiClient = __webpack_require__(53);
 
 var _NoteApiClient2 = _interopRequireDefault(_NoteApiClient);
 
@@ -15286,7 +15295,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _dispatcher = __webpack_require__(22);
 
-var _NoteApiClient = __webpack_require__(52);
+var _NoteApiClient = __webpack_require__(53);
 
 var _NoteApiClient2 = _interopRequireDefault(_NoteApiClient);
 
@@ -16959,9 +16968,9 @@ var _dispatcher = __webpack_require__(22);
 
 var _dispatcher2 = _interopRequireDefault(_dispatcher);
 
-var _strutils = __webpack_require__(53);
+var _webutils = __webpack_require__(41);
 
-var _strutils2 = _interopRequireDefault(_strutils);
+var _webutils2 = _interopRequireDefault(_webutils);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -16983,7 +16992,7 @@ var AppStore = function (_ReduceStore) {
   _createClass(AppStore, [{
     key: 'getInitialState',
     value: function getInitialState() {
-      var memory = window.localStorage || window.UserDataStorage && new _strutils2.default.UserDataStorage() || new _strutils2.default.CookieStorage();
+      var memory = window.localStorage || window.UserDataStorage && new _webutils2.default.UserDataStorage() || new _webutils2.default.CookieStorage();
       var username = memory.getItem("username");
       //console.log(username);
       return { username: username };
@@ -17028,9 +17037,9 @@ var _dispatcher = __webpack_require__(22);
 
 var _dispatcher2 = _interopRequireDefault(_dispatcher);
 
-var _strutils = __webpack_require__(53);
+var _webutils = __webpack_require__(41);
 
-var _strutils2 = _interopRequireDefault(_strutils);
+var _webutils2 = _interopRequireDefault(_webutils);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -17054,10 +17063,11 @@ var DashboardStore = function (_ReduceStore) {
   _createClass(DashboardStore, [{
     key: 'getInitialState',
     value: function getInitialState() {
-      var memory = window.localStorage || window.UserDataStorage && new _strutils2.default.UserDataStorage() || new _strutils2.default.CookieStorage();
+      var memory = window.localStorage || window.UserDataStorage && new _webutils2.default.UserDataStorage() || new _webutils2.default.CookieStorage();
       var username = memory.getItem("username");
       //console.log(username);
-      return { username: username, notes: [], selectedNoteId: null };
+      return { username: username, notes: [],
+        selectedNoteId: null };
     }
   }, {
     key: 'reduce',
@@ -19225,7 +19235,7 @@ var FluxContainerSubscriptions = __webpack_require__(172);
 var React = __webpack_require__(5);
 
 var invariant = __webpack_require__(1);
-var shallowEqual = __webpack_require__(42);
+var shallowEqual = __webpack_require__(43);
 
 var Component = React.Component;
 
@@ -19954,7 +19964,7 @@ var _warning2 = _interopRequireDefault(_warning);
 
 var _LocationUtils = __webpack_require__(25);
 
-var _DOMUtils = __webpack_require__(44);
+var _DOMUtils = __webpack_require__(45);
 
 var _DOMStateStorage = __webpack_require__(87);
 
@@ -20134,7 +20144,7 @@ var _RefreshProtocol = __webpack_require__(178);
 
 var RefreshProtocol = _interopRequireWildcard(_RefreshProtocol);
 
-var _DOMUtils = __webpack_require__(44);
+var _DOMUtils = __webpack_require__(45);
 
 var _createHistory = __webpack_require__(56);
 
@@ -20230,7 +20240,7 @@ var _invariant2 = _interopRequireDefault(_invariant);
 
 var _ExecutionEnvironment = __webpack_require__(55);
 
-var _DOMUtils = __webpack_require__(44);
+var _DOMUtils = __webpack_require__(45);
 
 var _HashProtocol = __webpack_require__(177);
 
@@ -20390,7 +20400,7 @@ var _createHistory = __webpack_require__(56);
 
 var _createHistory2 = _interopRequireDefault(_createHistory);
 
-var _Actions = __webpack_require__(43);
+var _Actions = __webpack_require__(44);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -22061,7 +22071,7 @@ module.exports = DefaultEventPluginOrder;
 
 var EventPropagators = __webpack_require__(35);
 var ReactDOMComponentTree = __webpack_require__(6);
-var SyntheticMouseEvent = __webpack_require__(47);
+var SyntheticMouseEvent = __webpack_require__(48);
 
 var eventTypes = {
   mouseEnter: {
@@ -22711,9 +22721,9 @@ if (process.env.NODE_ENV !== 'production') {
   var checkReactTypeSpec = __webpack_require__(247);
 }
 
-var emptyObject = __webpack_require__(41);
+var emptyObject = __webpack_require__(42);
 var invariant = __webpack_require__(1);
-var shallowEqual = __webpack_require__(42);
+var shallowEqual = __webpack_require__(43);
 var shouldUpdateReactComponent = __webpack_require__(72);
 var warning = __webpack_require__(2);
 
@@ -23730,8 +23740,8 @@ var DOMNamespaces = __webpack_require__(60);
 var DOMProperty = __webpack_require__(19);
 var DOMPropertyOperations = __webpack_require__(94);
 var EventPluginHub = __webpack_require__(34);
-var EventPluginRegistry = __webpack_require__(45);
-var ReactBrowserEventEmitter = __webpack_require__(46);
+var EventPluginRegistry = __webpack_require__(46);
+var ReactBrowserEventEmitter = __webpack_require__(47);
 var ReactDOMComponentFlags = __webpack_require__(95);
 var ReactDOMComponentTree = __webpack_require__(6);
 var ReactDOMInput = __webpack_require__(206);
@@ -23743,10 +23753,10 @@ var ReactMultiChild = __webpack_require__(225);
 var ReactServerRenderingTransaction = __webpack_require__(230);
 
 var emptyFunction = __webpack_require__(9);
-var escapeTextContentForBrowser = __webpack_require__(49);
+var escapeTextContentForBrowser = __webpack_require__(50);
 var invariant = __webpack_require__(1);
 var isEventSupported = __webpack_require__(71);
-var shallowEqual = __webpack_require__(42);
+var shallowEqual = __webpack_require__(43);
 var inputValueTracking = __webpack_require__(109);
 var validateDOMNesting = __webpack_require__(73);
 var warning = __webpack_require__(2);
@@ -25693,7 +25703,7 @@ var DOMChildrenOperations = __webpack_require__(59);
 var DOMLazyTree = __webpack_require__(26);
 var ReactDOMComponentTree = __webpack_require__(6);
 
-var escapeTextContentForBrowser = __webpack_require__(49);
+var escapeTextContentForBrowser = __webpack_require__(50);
 var invariant = __webpack_require__(1);
 var validateDOMNesting = __webpack_require__(73);
 
@@ -26163,7 +26173,7 @@ module.exports = {
 
 
 var DOMProperty = __webpack_require__(19);
-var EventPluginRegistry = __webpack_require__(45);
+var EventPluginRegistry = __webpack_require__(46);
 var ReactComponentTreeHook = __webpack_require__(10);
 
 var warning = __webpack_require__(2);
@@ -26650,7 +26660,7 @@ module.exports = ReactDebugTool;
 var _assign = __webpack_require__(4);
 
 var ReactUpdates = __webpack_require__(13);
-var Transaction = __webpack_require__(48);
+var Transaction = __webpack_require__(49);
 
 var emptyFunction = __webpack_require__(9);
 
@@ -27077,7 +27087,7 @@ var EventPluginHub = __webpack_require__(34);
 var EventPluginUtils = __webpack_require__(61);
 var ReactComponentEnvironment = __webpack_require__(64);
 var ReactEmptyComponent = __webpack_require__(97);
-var ReactBrowserEventEmitter = __webpack_require__(46);
+var ReactBrowserEventEmitter = __webpack_require__(47);
 var ReactHostComponent = __webpack_require__(99);
 var ReactUpdates = __webpack_require__(13);
 
@@ -27795,10 +27805,10 @@ var _assign = __webpack_require__(4);
 
 var CallbackQueue = __webpack_require__(93);
 var PooledClass = __webpack_require__(23);
-var ReactBrowserEventEmitter = __webpack_require__(46);
+var ReactBrowserEventEmitter = __webpack_require__(47);
 var ReactInputSelection = __webpack_require__(100);
 var ReactInstrumentation = __webpack_require__(11);
-var Transaction = __webpack_require__(48);
+var Transaction = __webpack_require__(49);
 var ReactUpdateQueue = __webpack_require__(66);
 
 /**
@@ -28072,7 +28082,7 @@ module.exports = ReactRef;
 var _assign = __webpack_require__(4);
 
 var PooledClass = __webpack_require__(23);
-var Transaction = __webpack_require__(48);
+var Transaction = __webpack_require__(49);
 var ReactInstrumentation = __webpack_require__(11);
 var ReactServerUpdateQueue = __webpack_require__(231);
 
@@ -28644,7 +28654,7 @@ var SyntheticEvent = __webpack_require__(16);
 
 var getActiveElement = __webpack_require__(84);
 var isTextInputElement = __webpack_require__(111);
-var shallowEqual = __webpack_require__(42);
+var shallowEqual = __webpack_require__(43);
 
 var skipSelectionChangeEvent = ExecutionEnvironment.canUseDOM && 'documentMode' in document && document.documentMode <= 11;
 
@@ -28840,7 +28850,7 @@ var SyntheticClipboardEvent = __webpack_require__(237);
 var SyntheticEvent = __webpack_require__(16);
 var SyntheticFocusEvent = __webpack_require__(240);
 var SyntheticKeyboardEvent = __webpack_require__(242);
-var SyntheticMouseEvent = __webpack_require__(47);
+var SyntheticMouseEvent = __webpack_require__(48);
 var SyntheticDragEvent = __webpack_require__(239);
 var SyntheticTouchEvent = __webpack_require__(243);
 var SyntheticTransitionEvent = __webpack_require__(244);
@@ -29189,7 +29199,7 @@ module.exports = SyntheticCompositionEvent;
 
 
 
-var SyntheticMouseEvent = __webpack_require__(47);
+var SyntheticMouseEvent = __webpack_require__(48);
 
 /**
  * @interface DragEvent
@@ -29496,7 +29506,7 @@ module.exports = SyntheticTransitionEvent;
 
 
 
-var SyntheticMouseEvent = __webpack_require__(47);
+var SyntheticMouseEvent = __webpack_require__(48);
 
 /**
  * @interface WheelEvent
@@ -30275,7 +30285,7 @@ module.exports = getVendorPrefixedEventName;
 
 
 
-var escapeTextContentForBrowser = __webpack_require__(49);
+var escapeTextContentForBrowser = __webpack_require__(50);
 
 /**
  * Escapes attribute value to prevent scripting attacks.
@@ -31222,7 +31232,7 @@ function isActive(_ref, indexOnly, currentLocation, routes, params) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(process) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_history_lib_Actions__ = __webpack_require__(43);
+/* WEBPACK VAR INJECTION */(function(process) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_history_lib_Actions__ = __webpack_require__(44);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_history_lib_Actions___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_history_lib_Actions__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_invariant__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_invariant___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_invariant__);

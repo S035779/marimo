@@ -25,19 +25,32 @@ class Dashboard extends React.Component {
   }
   // ５．選択したidを元にノートを特定し、NoteEditに表示
   render() {
-    const note = this.state.notes.find(note => note.id === Number(this.props.params.id));
-    const user = this.state.username;
+    const { notes, username, selectedNoteId } = this.state;
+    console.log('selectedNoteId: ', selectedNoteId);
+    const _selectedNoteId = Number(this.props.params.id);
+    const selectedNote = notes.find(note => {
+      return note.id === _selectedNoteId;
+    });
+    
     return <div className="page-Dashboard">
       <div className="page-Dashboard-list">
         <div className="page-Dashboard-listHeader">
-          <Button onClick={() => this.handleClickNew()}>New Note</Button>
+        <Button onClick={() => this.handleClickNew()}>
+          New Note
+        </Button>
         </div>
         <div role="navigation">
-          <NoteList notes={this.state.notes} selectedNoteId={this.props.params.id} />
+        <NoteList
+          notes={notes}
+          selectedNoteId={_selectedNoteId}
+        />
         </div>
       </div>
       <div className="page-Dashboard-main" role="form">
-        {this.props.children ? React.cloneElement(this.props.children, { user: user, note: note }) : null}
+      { this.props.children
+        ? React.cloneElement( this.props.children
+          , { user: username, note: selectedNote })
+        : null }
       </div>
     </div>;
   }
