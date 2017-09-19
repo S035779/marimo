@@ -11,7 +11,6 @@ class DashboardStore extends ReduceStore {
     return {
       username: memory.getItem("username")
       , notes: []
-      , selectedNoteId: null
     };
   }
 
@@ -24,7 +23,6 @@ class DashboardStore extends ReduceStore {
       case 'note/create':
         return Object.assign({}, state, {
           notes: [action.note, ...state.notes],
-          selectedNoteId: action.note.id
         });
       case 'note/update':
         return Object.assign({}, state, {

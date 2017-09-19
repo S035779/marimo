@@ -23,13 +23,13 @@ class Dashboard extends React.Component {
   handleClickNew() {
     NoteAction.create();
   }
+
   // ５．選択したidを元にノートを特定し、NoteEditに表示
   render() {
-    const { notes, username, selectedNoteId } = this.state;
-    console.log('selectedNoteId: ', selectedNoteId);
-    const _selectedNoteId = Number(this.props.params.id);
+    const { notes, username } = this.state;
+    const selectedNoteId = Number(this.props.params.id);
     const selectedNote = notes.find(note => {
-      return note.id === _selectedNoteId;
+      return note.id === selectedNoteId;
     });
     
     return <div className="page-Dashboard">
@@ -42,7 +42,7 @@ class Dashboard extends React.Component {
         <div role="navigation">
         <NoteList
           notes={notes}
-          selectedNoteId={_selectedNoteId}
+          selectedNoteId={selectedNoteId}
         />
         </div>
       </div>

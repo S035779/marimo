@@ -4797,7 +4797,10 @@ exports.default = {
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.fetchMyNotes().then(function (notes) {
       spinner.stop();
-      (0, _dispatcher.dispatch)({ type: 'note/fetch/my', notes: notes });
+      (0, _dispatcher.dispatch)({
+        type: 'note/fetch/my',
+        notes: notes
+      });
     });
   },
   fetchStarred: function fetchStarred() {
@@ -4805,7 +4808,10 @@ exports.default = {
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.fetchStarredNotes().then(function (notes) {
       spinner.stop();
-      (0, _dispatcher.dispatch)({ type: 'note/fetch/starred', notes: notes });
+      (0, _dispatcher.dispatch)({
+        type: 'note/fetch/starred',
+        notes: notes
+      });
     });
   },
   fetch: function fetch(id) {
@@ -4814,7 +4820,10 @@ exports.default = {
     (0, _dispatcher.dispatch)({ type: 'note/fetch/before' });
     return _NoteApiClient2.default.fetchNote(id).then(function (note) {
       spinner.stop();
-      (0, _dispatcher.dispatch)({ type: 'note/fetch', note: note });
+      (0, _dispatcher.dispatch)({
+        type: 'note/fetch',
+        note: note
+      });
     });
   },
   create: function create() {
@@ -4822,7 +4831,10 @@ exports.default = {
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.createNote().then(function (note) {
       spinner.stop();
-      (0, _dispatcher.dispatch)({ type: 'note/create', note: note });
+      (0, _dispatcher.dispatch)({
+        type: 'note/create',
+        note: note
+      });
     });
   },
   update: function update(id, _ref) {
@@ -4830,14 +4842,19 @@ exports.default = {
 
     var title = _ref.title,
         body = _ref.body,
-        category = _ref.category;
+        category = _ref.category,
+        options = _ref.options;
 
     var spinner = _webutils2.default.spinner();
     spinner.spin(this.target('app'));
-    return _NoteApiClient2.default.updateNote(id, { title: title, body: body, category: category }).then(function () {
+    return _NoteApiClient2.default.updateNote(id, {
+      title: title, body: body, category: category, options: options }).then(function () {
       spinner.stop();
-      (0, _dispatcher.dispatch)({ type: 'note/update',
-        id: id, note: { title: title, body: body, category: category } });
+      (0, _dispatcher.dispatch)({
+        type: 'note/update',
+        id: id,
+        note: { title: title, body: body, category: category, options: options }
+      });
     }).then(function () {
       return _this.fetchMyNotes();
     });
@@ -4847,7 +4864,10 @@ exports.default = {
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.deleteNote(id).then(function () {
       spinner.stop();
-      (0, _dispatcher.dispatch)({ type: 'note/delete', id: id });
+      (0, _dispatcher.dispatch)({
+        type: 'note/delete',
+        id: id
+      });
     });
   },
   getusername: function getusername() {
@@ -4855,7 +4875,10 @@ exports.default = {
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.getUsername().then(function (username) {
       spinner.stop();
-      (0, _dispatcher.dispatch)({ type: 'note/username', username: username });
+      (0, _dispatcher.dispatch)({
+        type: 'note/username',
+        username: username
+      });
     });
   }
 };
@@ -4929,8 +4952,12 @@ exports.default = Button;
 
 var Spinner = __webpack_require__(148);
 
+/**
+ * spinner
+ *
+ * @returns {object} - スピナーオブジェクト
+ */
 var spinner = function spinner() {
-    //設定
     var opts = {
         lines: 13 // The number of lines to draw
         , length: 28 // The length of each line
@@ -4955,11 +4982,17 @@ var spinner = function spinner() {
         , hwaccel: false // Whether to use hardware acceleration
         , position: 'absolute' // Element positioning
     };
-    //スピナーオブジェクト
     return new Spinner(opts);
 };
 module.exports.spinner = spinner;
 
+/**
+ * setCookies
+ *
+ * @param name
+ * @param value
+ * @param daysToLive
+ */
 var setCookies = function setCookies(name, value, daysToLive) {
     var cookie = name + "=" + encodeURIComponent(value);
     if (typeof daysToLive === "number") cookie += "; max-age=" + daysToLive * 60 * 60 * 24;
@@ -4967,165 +5000,128 @@ var setCookies = function setCookies(name, value, daysToLive) {
 };
 module.exports.setCookies = setCookies;
 
-// Return the document's cookies as an object of name/value pairs.
-// Assume that cookie values are encoded with encodeURIComponent().
+/**
+ * getCookies
+ * Return the document's cookies as an object of name/value
+ * pairs.Assume that cookie values are encoded with
+ * encodeURIComponent().
+ *
+ * @returns {object} - Store name and value in object.
+ */
 var getCookies = function getCookies() {
-    var cookies = {}; // The object we will return
-    var all = document.cookie; // Get all cookies in one big string
-    if (all === "") // If the property is the empty string
-        return cookies; // return an empty object
-    var list = all.split("; "); // Split into individual name=value pairs
+    var cookies = {};
+    var all = document.cookie;
+    if (all === "") return cookies;
+    var list = all.split("; ");
     for (var i = 0; i < list.length; i++) {
-        // For each cookie
         var cookie = list[i];
-        var p = cookie.indexOf("="); // Find the first = sign
-        var name = cookie.substring(0, p); // Get cookie name
-        var value = cookie.substring(p + 1); // Get cookie value
-        value = decodeURIComponent(value); // Decode the value
-        cookies[name] = value; // Store name and value in object
+        var p = cookie.indexOf("=");
+        var name = cookie.substring(0, p);
+        var value = cookie.substring(p + 1);
+        value = decodeURIComponent(value);
+        cookies[name] = value;
     }
     return cookies;
 };
 module.exports.getCookies = getCookies;
 
-/*
- * CookieStorage.js
- * This class implements the Storage API that localStorage and sessionStorage
- * do, but implements it on top of HTTP Cookies.
+/**
+ * CookieStorage
+ * This class implements the Storage API that localStorage and
+ * sessionStorage do, but implements it on top of HTTP Cookies.
+ *
+ * @param maxage {number} - lifetime
+ * @param path {string} - scope
  */
 var CookieStorage = function CookieStorage(maxage, path) {
-    // Arguments specify lifetime and scope
-
-    // Get an object that holds all cookies
     var cookies = function () {
-        // The getCookies() function shown earlier
-        var cookies = {}; // The object we will return
-        var all = document.cookie; // Get all cookies in one big string
-        if (all === "") // If the property is the empty string
-            return cookies; // return an empty object
-        var list = all.split("; "); // Split into individual name=value pairs
+        var cookies = {};
+        var all = document.cookie;
+        if (all === "") return cookies;
+        var list = all.split("; ");
         for (var i = 0; i < list.length; i++) {
-            // For each cookie
             var cookie = list[i];
-            var p = cookie.indexOf("="); // Find the first = sign
-            var name = cookie.substring(0, p); // Get cookie name
-            var value = cookie.substring(p + 1); // Get cookie value
-            value = decodeURIComponent(value); // Decode the value
-            cookies[name] = value; // Store name and value
+            var p = cookie.indexOf("=");
+            var name = cookie.substring(0, p);
+            var value = cookie.substring(p + 1);
+            value = decodeURIComponent(value);
+            cookies[name] = value;
         }
         return cookies;
     }();
-
-    // Collect the cookie names in an array
     var keys = [];
     for (var key in cookies) {
         keys.push(key);
-    } // Now define the public properties and methods of the Storage API
-
-    // The number of stored cookies
-    this.length = keys.length;
-
-    // Return the name of the nth cookie, or null if n is out of range
+    }this.length = keys.length;
     this.key = function (n) {
         if (n < 0 || n >= keys.length) return null;
         return keys[n];
     };
-
-    // Return the value of the named cookie, or null.
     this.getItem = function (name) {
         return cookies[name] || null;
     };
-
-    // Store a value
     this.setItem = function (key, value) {
         if (!(key in cookies)) {
-            // If no existing cookie with this name
-            keys.push(key); // Add key to the array of keys
-            this.length++; // And increment the length
+            keys.push(key);
+            this.length++;
         }
-
-        // Store this name/value pair in the set of cookies.
         cookies[key] = value;
-
-        // Now actually set the cookie.
-        // First encode value and create a name=encoded-value string
         var cookie = key + "=" + encodeURIComponent(value);
-
-        // Add cookie attributes to that string
         if (maxage) cookie += "; max-age=" + maxage;
         if (path) cookie += "; path=" + path;
-
-        // Set the cookie through the magic document.cookie property
         document.cookie = cookie;
     };
-
-    // Remove the specified cookie
     this.removeItem = function (key) {
-        if (!(key in cookies)) return; // If it doesn't exist, do nothing
-
-        // Delete the cookie from our internal set of cookies
+        if (!(key in cookies)) return;
         delete cookies[key];
-
-        // And remove the key from the array of names, too.
-        // This would be easier with the ES5 array indexOf() method.
         for (var i = 0; i < keys.length; i++) {
-            // Loop through all keys
             if (keys[i] === key) {
-                // When we find the one we want
-                keys.splice(i, 1); // Remove it from the array.
+                keys.splice(i, 1);
                 break;
             }
         }
-        this.length--; // Decrement cookie length
-
-        // Finally actually delete the cookie by giving it an empty value
-        // and an immediate expiration date.
+        this.length--;
         document.cookie = key + "=; max-age=0";
     };
-
-    // Remove all cookies
     this.clear = function () {
-        // Loop through the keys, removing the cookies
         for (var i = 0; i < keys.length; i++) {
             document.cookie = keys[i] + "=; max-age=0";
-        } // Reset our internal state
-        cookies = {};
+        }cookies = {};
         keys = [];
         this.length = 0;
     };
 };
 module.exports.CookieStorage = CookieStorage;
 
+/**
+ * UserDataStorage
+ * Create a document element and install the special userData
+ * behavior on it so it gets save() and load() methods.
+ *
+ * @param {number} maxage - If maxage is specified, expire the
+ *                  userData in maxage seconds
+ */
 var UserDataStorage = function UserDataStorage(maxage) {
-    // Create a document element and install the special userData
-    // behavior on it so it gets save() and load() methods.
-    var memory = document.createElement("div"); // Create an element
-    memory.style.display = "none"; // Never display it
-    memory.style.behavior = "url('#default#userData')"; // Attach magic behavior
-    document.body.appendChild(memory); // Add to the document
-
-    // If maxage is specified, expire the userData in maxage seconds
+    var memory = document.createElement("div");
+    memory.style.display = "none";
+    memory.style.behavior = "url('#default#userData')";
+    document.body.appendChild(memory);
     if (maxage) {
-        var now = new Date().getTime(); // The current time
-        var expires = now + maxage * 1000; // maxage seconds from now
+        var now = new Date().getTime();
+        var expires = now + maxage * 1000;
         memory.expires = new Date(expires).toUTCString();
     }
-
-    // Initialize memory by loading saved values.
-    // The argument is arbitrary, but must also be passed to save()
-    memory.load("UserDataStorage"); // Load any stored data
-
+    memory.load("UserDataStorage");
     this.getItem = function (key) {
-        // Retrieve saved values from attributes
         return memory.getAttribute(key) || null;
     };
     this.setItem = function (key, value) {
-        memory.setAttribute(key, value); // Store values as attributes
-        memory.save("UserDataStorage"); // Save state after any change
+        memory.setAttribute(key, value);
+        memory.save("UserDataStorage");
     };
     this.removeItem = function (key) {
-        memory.removeAttribute(key); // Remove stored value attribute
-        memory.save("UserDataStorage"); // Save new state
+        memory.removeAttribute(key);
+        memory.save("UserDataStorage");
     };
 };
 module.exports.UserDataStorage = UserDataStorage;
@@ -6518,12 +6514,10 @@ exports.default = {
           var query = { user: username };
           var uri = url;
           _xhrutils2.default.get(uri, query, function (data) {
-            //console.log(data);
             notes = data;
             resolve(notes);
           });
         });
-        break;
       case 'create':
       case 'delete':
       case 'search':
@@ -6534,7 +6528,6 @@ exports.default = {
             resolve(response);
           });
         });
-        break;
       case 'post':
         return new Promise(function (resolve) {
           console.log(response);
@@ -6543,7 +6536,6 @@ exports.default = {
             resolve(response.id);
           });
         });
-        break;
       default:
         return new Promise(function (resolve) {
           console.log(response);
@@ -6551,7 +6543,6 @@ exports.default = {
             return resolve(response);
           }, LATENCY);
         });
-        break;
     }
   },
 
@@ -6599,12 +6590,15 @@ exports.default = {
 
   // ４．新規のノートを作成する
   createNote: function createNote() {
-    var id = _encutils2.default.makeRandInt(8);
-    var updated = this.getUpdated();
-    var user = this.getName();
-    var note = { user: user, id: id, title: 'Untitled',
-      category: '', starred: false, body: '',
-      updated: updated };
+    var note = {
+      user: this.getName(),
+      id: _encutils2.default.makeRandInt(8),
+      title: 'Untitled',
+      category: '',
+      starred: false,
+      body: '',
+      updated: this.getUpdated()
+    };
     notes.unshift(note);
     return this.request('create', note);
   },
@@ -6615,12 +6609,18 @@ exports.default = {
 
     var title = _ref.title,
         body = _ref.body,
-        category = _ref.category;
+        category = _ref.category,
+        options = _ref.options;
 
     notes = notes.map(function (note) {
       if (note.id === id) {
-        return Object.assign({}, note, { title: title, body: body, category: category,
-          updated: _this3.getUpdated() });
+        return Object.assign({}, note, {
+          title: title,
+          body: body,
+          category: category,
+          options: options,
+          updated: _this3.getUpdated()
+        });
       } else {
         return note;
       }
@@ -16491,10 +16491,17 @@ var Dashboard = function (_React$Component) {
     value: function render() {
       var _this2 = this;
 
-      var note = this.state.notes.find(function (note) {
-        return note.id === Number(_this2.props.params.id);
+      var _state = this.state,
+          notes = _state.notes,
+          username = _state.username,
+          selectedNoteId = _state.selectedNoteId;
+
+      console.log('selectedNoteId: ', selectedNoteId);
+      var _selectedNoteId = Number(this.props.params.id);
+      var selectedNote = notes.find(function (note) {
+        return note.id === _selectedNoteId;
       });
-      var user = this.state.username;
+
       return _react2.default.createElement(
         'div',
         { className: 'page-Dashboard' },
@@ -16515,13 +16522,16 @@ var Dashboard = function (_React$Component) {
           _react2.default.createElement(
             'div',
             { role: 'navigation' },
-            _react2.default.createElement(_NoteList2.default, { notes: this.state.notes, selectedNoteId: this.props.params.id })
+            _react2.default.createElement(_NoteList2.default, {
+              notes: notes,
+              selectedNoteId: _selectedNoteId
+            })
           )
         ),
         _react2.default.createElement(
           'div',
           { className: 'page-Dashboard-main', role: 'form' },
-          this.props.children ? _react2.default.cloneElement(this.props.children, { user: user, note: note }) : null
+          this.props.children ? _react2.default.cloneElement(this.props.children, { user: username, note: selectedNote }) : null
         )
       );
     }
@@ -17064,10 +17074,12 @@ var DashboardStore = function (_ReduceStore) {
     key: 'getInitialState',
     value: function getInitialState() {
       var memory = window.localStorage || window.UserDataStorage && new _webutils2.default.UserDataStorage() || new _webutils2.default.CookieStorage();
-      var username = memory.getItem("username");
       //console.log(username);
-      return { username: username, notes: [],
-        selectedNoteId: null };
+      return {
+        username: memory.getItem("username"),
+        notes: [],
+        selectedNoteId: null
+      };
     }
   }, {
     key: 'reduce',
@@ -17079,7 +17091,8 @@ var DashboardStore = function (_ReduceStore) {
           });
         case 'note/create':
           return Object.assign({}, state, {
-            notes: [action.note].concat(_toConsumableArray(state.notes))
+            notes: [action.note].concat(_toConsumableArray(state.notes)),
+            selectedNoteId: action.note.id
           });
         case 'note/update':
           return Object.assign({}, state, {
