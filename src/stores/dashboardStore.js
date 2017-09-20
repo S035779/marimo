@@ -7,10 +7,10 @@ class DashboardStore extends ReduceStore {
     var memory = window.localStorage ||
       (window.UserDataStorage && new app.UserDataStorage()) ||
       new app.CookieStorage();
-    //console.log(username);
     return {
       username: memory.getItem("username")
       , notes: []
+      , selectedNoteId: null
     };
   }
 
@@ -23,6 +23,7 @@ class DashboardStore extends ReduceStore {
       case 'note/create':
         return Object.assign({}, state, {
           notes: [action.note, ...state.notes],
+          selectedNoteId: action.note.id
         });
       case 'note/update':
         return Object.assign({}, state, {

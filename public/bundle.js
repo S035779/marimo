@@ -16484,6 +16484,7 @@ var Dashboard = function (_React$Component) {
     value: function handleClickNew() {
       _NoteAction2.default.create();
     }
+
     // ５．選択したidを元にノートを特定し、NoteEditに表示
 
   }, {
@@ -16493,13 +16494,11 @@ var Dashboard = function (_React$Component) {
 
       var _state = this.state,
           notes = _state.notes,
-          username = _state.username,
-          selectedNoteId = _state.selectedNoteId;
+          username = _state.username;
 
-      console.log('selectedNoteId: ', selectedNoteId);
-      var _selectedNoteId = Number(this.props.params.id);
+      var selectedNoteId = Number(this.props.params.id);
       var selectedNote = notes.find(function (note) {
-        return note.id === _selectedNoteId;
+        return note.id === selectedNoteId;
       });
 
       return _react2.default.createElement(
@@ -16524,7 +16523,7 @@ var Dashboard = function (_React$Component) {
             { role: 'navigation' },
             _react2.default.createElement(_NoteList2.default, {
               notes: notes,
-              selectedNoteId: _selectedNoteId
+              selectedNoteId: selectedNoteId
             })
           )
         ),
@@ -17077,8 +17076,7 @@ var DashboardStore = function (_ReduceStore) {
       //console.log(username);
       return {
         username: memory.getItem("username"),
-        notes: [],
-        selectedNoteId: null
+        notes: []
       };
     }
   }, {
@@ -17091,8 +17089,7 @@ var DashboardStore = function (_ReduceStore) {
           });
         case 'note/create':
           return Object.assign({}, state, {
-            notes: [action.note].concat(_toConsumableArray(state.notes)),
-            selectedNoteId: action.note.id
+            notes: [action.note].concat(_toConsumableArray(state.notes))
           });
         case 'note/update':
           return Object.assign({}, state, {

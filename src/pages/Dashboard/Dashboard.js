@@ -6,6 +6,12 @@ import Button from '../../components/Button/Button';
 import NoteList from '../../components/NoteList/NoteList';
 
 class Dashboard extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isNew: false
+    };
+  }
   // １．ストアへ自身を登録する
   static getStores() {
     return [dashboardStore];
@@ -19,19 +25,30 @@ class Dashboard extends React.Component {
     NoteAction.fetchMyNotes();
     NoteAction.getusername();
   }
+
+  componentWillReceiveProps() {
+    this.setState({ isNew: false });
+  }
+
+  componentDidUpdate() {
+    if(!this.state.isNew) {
+      this.setState({
+        selectedNoteId: Number(this.props.params.id)
+      });
+    }
+  }
   // ４．新規作成の場合のハンドラを登録
   handleClickNew() {
     NoteAction.create();
+    this.setState({ isNew: true });
   }
 
   // ５．選択したidを元にノートを特定し、NoteEditに表示
   render() {
-    const { notes, username } = this.state;
-    const selectedNoteId = Number(this.props.params.id);
+    const { notes, username, selectedNoteId } = this.state;
     const selectedNote = notes.find(note => {
       return note.id === selectedNoteId;
     });
-    
     return <div className="page-Dashboard">
       <div className="page-Dashboard-list">
         <div className="page-Dashboard-listHeader">
