@@ -12,15 +12,16 @@ export default {
     return NoteApiClient.createStar(noteId).then(() => {
       spinner.stop();
       dispatch({ type: 'star/create', noteId });
+      console.log(`[StarredAction] Response: star/create`);
     });
   },
-
   delete(noteId) {
     const spinner = app.spinner();
     spinner.spin(this.target('app'));
     return NoteApiClient.deleteStar(noteId).then(noteId => {
       spinner.stop();
       dispatch({ type: 'star/delete', noteId });
+      console.log(`[StarredAction] Response: star/delete`);
     });
   },
 };

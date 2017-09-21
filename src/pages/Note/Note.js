@@ -20,9 +20,9 @@ class Note extends React.Component {
   }
 
   handleChangeStar(starred) {
+    console.log(`[NoteControleView] Request: handleChangeStar`);
     const note = Object.assign({}, this.state.note, { starred });
     this.setState({ note });
-
     if (starred) {
       StarAction.create(note.id);
     }
@@ -31,9 +31,16 @@ class Note extends React.Component {
     }
   }
 
-  handleSearch(options) {
+  handleChangeSearch(options) {
+    console.log(`[NoteControleView] Request: handleChangeSearch`);
     const note = Object.assign({}, this.state.note, { options });
     this.setState({ note });
+  }
+
+  handleChangeOptions() {
+    console.log(`[NoteControleView] Request: handleChangeOptions`);
+    const { id, options } = this.state.note;
+    NoteAction.updateOptions(id, options);
   }
 
   render() {
@@ -87,7 +94,9 @@ class Note extends React.Component {
       <NoteHeader
         note={note} 
         onChangeStar={this.handleChangeStar.bind(this)} 
-        onSearch={this.handleSearch.bind(this)} />
+        onSearch={this.handleChangeSearch.bind(this)}
+        onChangeOptions={this.handleChangeOptions.bind(this)}
+      />
       <NoteBody items={items}/>
     </div>;
   }

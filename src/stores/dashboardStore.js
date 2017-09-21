@@ -38,7 +38,7 @@ class DashboardStore extends ReduceStore {
             note => note.id !== action.id
           )
         });
-      case 'note/username':
+      case 'note/fetch/username':
         return Object.assign({}, state, {
            username: action.username
         });

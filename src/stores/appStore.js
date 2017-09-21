@@ -8,15 +8,12 @@ class AppStore extends ReduceStore {
       (window.UserDataStorage && new app.UserDataStorage()) ||
       new app.CookieStorage();
     var username = memory.getItem("username");
-    //console.log(username);
     return { username: username };
   }
 
   reduce(state, action) {
-    //console.dir(state);
-    //console.dir(action);
     switch (action.type) {
-      case 'app/username':
+      case 'app/fetch/username':
         return Object.assign({}, state, {
            username: action.username
         });

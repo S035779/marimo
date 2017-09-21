@@ -27,13 +27,22 @@ export default class NoteHeader extends React.Component {
   }
 
   handleClickEdit() {
+    console.log(`[NoteHeaderView] Request: handleClickEdit`);
+    this.props.onChangeOptions();
     browserHistory.push(`/notes/${this.props.note.id}/edit`);
   }
 
   handleClickDelete() {
+    console.log(`[NoteHeaderView] Request: handleClickDelete`);
     if (window.confirm('Are you sure?')) {
       this.props.onDeleteNote();
     }
+  }
+
+  handleClickSearch(e) {
+    console.log(`[NoteHeaderView] Request: handleClickSearch`);
+    e.preventDefault();
+    this.props.onSearch(this.state);
   }
 
   handleChangeText(name, e) {
@@ -63,11 +72,6 @@ export default class NoteHeader extends React.Component {
     };
     newState[name] = values;
     this.setState(newState);
-  }
-
-  handleSearch(e) {
-    e.preventDefault();
-    this.props.onSearch(this.state);
   }
 
   renderOption(objs, prop1, prop2) {
@@ -221,7 +225,7 @@ export default class NoteHeader extends React.Component {
       </div>
       <div className="NoteHeader-buttons">
       <span><Button onClick={
-        this.handleSearch.bind(this)
+        this.handleClickSearch.bind(this)
       }>Search</Button></span>
       <span><Button hidden={!this.isOwn()} onClick={
         () => this.handleClickEdit()

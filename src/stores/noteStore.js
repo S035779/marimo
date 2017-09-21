@@ -14,18 +14,23 @@ class NoteStore extends ReduceStore {
         return { note: action.note };
       case 'star/create':
         if (state.id === action.noteId) {
-          return { note: Object.assign({}, state.note, { starred: true }) };
-        }
-        else {
-          return state;
-        }
+          return {
+             note: Object.assign({}
+             , state.note, { starred: true })
+          };
+        } else { return state }
       case 'star/delete':
         if (state.id === action.noteId) {
-          return { note: Object.assign({}, state.note, { starred: false }) };
-        }
-        else {
-          return state;
-        }
+          return {
+             note: Object.assign({}
+             , state.note, { starred: false }) };
+        } else { return state; }
+      case 'note/update/options':
+        if (state.id === action.id) {
+          return {
+             note: Object.assign({}
+             , state.note, action.options) };
+        } else { return state; }
       default:
         return state;
     }

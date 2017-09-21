@@ -1,6 +1,5 @@
 var xml = require('xml2js');
 var std = require('../utils/stdutils');
-var enc = require('../utils/encutils');
 var htp = require('../utils/netutils');
 
 // YAHOO! Auction WebAPI.
@@ -15,7 +14,7 @@ var v2 = 'htps://auctions.yahooapis.jp/AuctionWebService/V2/'
  * @param callback {function}
  */
 var YHsearch = function(options, callback) {
-  var uri = v2 + 'search?' + enc.encodeFormData(options);
+  var uri = v2 + 'search?' + std.encodeFormData(options);
   htp.get(uri, function(stat, head, body) {
     var head = { search: options.query, page: options.page
       , request: uri, status: stat, header: head };
@@ -67,7 +66,7 @@ module.exports.YHsearch = YHsearch;
  * @param callback {function}
  */
 var YHauctionItem = function(options, callback) {
-  var uri = v2 + 'auctionItem?' + enc.encodeFormData(options);
+  var uri = v2 + 'auctionItem?' + std.encodeFormData(options);
   htp.get(uri, function(stat, head, body) {
     var head = { auctionID: options.auctionID, request: uri
       , status: stat, header: head };
@@ -106,7 +105,7 @@ module.exports.YHauctionItem = YHauctionItem;
  * @param callback {function}
  */
 var YHbidHistory = function(options, callback) {
-  var uri = v1 + 'BidHistory?' + enc.encodeFormData(options);
+  var uri = v1 + 'BidHistory?' + std.encodeFormData(options);
   htp.get(uri, function(stat, head, body) {
     var head = { auctionID: options.auctionID, request: uri
       , status: stat, header: head };
