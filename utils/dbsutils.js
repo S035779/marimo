@@ -104,44 +104,22 @@ module.exports.removeNote = removeNote;
 var createNote = function(req, res, callback){
   Note.create({ 
     _id: new ObjectId
-    , userid:    ObjectId(res.user._id)
-    , id:        req.body.id
-    , title:     req.body.title
-    , category:  req.body.category
-    , starred:   req.body.starred
-    , search:    req.body.body
-    , options: { category:       0
-               , page:           0
-               , sort:           ""
-               , order:          ""
-               , store:          ""
-               , aucminprice:    0
-               , aucmaxprice:    0
-               , aucmin_bidorbuy_price: 0
-               , aucmax_bidorbuy_price: 0
-               , loc_cd:         0
-               , easypayment:    0
-               , new:            0
-               , freeshipping:   0
-               , wrappingicon:   0
-               , buynow:         0
-               , thumbnail:      0
-               , attn:           0
-               , point:          0
-               , gift_icon:      0
-               , item_status:    0
-               , offer:          0
-               , adf:            0
-               , min_charity:    0
-               , max_charity:    0
-               , min_affiliate:  0
-               , max_affiliate:  0
-               , timebuf:        0
-               , ranking:        ""
-               , seller:         ""
-               , f:              "" 
-      }
-    , items: []
+    , userid:   ObjectId(res.user._id)
+    , id:       req.body.id
+    , title:    req.body.title
+    , category: req.body.category
+    , starred:  req.body.starred
+    , search:   req.body.body
+    , options:  { searchString:   ''
+                  , highestPrice: ''
+                  , lowestPrice:  ''
+                  , bids:         false
+                  , condition:    'all'
+                  , status:       false
+                  , AuctionID:    []
+                  , categoryPath: []
+                  , seller:       [] }
+    , items:     []
     , created:   Date.now()
     , updated:   Date.now()
   }, function(err) {
@@ -632,12 +610,12 @@ var updateNote = function(req, res, callback) {
   if (req.hasOwnProperty('body')) { // isBody
     userid = ObjectId(res.user._id);
     id = req.body.id;
-    starred = req.body.starred ? Boolean(1) : Boolean(0);
     obj = {
       title:        req.body.title
       , category:   req.body.category
       , search:     req.body.body
-      , starred:    starred
+      , starred:    req.body.starred ? Boolean(1) : Boolean(0)
+      , options:    req.body.options
       , updated:    req.body.updated
     };
   } else if (res.hasOwnProperty('note')) { // isNote
@@ -645,7 +623,6 @@ var updateNote = function(req, res, callback) {
     id = res.note.id;
   }
 
-  //if (res.hasOwnProperty('historyIds') 
   if(res.hasOwnProperty('Ids')) { // isItem
     var historyid = [];
     var items = [];
@@ -705,6 +682,7 @@ var getNotes = function(req, res, callback){
         , body:     doc.search
         , starred:  doc.starred
         , items:    doc.historyid
+        , options:  doc.options
         , updated:  doc.updated
       });
     });

@@ -8,17 +8,20 @@ import std from '../../../utils/stdutils';
 export default class NoteHeader extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { 
-      searchString: '' 
+    const options = {
+      searchString:   ''
       , highestPrice: ''
-      , lowestPrice: ''
-      , bids: false
-      , condition: 'all'
-      , status: false
-      , AuctionID: []
+      , lowestPrice:  ''
+      , bids:         false
+      , condition:    'all'
+      , status:       false
+      , AuctionID:    []
       , categoryPath: []
-      , seller: []
+      , seller:       []
     };
+    this.state = props.note.options != null
+      ? Object.assign({}, props.note.options)
+      : options;
   }
 
   isOwn() {
@@ -96,7 +99,6 @@ export default class NoteHeader extends React.Component {
       this.props.note.items, 'CategoryPath');
     const optSelrs = this.renderOption(
       this.props.note.items, 'Seller', 'Id');
-
     return <table width="100%"><tbody>
       <tr><td width="10%">
       <span><label htmlFor="search_string">

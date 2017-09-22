@@ -35,12 +35,14 @@ class Note extends React.Component {
     console.log(`[NoteControleView] Request: handleChangeSearch`);
     const note = Object.assign({}, this.state.note, { options });
     this.setState({ note });
+    console.log(options);
   }
 
   handleChangeOptions() {
     console.log(`[NoteControleView] Request: handleChangeOptions`);
     const { id, options } = this.state.note;
     NoteAction.updateOptions(id, options);
+    console.log(options);
   }
 
   render() {
@@ -52,7 +54,7 @@ class Note extends React.Component {
       if(!item.item.body.hasOwnProperty('ResultSet')) 
         return false;
       const obj = item.item.body.ResultSet.Result;
-      if(note.hasOwnProperty('options')) {
+      if(note.options != null) {
         if(!obj.Title.match(note.options.searchString)
           && note.options.searchString !== '') 
           return false;

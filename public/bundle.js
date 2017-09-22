@@ -6576,7 +6576,9 @@ exports.default = {
       case 'get':
         return new Promise(function (resolve) {
           _xhrutils2.default.get(url, { user: _this.getName() }, function (data) {
-            notes = data;resolve(notes);
+            notes = data;
+            console.log(notes);
+            resolve(notes);
           });
         });
       case 'post/starred':
@@ -6685,16 +6687,10 @@ exports.default = {
 
   //
   updateOptions: function updateOptions(id, options) {
-    notes = notes.map(function (note) {
-      if (note.id === id) {
-        return Object.assign({}, note, options);
-      } else {
-        return note;
-      }
-    });
     var note = notes.find(function (note) {
       return note.id === id;
     });
+    note.options = options;
     return this.request('post/options', note);
   },
 
@@ -15562,7 +15558,7 @@ var NoteHeader = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (NoteHeader.__proto__ || Object.getPrototypeOf(NoteHeader)).call(this, props));
 
-    _this.state = {
+    var options = {
       searchString: '',
       highestPrice: '',
       lowestPrice: '',
@@ -15573,6 +15569,7 @@ var NoteHeader = function (_React$Component) {
       categoryPath: [],
       seller: []
     };
+    _this.state = props.note.options != null ? Object.assign({}, props.note.options) : options;
     return _this;
   }
 
@@ -15661,7 +15658,6 @@ var NoteHeader = function (_React$Component) {
       var optAuIDs = this.renderOption(this.props.note.items, 'AuctionID');
       var optPaths = this.renderOption(this.props.note.items, 'CategoryPath');
       var optSelrs = this.renderOption(this.props.note.items, 'Seller', 'Id');
-
       return _react2.default.createElement(
         'table',
         { width: '100%' },
@@ -16383,7 +16379,8 @@ var StarredNoteList = function (_React$Component) {
               _react2.default.createElement(
                 'span',
                 { className: 'page-Stars-author' },
-                _react2.default.createElement('img', { src: '/assets/user.svg', width: '16', height: '16' }),
+                _react2.default.createElement('img', { src: '/assets/user.svg', width: '16', height: '16'
+                }),
                 ' ',
                 note.user,
                 ' '
@@ -16929,6 +16926,7 @@ var Note = function (_React$Component) {
       console.log('[NoteControleView] Request: handleChangeSearch');
       var note = Object.assign({}, this.state.note, { options: options });
       this.setState({ note: note });
+      console.log(options);
     }
   }, {
     key: 'handleChangeOptions',
@@ -16939,6 +16937,7 @@ var Note = function (_React$Component) {
           options = _state$note.options;
 
       _NoteAction2.default.updateOptions(id, options);
+      console.log(options);
     }
   }, {
     key: 'render',
@@ -16950,7 +16949,7 @@ var Note = function (_React$Component) {
       var items = note.items.filter(function (item) {
         if (!item.item.body.hasOwnProperty('ResultSet')) return false;
         var obj = item.item.body.ResultSet.Result;
-        if (note.hasOwnProperty('options')) {
+        if (note.options != null) {
           if (!obj.Title.match(note.options.searchString) && note.options.searchString !== '') return false;
           if (note.options.bids && Number(obj.Bids) === 0) return false;
           if (note.options.condition !== 'all' && note.options.condition !== obj.ItemStatus.Condition) return false;

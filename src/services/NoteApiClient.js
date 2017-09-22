@@ -14,7 +14,9 @@ export default {
         return new Promise(resolve => {
           xhr.get(url, { user: this.getName() }
           , function(data) {
-            notes = data; resolve(notes); });
+            notes = data;
+            console.log(notes);
+            resolve(notes); });
         });
       case 'post/starred':
         return new Promise(resolve => {
@@ -101,12 +103,8 @@ export default {
   },
   //
   updateOptions(id, options) {
-    notes = notes.map(note => {
-      if (note.id === id) {
-        return Object.assign( {}, note, options);
-      } else { return note; }
-    });
     const note = notes.find(note => note.id === id);
+    note.options = options;
     return this.request('post/options', note);
   },
   // ６．特定のノートを削除する

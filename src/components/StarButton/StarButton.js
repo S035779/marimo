@@ -18,7 +18,8 @@ export default class StarButton extends React.Component {
 
   render() {
     return <span className="Star">
-      {this.props.starred ? this.renderUnstar() : this.renderStar()}
+      {this.props.starred
+        ? this.renderUnstar() : this.renderStar() }
     </span>;
   }
 }
