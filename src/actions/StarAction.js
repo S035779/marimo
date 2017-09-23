@@ -6,22 +6,22 @@ export default {
   target(elm) {
     return document.getElementById(elm);
   },
-  create(noteId) {
+  create(id) {
     const spinner = app.spinner();
     spinner.spin(this.target('app'));
-    return NoteApiClient.createStar(noteId).then(() => {
+    return NoteApiClient.createStar(id).then(note => {
       spinner.stop();
-      dispatch({ type: 'star/create', noteId });
-      console.log(`[StarredAction] Response: star/create`);
+      dispatch({ type: 'star/update', note });
+      console.log(`[StarredAction] Response: star/update`);
     });
   },
-  delete(noteId) {
+  delete(id) {
     const spinner = app.spinner();
     spinner.spin(this.target('app'));
-    return NoteApiClient.deleteStar(noteId).then(noteId => {
+    return NoteApiClient.deleteStar(id).then(note => {
       spinner.stop();
-      dispatch({ type: 'star/delete', noteId });
-      console.log(`[StarredAction] Response: star/delete`);
+      dispatch({ type: 'star/update', note });
+      console.log(`[StarredAction] Response: star/update`);
     });
   },
 };

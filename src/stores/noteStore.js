@@ -12,19 +12,12 @@ class NoteStore extends ReduceStore {
         return { note: null };
       case 'note/fetch':
         return { note: action.note };
-      case 'star/create':
-        if (state.id === action.noteId) {
+      case 'star/update':
+        if (state.id === action.id) {
           return {
-             note: Object.assign({}
-             , state.note, { starred: true })
+             note: Object.assign({}, state.note, action.starred )
           };
         } else { return state }
-      case 'star/delete':
-        if (state.id === action.noteId) {
-          return {
-             note: Object.assign({}
-             , state.note, { starred: false }) };
-        } else { return state; }
       case 'note/update/options':
         if (state.id === action.id) {
           return {

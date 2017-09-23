@@ -24,7 +24,7 @@ var findUser = function(req, res, callback) {
       log.error(err.message);
       return callback(err);
     }
-    //log.trace(user);
+    log.trace(user);
     log.info(`${pspid}> find User done.`);
     callback(err, req, std.extend(res, { user }));
   });
@@ -110,18 +110,10 @@ var createNote = function(req, res, callback){
     , category: req.body.category
     , starred:  req.body.starred
     , search:   req.body.body
-    , options:  { searchString:   ''
-                  , highestPrice: ''
-                  , lowestPrice:  ''
-                  , bids:         false
-                  , condition:    'all'
-                  , status:       false
-                  , AuctionID:    []
-                  , categoryPath: []
-                  , seller:       [] }
-    , items:     []
-    , created:   Date.now()
-    , updated:   Date.now()
+    , options:  req.body.options
+    , items:    req.body.items
+    , created:  Date.now()
+    , updated:  Date.now()
   }, function(err) {
     if(err) {
       log.error(err.message);

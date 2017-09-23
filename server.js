@@ -45,8 +45,8 @@ var init = function() {
 
   mongoose.connection.on('error', function (err) {
     log.error(`${pspid}> Got Mongoose error: ${err.name}`);
-    log.error(`${pspid}> ${err.message}`);
-    log.error(`${pspid}> ${err.stack}`);
+    log.trace(`${pspid}> ${err.message}`);
+    log.trace(`${pspid}> ${err.stack}`);
     shutdown(process.exit);
   });
 
@@ -73,15 +73,15 @@ var init = function() {
 
   process.on('uncaughtException', function(err) {
     log.error(`${pspid}> Got uncaught exception: ${err.name}`);
-    log.error(`${pspid}> ${err.message}`);
-    log.error(`${pspid}> ${err.stack}`);
+    log.trace(`${pspid}> ${err.message}`);
+    log.trace(`${pspid}> ${err.stack}`);
     shutdown(process.exit);
   });
 
   process.on('warning', function(err) {
     log.warn(`${pspid}> Got warning: ${err.name}`);
-    log.warn(`${pspid}> ${err.message}`);
-    log.warn(`${pspid}> ${err.stack}`);
+    log.trace(`${pspid}> ${err.message}`);
+    log.trace(`${pspid}> ${err.stack}`);
   });
 
   process.on('exit', function(code, signal) {

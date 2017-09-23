@@ -46,7 +46,8 @@ export default {
       spinner.stop();
       dispatch({ type: 'note/create', note });
       console.log(`[NoteAction] Response: note/create`);
-    });
+    })
+    .then(() => this.fetchMyNotes());
   },
   update(id, { title, body, category }) {
     const spinner = app.spinner();
@@ -85,7 +86,7 @@ export default {
   getusername() {
     const spinner = app.spinner();
     spinner.spin(this.target('app'));
-    return NoteApiClient.getUsername()
+    return NoteApiClient.fetchUser()
     .then(username => { // -> dashboardStore.js
       spinner.stop();
       dispatch({ type: 'note/fetch/username'

@@ -9,7 +9,7 @@ export default {
   getusername() {
     const spinner = app.spinner();
     spinner.spin(this.target('app'));
-    return NoteApiClient.getUsername()
+    return NoteApiClient.fetchUser()
     .then(username => {
       spinner.stop();
       dispatch({ type: 'app/fetch/username'

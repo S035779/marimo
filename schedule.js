@@ -37,8 +37,8 @@ var init = function() {
 
   mongoose.connection.on('error', function (err) {
     log.error(`${pspid}> Got Mongoose error: ${err.name}`);
-    log.error(`${pspid}> ${err.message}`);
-    log.error(`${pspid}> ${err.stack}`);
+    log.trace(`${pspid}> ${err.message}`);
+    log.trace(`${pspid}> ${err.stack}`);
     shutdown(process.exit);
   });
 
@@ -65,15 +65,15 @@ var init = function() {
 
   process.on('uncaughtException', function(err) {
     log.error(`${pspid}> Got uncaught exception: ${err.name}`);
-    log.error(`${pspid}> ${err.message}`);
-    log.error(`${pspid}> ${err.stack}`);
+    log.trace(`${pspid}> ${err.message}`);
+    log.trace(`${pspid}> ${err.stack}`);
     shutdown(process.exit); 
   });
 
   process.on('warning', function(err) {
     log.warn(`${pspid}> Got warning!: ${err.name}`);
-    log.warn(`${pspid}> ${err.message}`);
-    log.warn(`${pspid}> ${err.stack}`);
+    log.trace(`${pspid}> ${err.message}`);
+    log.trace(`${pspid}> ${err.stack}`);
   });
 
   process.on('exit', function(code, signal) {
@@ -113,8 +113,8 @@ var fork = function() {
 
   cps.on('error', function(err) {
     log.error(`${pspid}> Got error: ${err.name}`);
-    log.error(`${pspid}> ${err.message}`);
-    log.error(`${pspid}> ${err.stack}`);
+    log.trace(`${pspid}> ${err.message}`);
+    log.trace(`${pspid}> ${err.stack}`);
   });
 
   cps.on('disconnect', function() {
@@ -123,13 +123,13 @@ var fork = function() {
 
   cps.on('exit', function(code, signal) {
     log.info(`${pspid}> Child process terminated.`);
-    log.info(
+    log.trace(
       `${pspid}> about to exit with c/s: ${signal || code}`);
   });
 
   cps.on('close', function(code, signal) {
     log.info(`${pspid}> Child process closed.`);
-    log.info(
+    log.trace(
       `${pspid}> about to close with c/s: ${signal || code}`);
   });
 
@@ -155,8 +155,8 @@ var main = (function() {
     cps[idx].send(req, function(err) {
       if(err) {
         log.error(`${pspid}> Got error: ${err.name}`);
-        log.error(`${pspid}> ${err.message}`);
-        log.error(`${pspid}> ${err.stack}`);
+        log.trace(`${pspid}> ${err.message}`);
+        log.trace(`${pspid}> ${err.stack}`);
       }
     });
     idx++;
@@ -175,8 +175,8 @@ var main = (function() {
     ], function(err, req, res) {
       if(err) {
         log.error(`${pspid}> Got error: ${err.name}`);
-        log.error(`${pspid}> ${err.message}`);
-        log.error(`${pspid}> ${err.stack}`);
+        log.trace(`${pspid}> ${err.message}`);
+        log.trace(`${pspid}> ${err.stack}`);
         return;
       }
       try {
@@ -189,8 +189,8 @@ var main = (function() {
         });
       } catch(err) {
         log.error(`${pspid}> Got error: ${err.name}`);
-        log.error(`${pspid}> ${err.message}`);
-        log.error(`${pspid}> ${err.stack}`);
+        log.trace(`${pspid}> ${err.message}`);
+        log.trace(`${pspid}> ${err.stack}`);
         return;
       }
       log.info(`${pspid}> ${monit} min. interval...`);

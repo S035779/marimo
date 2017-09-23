@@ -12,31 +12,33 @@ export default {
     switch(func) {
       case 'get':
         return new Promise(resolve => {
-          xhr.get(url, { user: this.getName() }
+          xhr.get(url, response
           , function(data) {
             notes = data;
             console.log(notes);
             resolve(notes); });
         });
-      case 'post/starred':
-        return new Promise(resolve => {
-          xhr.postJSON(url, response
-            , function() { resolve(response.id); });
-        });
-      case 'post/options':
+      case 'post':
         return new Promise(resolve => {
           xhr.postJSON(url, response
             , function() { resolve(response); });
         });
-      case 'post/create':
-      case 'post/delete':
-      case 'post/search':
+      case 'create':
+      case 'delete':
+      case 'search':
         return new Promise(resolve => {
           const uri = url + '/' + func;
           xhr.postJSON(uri, response
             , function() { resolve(response); });
         });
-      case 'get/username':
+      case 'storage':
+        return new Promise(resolve => {
+          const memory = window.localStorage
+            || (window.UserDataStorage
+            && new app.UserDataStorage()) ||
+            new app.CookieStorage();
+          resolve(memory.getItem(response));
+        });
       case 'get/starred':
       case 'get/note':
       default:
@@ -46,20 +48,15 @@ export default {
     }
   },
 
-  getName() {
-    const memory = window.localStorage ||
-      (window.UserDataStorage && new app.UserDataStorage()) ||
-      new app.CookieStorage();
-    return memory.getItem("username");
-  },
-
-  getUsername() {
-    return this.request('get/username', this.getName());
+  fetchUser() {
+    return this.request('storage', 'username');
   },
   // １．自分のノートをデータベースから全件取得する
   fetchMyNotes() {
-    return this.request('get'
-      , notes.filter(note => note.user === this.getName()));
+    const self = this;
+    return this.fetchUser()
+    .then(username =>  self.request('get', { user: username })
+    );
   },
   // ２．お気に入りノートのみを表示
   fetchStarredNotes() {
@@ -74,55 +71,67 @@ export default {
   },
   // ４．新規のノートを作成する
   createNote() {
-    const note = {
-      user:       this.getName()
-      , id:       std.makeRandInt(8)
-      , title:    'Untitled'
-      , category: ''
-      , starred:  false
-      , body:     ''
-      , updated:  std.getTimeStamp()
-    };
-    notes.unshift(note);
-    return this.request('post/create', note);
+    const self = this;
+    return this.fetchUser()
+    .then(function(username) {
+      const note = {
+        user:       username
+        , id:       std.makeRandInt(8)
+        , title:    'Untitled'
+        , category: ''
+        , starred:  false
+        , body:     ''
+        , options: {
+          searchString:   ''
+          , highestPrice: ''
+          , lowestPrice:  ''
+          , bids:         false
+          , condition:    'all'
+          , status:       false
+          , AuctionID:    []
+          , categoryPath: []
+          , seller:       [] }
+        , items:     []
+        , updated:  std.getTimeStamp()
+      };
+      return self.request('create', note);
+    });
   },
   // ５．特定のノートをアップデートする
   updateNote(id, { title, body, category }) {
     notes = notes.map(note => {
       if (note.id === id) {
-        return Object.assign( {}, note, {
-          title
-          , body
-          , category
-          , updated: std.getTimeStamp()
-        });
-      } else { return note; }
+        return Object.assign({}, note
+        , { title, body, category, updated: std.getTimeStamp()});
+      } else {
+        return note;
+      }
     });
     const note = notes.find(note => note.id === id);
-    return this.request('post/search', note);
+    return this.request('search', note);
   },
   //
   updateOptions(id, options) {
     const note = notes.find(note => note.id === id);
     note.options = options;
-    return this.request('post/options', note);
+    return this.request('post', note);
   },
   // ６．特定のノートを削除する
   deleteNote(id) {
     const note = notes.find(note => note.id === id);
     notes = notes.filter(note => note.id !== id);
-    return this.request('post/delete', note);
+    return this.request('delete', note);
   },
   // ７．特定のノートをお気に入りにする
   createStar(id) {
     const note = notes.find(note => note.id === id);
     note.starred = Boolean(1);
-    return this.request('post/starred', note);
+    return this.request('post', note);
   },
   // ８．特定のノートのお気に入りを外す
   deleteStar(id) {
     const note = notes.find(note => note.id === id);
     note.starred = Boolean(0);
-    return this.request('post/starred', note);
+    return this.request('post', note);
   },
 };
