@@ -246,21 +246,22 @@ module.exports.findHistorys = findHistorys;
  * @param callback {function}
  */
 var getResultSet = function(req, res, callback) {
-  var maxPage = req.hasOwnProperty('pages') ? req.pages : 5;
-  var query = req.hasOwnProperty('body') 
+  var maxPage   = req.hasOwnProperty('pages')
+    ? req.pages : 5;
+  var page      = req.hasOwnProperty('body')
+    ? 1 : maxPage;
+  var query     = req.hasOwnProperty('body') 
     ? req.body.body : res.note.search;
-  var page = req.hasOwnProperty('body') ? 1 : maxPage;
-
+  var options   = req.hasOwnProperty('body')
+    ? req.body.options : res.note.options;
+    
   log.count();
   log.time();
   log.profile();
 
-  app.YHsearch({ 
-    appid:    req.appid
-    , query
-    , sort:   'bids'
-    , order:  'a' 
-  }, function(err, ids, obj){
+  app.YHsearch(
+    helperOptions({ appid: req.appid, query, page }, options)
+  , function(err, ids, obj){
     if (err) {
       log.error(err.message);
       return callback(err);
@@ -297,11 +298,14 @@ module.exports.getResultSet = getResultSet;
  * @param callback {function}
  */
 var getAuctionIds = function(req, res, callback) {
-  var int = req.hasOwnProperty('intvl') ? req.intvl : 24;
-  var query = req.hasOwnProperty('body') 
+  var int       = req.hasOwnProperty('intvl')
+    ? req.intvl : 24;
+  var query     = req.hasOwnProperty('body') 
     ? req.body.body : res.note.search;
-  var historys = res.hasOwnProperty('historys')
+  var historys  = res.hasOwnProperty('historys')
     ? res.historys : null;
+  var options   = req.hasOwnProperty('body')
+    ? req.body.options : res.note.options;
 
   log.time();
   log.profile();
@@ -310,13 +314,9 @@ var getAuctionIds = function(req, res, callback) {
   var Ids = [];
   async.forEachSeries(res.pages, function(page, cbk) {
     //log.trace(`page:`, page);
-    app.YHsearch({ 
-      appid:    req.appid
-      , query
-      , sort:   'bids'
-      , order:  'a'
-      , page:   page 
-    }, function(err, ids, obj){
+    app.YHsearch(
+      helperOptions({ appid: req.appid, query, page }, options)
+    , function(err, ids, obj){
       if (err) {
         return cbk(err);
       }
@@ -390,6 +390,52 @@ var helperIds = function(o, p, q) {
   });
   //log.trace(result);
   return result;
+};
+
+/**
+ * helperOptions
+ *
+ * @param o {object} - YHsearch default sets.
+ * @param p {object} - YHsearch customed sets.
+ * @returns {object} - YHsearch result options.
+ */
+var helperOptions = function(o, p) {
+  var _o = o;
+  var _p = p ? p : {};
+  var _r = { new: 1, used: 2, other: 0 };
+
+  var options = {
+    appid:        _o.appid
+    , output:     'xml'
+    , query:      _o.query
+    , type:       'all'
+    , page:       _o.page ? Number(_o.page) : 1
+    , sort:       'score'
+    , order:      'a'
+    , store:      0
+    , gift_icon:  0
+    , adf:        1
+    , ranking:    'current'
+    , f:          '0x2'
+  };
+
+  if(_p.searchString)
+    options['query']       =  _o.query + ' ' + _p.searchString;
+
+  if(_p.lowestPrice)
+    options['aucminprice'] = Number(_p.lowestPrice);
+  
+  if(_p.hightPrice)
+    options['aucmaxprice'] = Number(_p.hightPrice);
+  
+  if(_p.condition !== 'all')
+    options['item_status'] = Number(_r[_p.condition]);
+  
+  if(_p.seller && _p.seller.length)
+    options['seller']      = _p.seller.join();
+
+  //log.trace(options);
+  return options;
 };
 
 /**
