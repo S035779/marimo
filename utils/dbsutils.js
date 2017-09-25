@@ -407,34 +407,41 @@ var helperOptions = function(o, p) {
   var options = {
     appid:        _o.appid
     , output:     'xml'
-    , query:      _o.query
     , type:       'all'
     , page:       _o.page ? Number(_o.page) : 1
-    , sort:       'score'
     , order:      'a'
     , store:      0
     , gift_icon:  0
     , adf:        1
-    , ranking:    'current'
     , f:          '0x2'
   };
 
-  if(_p.searchString)
-    options['query']       =  _o.query + ' ' + _p.searchString;
+  if(_p.searchString) {
+    options['query']       = _o.query + ' ' + _p.searchString;
+  } else {
+    options['query']       = _o.query;
+  }
 
-  if(_p.lowestPrice)
-    options['aucminprice'] = Number(_p.lowestPrice);
-  
   if(_p.hightPrice)
     options['aucmaxprice'] = Number(_p.hightPrice);
   
+  if(_p.lowestPrice)
+    options['aucminprice'] = Number(_p.lowestPrice);
+  
+  if(_p.bids) {
+    options['sort']        = 'bids';
+  } else {
+    options['sort']        = 'score';
+    options['ranking']     = 'current';
+  }
+
   if(_p.condition !== 'all')
     options['item_status'] = Number(_r[_p.condition]);
   
   if(_p.seller && _p.seller.length)
     options['seller']      = _p.seller.join();
 
-  //log.trace(options);
+  log.trace(`${pspid}> YHsearch options:`, options);
   return options;
 };
 

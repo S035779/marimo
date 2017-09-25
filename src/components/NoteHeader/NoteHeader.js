@@ -8,7 +8,24 @@ import std from '../../../utils/stdutils';
 export default class NoteHeader extends React.Component {
   constructor(props) {
     super(props);
-    const options = {
+    this.state = Object.assign({}, props.note.options);
+  }
+
+  isOwn() {
+    const user = this.props.user;
+    return this.props.note.user === user;
+  }
+
+  handleClickSearch(e) {
+    console.log(`[NoteHeaderView] Request: handleClickSearch`);
+    e.preventDefault();
+    this.props.onSearch(this.state);
+    this.props.onChangeOptions();
+  }
+
+  handleClickReset() {
+    console.log(`[NoteHeaderView] Request: handleClickReset`);
+    this.setState({
       searchString:   ''
       , highestPrice: ''
       , lowestPrice:  ''
@@ -18,20 +35,13 @@ export default class NoteHeader extends React.Component {
       , AuctionID:    []
       , categoryPath: []
       , seller:       []
-    };
-    this.state = props.note.options != null
-      ? Object.assign({}, props.note.options)
-      : options;
-  }
-
-  isOwn() {
-    const user = this.props.user;
-    return this.props.note.user === user;
+    });
+    this.props.onSearch(this.state);
+    this.props.onChangeOptions();
   }
 
   handleClickEdit() {
     console.log(`[NoteHeaderView] Request: handleClickEdit`);
-    this.props.onChangeOptions();
     browserHistory.push(`/notes/${this.props.note.id}/edit`);
   }
 
@@ -40,12 +50,6 @@ export default class NoteHeader extends React.Component {
     if (window.confirm('Are you sure?')) {
       this.props.onDeleteNote();
     }
-  }
-
-  handleClickSearch(e) {
-    console.log(`[NoteHeaderView] Request: handleClickSearch`);
-    e.preventDefault();
-    this.props.onSearch(this.state);
   }
 
   handleChangeText(name, e) {
@@ -229,6 +233,9 @@ export default class NoteHeader extends React.Component {
       <span><Button onClick={
         this.handleClickSearch.bind(this)
       }>Search</Button></span>
+      <span><Button onClick={
+        this.handleClickReset.bind(this)
+      }>Reset</Button></span>
       <span><Button hidden={!this.isOwn()} onClick={
         () => this.handleClickEdit()
       }>Edit</Button></span>
