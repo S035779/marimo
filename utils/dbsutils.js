@@ -24,7 +24,7 @@ var findUser = function(req, res, callback) {
       log.error(err.message);
       return callback(err);
     }
-    log.trace(user);
+    log.trace(`${pspid}>`, user);
     log.info(`${pspid}> find User done.`);
     callback(err, req, std.extend(res, { user }));
   });
@@ -46,7 +46,7 @@ var findNote = function(req, res, callback) {
       log.error(err.message);
       return callback(err);
     }
-    //log.trace(note);
+    //log.trace(`${pspid}>`, note);
     log.info(`${pspid}> find Note done.`);
     callback(err, req, std.extend(res, { note }));
   });
@@ -142,7 +142,7 @@ var findUsers = function(req, res, callback) {
     docs.forEach(function(doc) {
       users.push(doc);
     });
-    //log.trace(users);
+    //log.trace(`${pspid}>`, users);
     log.info(`${pspid}> find Users done.`);
     callback(err, req, std.extend(res, { users }));
   });
@@ -157,8 +157,8 @@ module.exports.findUsers = findUsers;
  * @param callback {function}
  */
 var findNotes = function(req, res, callback) {
-  var int = req.hasOwnProperty('intvl') ? req.intvl : 24;
-  var mon = req.hasOwnProperty('monit') ? req.monit : 5;
+  var int = req.intvl;
+  var mon = req.monit;
   var users = res.users;
 
   var int = int*1000*60*60;
@@ -177,7 +177,7 @@ var findNotes = function(req, res, callback) {
       try {
         docs.forEach(function(doc) {
           var isMon = ((now - doc.updated) % int) < mon;
-          //log.trace('updated? :'
+          //log.trace(`${pspid}>`, 'updated? :'
           //, updated, nowMon, (nowMon-updated)%int, mon);
           log.debug(doc.id, isMon);
           if (isMon) notes.push(doc);
@@ -192,7 +192,7 @@ var findNotes = function(req, res, callback) {
       log.error(err.message);
       return callback(err);
     }
-    //log.trace(notes);
+    //log.trace(`${pspid}>`, notes);
     log.info(`${pspid}> find Notes done.`);
     callback(err, req, std.extend(res, { notes }));
   });
@@ -231,7 +231,7 @@ var findHistorys = function(req, res, callback) {
       log.error(err.message);
       return callback(err);
     }
-    //log.trace(historys);
+    //log.trace(`${pspid}>`, historys);
     log.info(`${pspid}> find Historys done.`);
     callback(err, req, std.extend(res, { historys }));
   });
@@ -246,10 +246,8 @@ module.exports.findHistorys = findHistorys;
  * @param callback {function}
  */
 var getResultSet = function(req, res, callback) {
-  var maxPage   = req.hasOwnProperty('pages')
-    ? req.pages : 5;
-  var page      = req.hasOwnProperty('body')
-    ? 1 : maxPage;
+  var appid     = req.appid;
+  var maxPages  = req.hasOwnProperty('body') ? 1 : req.pages;
   var query     = req.hasOwnProperty('body') 
     ? req.body.body : res.note.search;
   var options   = req.hasOwnProperty('body')
@@ -260,7 +258,7 @@ var getResultSet = function(req, res, callback) {
   log.profile();
 
   app.YHsearch(
-    helperOptions({ appid: req.appid, query, page }, options)
+    helperOptions({ appid, query }, options)
   , function(err, ids, obj){
     if (err) {
       log.error(err.message);
@@ -270,11 +268,11 @@ var getResultSet = function(req, res, callback) {
     var pages = [];
     for(var i=0; i<Math.ceil(
       opt.totalResultsAvailable/opt.totalResultsReturned); i++){
-      if(i>=page) break;
+      if(i >= maxPages) break;
       pages[i]=i+1;
     }
     log.debug(`Number of pages: ${pages.length}`);
-    //log.trace(`Avail, Return, position :`
+    //log.trace(`${pspid}>`, `Avail, Return, position :`
     //  , opt.totalResultsAvailable
     //  , opt.totalResultsReturned
     //  , opt.firstResultPosition
@@ -298,31 +296,32 @@ module.exports.getResultSet = getResultSet;
  * @param callback {function}
  */
 var getAuctionIds = function(req, res, callback) {
-  var int       = req.hasOwnProperty('intvl')
-    ? req.intvl : 24;
+  var appid     = req.appid;
+  var int       = req.intvl;
   var query     = req.hasOwnProperty('body') 
     ? req.body.body : res.note.search;
-  var historys  = res.hasOwnProperty('historys')
-    ? res.historys : null;
   var options   = req.hasOwnProperty('body')
     ? req.body.options : res.note.options;
+  var historys  = res.hasOwnProperty('historys')
+    ? res.historys : null;
+  var pages     = res.pages;
 
   log.time();
   log.profile();
 
   var newIds = [];
   var Ids = [];
-  async.forEachSeries(res.pages, function(page, cbk) {
-    //log.trace(`page:`, page);
+  async.forEachSeries(pages, function(page, cbk) {
+    //log.trace(`${pspid}>`, `page:`, page);
     app.YHsearch(
-      helperOptions({ appid: req.appid, query, page }, options)
+      helperOptions({ appid, query, page }, options)
     , function(err, ids, obj){
       if (err) {
         return cbk(err);
       }
       try {
         if (ids.length > 0) newIds=newIds.concat(ids);
-        //log.trace(ids);
+        //log.trace(`${pspid}>`, ids);
       } catch(e) {
         return cbk(e);
       }
@@ -335,7 +334,7 @@ var getAuctionIds = function(req, res, callback) {
       return callback(err);
     }
     try {
-      //log.trace(newIds);
+      //log.trace(`${pspid}>`, newIds);
       Ids = helperIds(historys, newIds, int);
     } catch(err) {
       return callback(err);
@@ -388,7 +387,7 @@ var helperIds = function(o, p, q) {
       result.push({ id, _id: o[id]._id, status: 3 });
     }
   });
-  //log.trace(result);
+  //log.trace(`${pspid}>`, result);
   return result;
 };
 
@@ -408,7 +407,7 @@ var helperOptions = function(o, p) {
     appid:        _o.appid
     , output:     'xml'
     , type:       'all'
-    , page:       _o.page ? Number(_o.page) : 1
+    , page:       _o.page ? _o.page : 1
     , order:      'a'
     , store:      0
     , gift_icon:  0
@@ -435,13 +434,13 @@ var helperOptions = function(o, p) {
     options['ranking']     = 'current';
   }
 
-  if(_p.condition !== 'all')
+  if(_p.condition && _p.condition !== 'all')
     options['item_status'] = Number(_r[_p.condition]);
   
   if(_p.seller && _p.seller.length)
     options['seller']      = _p.seller.join();
 
-  log.trace(`${pspid}> YHsearch options:`, options);
+  log.trace(`${pspid}>`, `YHsearch options:`, options);
   return options;
 };
 
@@ -461,7 +460,7 @@ var getAuctionItems = function(req, res, callback) {
 
   var Items=[];
   async.forEachSeries(Ids, function(Id, cbk) {
-    //log.trace(`auction_id, status :`, Id.id, Id.status);
+    //log.trace(`${pspid}>`, `auction_id, status :`, Id.id, Id.status);
     switch(Id.status) {
       case 0:
       case 1:
@@ -472,7 +471,7 @@ var getAuctionItems = function(req, res, callback) {
             return cbk(err);
           }
           Items[Id.id]={ item: obj, status: Id.status };
-          //log.trace(Items[Id.id]);
+          //log.trace(`${pspid}>`, Items[Id.id]);
           log.count();
           cbk();
         });
@@ -489,7 +488,7 @@ var getAuctionItems = function(req, res, callback) {
       log.error(err.message);
       return callback(err);
     }
-    //log.trace(Items);
+    //log.trace(`${pspid}>`, Items);
     
     log.countEnd();
     log.timeEnd();
@@ -517,7 +516,7 @@ var getBidHistorys = function(req, res, callback) {
 
   var Bids=[];
   async.forEachSeries(Ids, function(Id, cbk) {
-    //log.trace(`auction_id, status :`, Id.id, Id.status);
+    //log.trace(`${pspid}>`, `auction_id, status :`, Id.id, Id.status);
     switch(Id.status) {
       case 0:
       case 1:
@@ -528,7 +527,7 @@ var getBidHistorys = function(req, res, callback) {
             return cbk(err);
           }
           Bids[Id.id]={ bids: obj, status: Id.status };
-          //log.trace(Bids[Id.id]);
+          //log.trace(`${pspid}>`, Bids[Id.id]);
           log.count();
           cbk();
         });
@@ -545,7 +544,7 @@ var getBidHistorys = function(req, res, callback) {
       log.error(err.message);
       return callback(err);
     }
-    //log.trace(Bids);
+    //log.trace(`${pspid}>`, Bids);
     
     log.countEnd();
     log.timeEnd();
@@ -718,7 +717,7 @@ var getNotes = function(req, res, callback){
     }
     var newNotes = [];
     docs.forEach(function(doc) {
-      //log.trace(doc);
+      //log.trace(`${pspid}>`, doc);
       newNotes.push({
         user:       req.body.user
         , id:       doc.id

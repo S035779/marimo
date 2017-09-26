@@ -46,8 +46,7 @@ export default {
       spinner.stop();
       dispatch({ type: 'note/create', note });
       console.log(`[NoteAction] Response: note/create`);
-    })
-    .then(() => this.fetchMyNotes());
+    }).then(() => this.fetchMyNotes());
   },
   update(id, { title, body, category }) {
     const spinner = app.spinner();
@@ -59,8 +58,7 @@ export default {
       dispatch({ type: 'note/update', id
         , note: { title, body, category } });
       console.log(`[NoteAction] Response: note/update`);
-    })
-    .then(() => this.fetchMyNotes());
+    }).then(() => this.fetchMyNotes());
   },
   updateOptions(id, options) {
     const spinner = app.spinner();
@@ -71,7 +69,7 @@ export default {
       dispatch({ type: 'note/update/options', id
         , options });
       console.log(`[NoteAction] Response: note/update/options`);
-    });
+    }).then(() => this.fetchMyNotes());
   },
   delete(id) {
     const spinner = app.spinner();

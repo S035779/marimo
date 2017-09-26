@@ -143,8 +143,8 @@ var fork = function() {
  */
 var main = (function() {
   init();
-  var intvl = process.env.interval;
-  var monit = process.env.monitor;
+  var intvl = process.env.interval || 12;
+  var monit = process.env.monitor || 5;
   var cpu = require('os').cpus().length;
   var cps = [];
   var idx=0;

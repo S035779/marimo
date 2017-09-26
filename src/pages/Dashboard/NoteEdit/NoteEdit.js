@@ -25,9 +25,6 @@ export default class NoteEdit extends React.Component {
       NoteAction.delete(this.state.note.id);
     }
   }
-  handleFetch() {
-    NoteAction.fetchMyNotes();
-  }
 
   handleShow() {
     browserHistory.push(`/notes/${this.state.note.id}`);
@@ -79,8 +76,6 @@ export default class NoteEdit extends React.Component {
             Delete</Button>
           <Button onClick={this.handleShow.bind(this)}>
             Show</Button>
-          <Button onClick={this.handleFetch.bind(this)}>
-            Update</Button>
         </div>
       </div>
       <div className="page-NoteEdit-body">

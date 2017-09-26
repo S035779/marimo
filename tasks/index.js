@@ -104,10 +104,10 @@ var shutdown = function(callback) {
  */
 var main = (function() {
   init();
-  var intvl = process.env.interval;
-  var monit = process.env.monitor;
   var appid = process.env.app_id;
-  var pages = process.env.pages;
+  var intvl = process.env.interval || 12;
+  var monit = process.env.monitor || 5;
+  var pages = process.env.pages || 8;
   var queue = async.queue(function (req, callback) {
     async.waterfall([
       async.apply(

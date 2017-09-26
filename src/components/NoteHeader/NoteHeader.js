@@ -20,7 +20,6 @@ export default class NoteHeader extends React.Component {
     console.log(`[NoteHeaderView] Request: handleClickSearch`);
     e.preventDefault();
     this.props.onSearch(this.state);
-    this.props.onChangeOptions();
   }
 
   handleClickReset() {
@@ -36,12 +35,11 @@ export default class NoteHeader extends React.Component {
       , categoryPath: []
       , seller:       []
     });
-    this.props.onSearch(this.state);
-    this.props.onChangeOptions();
   }
 
-  handleClickEdit() {
-    console.log(`[NoteHeaderView] Request: handleClickEdit`);
+  handleClickSave() {
+    console.log(`[NoteHeaderView] Request: handleClickSave`);
+    this.props.onChangeOptions();
     browserHistory.push(`/notes/${this.props.note.id}/edit`);
   }
 
@@ -231,14 +229,14 @@ export default class NoteHeader extends React.Component {
       </div>
       <div className="NoteHeader-buttons">
       <span><Button onClick={
-        this.handleClickSearch.bind(this)
-      }>Search</Button></span>
-      <span><Button onClick={
         this.handleClickReset.bind(this)
       }>Reset</Button></span>
+      <span><Button onClick={
+        this.handleClickSearch.bind(this)
+      }>Search</Button></span>
       <span><Button hidden={!this.isOwn()} onClick={
-        () => this.handleClickEdit()
-      }>Edit</Button></span>
+        () => this.handleClickSave()
+      }>Save</Button></span>
       <StarButton starred={note.starred} onChange={
         this.props.onChangeStar
       } />

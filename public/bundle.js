@@ -5106,6 +5106,8 @@ exports.default = {
     });
   },
   updateOptions: function updateOptions(id, options) {
+    var _this3 = this;
+
     var spinner = _webutils2.default.spinner();
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.updateOptions(id, options).then(function () {
@@ -5114,6 +5116,8 @@ exports.default = {
       (0, _dispatcher.dispatch)({ type: 'note/update/options', id: id,
         options: options });
       console.log('[NoteAction] Response: note/update/options');
+    }).then(function () {
+      return _this3.fetchMyNotes();
     });
   },
   delete: function _delete(id) {
@@ -6579,7 +6583,6 @@ exports.default = {
         return new Promise(function (resolve) {
           _xhrutils2.default.get(url, response, function (data) {
             notes = data;
-            console.log(notes);
             resolve(notes);
           });
         });
@@ -6603,8 +6606,20 @@ exports.default = {
           var memory = window.localStorage || window.UserDataStorage && new _webutils2.default.UserDataStorage() || new _webutils2.default.CookieStorage();
           resolve(memory.getItem(response));
         });
-      case 'get/starred':
-      case 'get/note':
+      case 'cache/starred':
+        return new Promise(function (resolve) {
+          var starredNotes = notes.filter(function (note) {
+            return note.starred === response;
+          });
+          resolve(starredNotes);
+        });
+      case 'cache':
+        return new Promise(function (resolve) {
+          var note = notes.find(function (note) {
+            return note.id === response;
+          });
+          resolve(note);
+        });
       default:
         return new Promise(function (resolve) {
           setTimeout(function () {
@@ -6627,18 +6642,12 @@ exports.default = {
 
   // ２．お気に入りノートのみを表示
   fetchStarredNotes: function fetchStarredNotes() {
-    var starredNotes = notes.filter(function (note) {
-      return note.starred === true;
-    });
-    return this.request('get/starred', starredNotes);
+    return this.request('cache/starred', true);
   },
 
   // ３．特定のノートを取得
   fetchNote: function fetchNote(id) {
-    var note = notes.find(function (note) {
-      return note.id === id;
-    });
-    return this.request('get/note', note);
+    return this.request('cache', id);
   },
 
   // ４．新規のノートを作成する
@@ -6675,55 +6684,56 @@ exports.default = {
         body = _ref.body,
         category = _ref.category;
 
-    notes = notes.map(function (note) {
-      if (note.id === id) {
-        return Object.assign({}, note, { title: title, body: body, category: category, updated: _stdutils2.default.getTimeStamp() });
-      } else {
-        return note;
-      }
+    var self = this;
+    return this.fetchNote(id).then(function (note) {
+      note = Object.assign({}, note, {
+        title: title, body: body, category: category,
+        updated: _stdutils2.default.getTimeStamp()
+      });
+      return self.request('search', note);
     });
-    var note = notes.find(function (note) {
-      return note.id === id;
-    });
-    return this.request('search', note);
   },
 
   //
   updateOptions: function updateOptions(id, options) {
-    var note = notes.find(function (note) {
-      return note.id === id;
+    var self = this;
+    return this.fetchNote(id).then(function (note) {
+      note = Object.assign({}, note, {
+        options: options,
+        updated: _stdutils2.default.getTimeStamp()
+      });
+      return self.request('post', note);
     });
-    note.options = options;
-    return this.request('post', note);
   },
 
   // ６．特定のノートを削除する
   deleteNote: function deleteNote(id) {
-    var note = notes.find(function (note) {
-      return note.id === id;
+    var self = this;
+    return this.fetchNote(id).then(function (note) {
+      return self.request('delete', note);
     });
-    notes = notes.filter(function (note) {
-      return note.id !== id;
-    });
-    return this.request('delete', note);
   },
 
   // ７．特定のノートをお気に入りにする
   createStar: function createStar(id) {
-    var note = notes.find(function (note) {
-      return note.id === id;
+    var self = this;
+    return this.fetchNote(id).then(function (note) {
+      note = Object.assign({}, note, {
+        starred: true
+      });
+      return self.request('post', note);
     });
-    note.starred = Boolean(1);
-    return this.request('post', note);
   },
 
   // ８．特定のノートのお気に入りを外す
   deleteStar: function deleteStar(id) {
-    var note = notes.find(function (note) {
-      return note.id === id;
+    var self = this;
+    return this.fetchNote(id).then(function (note) {
+      note = Object.assign({}, note, {
+        starred: false
+      });
+      return self.request('post', note);
     });
-    note.starred = Boolean(0);
-    return this.request('post', note);
   }
 };
 
@@ -15386,22 +15396,44 @@ exports.default = {
   target: function target(elm) {
     return document.getElementById(elm);
   },
+  fetchMyNotes: function fetchMyNotes() {
+    var spinner = _webutils2.default.spinner();
+    spinner.spin(this.target('app'));
+    return _NoteApiClient2.default.fetchMyNotes().then(function (notes) {
+      // -> dashboardStore.js
+      spinner.stop();
+      (0, _dispatcher.dispatch)({ type: 'note/fetch/my', notes: notes });
+      console.log('[StarredAction] Response: note/fetch/my');
+    });
+  },
   create: function create(id) {
+    var _this = this;
+
     var spinner = _webutils2.default.spinner();
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.createStar(id).then(function (note) {
+      // -> noteStore.js
       spinner.stop();
-      (0, _dispatcher.dispatch)({ type: 'star/update', note: note });
+      (0, _dispatcher.dispatch)({ type: 'star/update',
+        id: note.id, starred: note.starred });
       console.log('[StarredAction] Response: star/update');
+    }).then(function () {
+      return _this.fetchMyNotes();
     });
   },
   delete: function _delete(id) {
+    var _this2 = this;
+
     var spinner = _webutils2.default.spinner();
     spinner.spin(this.target('app'));
     return _NoteApiClient2.default.deleteStar(id).then(function (note) {
+      // -> noteStore.js
       spinner.stop();
-      (0, _dispatcher.dispatch)({ type: 'star/update', note: note });
+      (0, _dispatcher.dispatch)({ type: 'star/update',
+        id: note.id, starred: note.starred });
       console.log('[StarredAction] Response: star/update');
+    }).then(function () {
+      return _this2.fetchMyNotes();
     });
   }
 };
@@ -15561,18 +15593,7 @@ var NoteHeader = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (NoteHeader.__proto__ || Object.getPrototypeOf(NoteHeader)).call(this, props));
 
-    var options = {
-      searchString: '',
-      highestPrice: '',
-      lowestPrice: '',
-      bids: false,
-      condition: 'all',
-      status: false,
-      AuctionID: [],
-      categoryPath: [],
-      seller: []
-    };
-    _this.state = props.note.options != null ? Object.assign({}, props.note.options) : options;
+    _this.state = Object.assign({}, props.note.options);
     return _this;
   }
 
@@ -15583,9 +15604,32 @@ var NoteHeader = function (_React$Component) {
       return this.props.note.user === user;
     }
   }, {
-    key: 'handleClickEdit',
-    value: function handleClickEdit() {
-      console.log('[NoteHeaderView] Request: handleClickEdit');
+    key: 'handleClickSearch',
+    value: function handleClickSearch(e) {
+      console.log('[NoteHeaderView] Request: handleClickSearch');
+      e.preventDefault();
+      this.props.onSearch(this.state);
+    }
+  }, {
+    key: 'handleClickReset',
+    value: function handleClickReset() {
+      console.log('[NoteHeaderView] Request: handleClickReset');
+      this.setState({
+        searchString: '',
+        highestPrice: '',
+        lowestPrice: '',
+        bids: false,
+        condition: 'all',
+        status: false,
+        AuctionID: [],
+        categoryPath: [],
+        seller: []
+      });
+    }
+  }, {
+    key: 'handleClickSave',
+    value: function handleClickSave() {
+      console.log('[NoteHeaderView] Request: handleClickSave');
       this.props.onChangeOptions();
       _reactRouter.browserHistory.push('/notes/' + this.props.note.id + '/edit');
     }
@@ -15596,13 +15640,6 @@ var NoteHeader = function (_React$Component) {
       if (window.confirm('Are you sure?')) {
         this.props.onDeleteNote();
       }
-    }
-  }, {
-    key: 'handleClickSearch',
-    value: function handleClickSearch(e) {
-      console.log('[NoteHeaderView] Request: handleClickSearch');
-      e.preventDefault();
-      this.props.onSearch(this.state);
     }
   }, {
     key: 'handleChangeText',
@@ -16000,6 +16037,15 @@ var NoteHeader = function (_React$Component) {
             null,
             _react2.default.createElement(
               _Button2.default,
+              { onClick: this.handleClickReset.bind(this) },
+              'Reset'
+            )
+          ),
+          _react2.default.createElement(
+            'span',
+            null,
+            _react2.default.createElement(
+              _Button2.default,
               { onClick: this.handleClickSearch.bind(this) },
               'Search'
             )
@@ -16010,9 +16056,9 @@ var NoteHeader = function (_React$Component) {
             _react2.default.createElement(
               _Button2.default,
               { hidden: !this.isOwn(), onClick: function onClick() {
-                  return _this2.handleClickEdit();
+                  return _this2.handleClickSave();
                 } },
-              'Edit'
+              'Save'
             )
           ),
           _react2.default.createElement(_StarButton2.default, { starred: note.starred, onChange: this.props.onChangeStar })
@@ -16744,11 +16790,6 @@ var NoteEdit = function (_React$Component) {
       }
     }
   }, {
-    key: 'handleFetch',
-    value: function handleFetch() {
-      _NoteAction2.default.fetchMyNotes();
-    }
-  }, {
     key: 'handleShow',
     value: function handleShow() {
       _reactRouter.browserHistory.push('/notes/' + this.state.note.id);
@@ -16814,11 +16855,6 @@ var NoteEdit = function (_React$Component) {
               _Button2.default,
               { onClick: this.handleShow.bind(this) },
               'Show'
-            ),
-            _react2.default.createElement(
-              _Button2.default,
-              { onClick: this.handleFetch.bind(this) },
-              'Update'
             )
           )
         ),
@@ -16922,6 +16958,7 @@ var Note = function (_React$Component) {
       } else {
         _StarAction2.default.delete(note.id);
       }
+      console.log(starred);
     }
   }, {
     key: 'handleChangeSearch',
@@ -17282,23 +17319,31 @@ var NoteStore = function (_ReduceStore) {
   }, {
     key: 'reduce',
     value: function reduce(state, action) {
+      console.log('[noteStore] ActionType: ' + action.type);
+      console.log(state);
+      console.log(action);
       switch (action.type) {
         case 'note/fetch/before':
-          return { note: null };
+          return {
+            note: null
+          };
         case 'note/fetch':
-          return { note: action.note };
+          return {
+            note: action.note
+          };
         case 'star/update':
-          if (state.id === action.id) {
+          if (state.note.id === action.id) {
             return {
-              note: Object.assign({}, state.note, action.starred)
+              note: Object.assign({}, state.note, { starred: action.starred })
             };
           } else {
             return state;
           }
         case 'note/update/options':
-          if (state.id === action.id) {
+          if (state.note.id === action.id) {
             return {
-              note: Object.assign({}, state.note, action.options) };
+              note: Object.assign({}, state.note, { options: action.options })
+            };
           } else {
             return state;
           }

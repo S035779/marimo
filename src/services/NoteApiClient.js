@@ -12,10 +12,8 @@ export default {
     switch(func) {
       case 'get':
         return new Promise(resolve => {
-          xhr.get(url, response
-          , function(data) {
+          xhr.get(url, response, data => {
             notes = data;
-            console.log(notes);
             resolve(notes); });
         });
       case 'post':
@@ -39,8 +37,18 @@ export default {
             new app.CookieStorage();
           resolve(memory.getItem(response));
         });
-      case 'get/starred':
-      case 'get/note':
+      case 'cache/starred':
+        return new Promise(resolve => {
+          const starredNotes =
+            notes.filter(note => note.starred === response)
+          resolve(starredNotes);
+        });
+      case 'cache':
+        return new Promise(resolve => {
+          const note =
+            notes.find(note => note.id === response);
+          resolve(note);
+        });
       default:
         return new Promise(resolve => {
           setTimeout(() => resolve(response), LATENCY);
@@ -54,26 +62,22 @@ export default {
   // １．自分のノートをデータベースから全件取得する
   fetchMyNotes() {
     const self = this;
-    return this.fetchUser()
-    .then(username =>  self.request('get', { user: username })
-    );
+    return this.fetchUser().then(username =>
+      self.request('get', { user: username }));
   },
   // ２．お気に入りノートのみを表示
   fetchStarredNotes() {
-    const starredNotes =
-      notes.filter(note => note.starred === true);
-    return this.request('get/starred', starredNotes);
+    return this.request('cache/starred', true);
   },
   // ３．特定のノートを取得
   fetchNote(id) {
-    const note = notes.find(note => note.id === id);
-    return this.request('get/note', note);
+    return this.request('cache', id);
   },
   // ４．新規のノートを作成する
   createNote() {
     const self = this;
     return this.fetchUser()
-    .then(function(username) {
+    .then(username => {
       const note = {
         user:       username
         , id:       std.makeRandInt(8)
@@ -99,39 +103,51 @@ export default {
   },
   // ５．特定のノートをアップデートする
   updateNote(id, { title, body, category }) {
-    notes = notes.map(note => {
-      if (note.id === id) {
-        return Object.assign({}, note
-        , { title, body, category, updated: std.getTimeStamp()});
-      } else {
-        return note;
-      }
+    const self = this;
+    return this.fetchNote(id).then(note => {
+      note = Object.assign({}, note, {
+        title, body, category
+        , updated: std.getTimeStamp()
+      });
+      return self.request('search', note)
     });
-    const note = notes.find(note => note.id === id);
-    return this.request('search', note);
   },
   //
   updateOptions(id, options) {
-    const note = notes.find(note => note.id === id);
-    note.options = options;
-    return this.request('post', note);
+    const self = this;
+    return this.fetchNote(id).then(note => {
+      note = Object.assign({}, note, {
+        options
+        , updated: std.getTimeStamp()
+      });
+      return self.request('post', note);
+    });
   },
   // ６．特定のノートを削除する
   deleteNote(id) {
-    const note = notes.find(note => note.id === id);
-    notes = notes.filter(note => note.id !== id);
-    return this.request('delete', note);
+    const self = this;
+    return this.fetchNote(id).then(note => {
+      return self.request('delete', note)
+    });
   },
   // ７．特定のノートをお気に入りにする
   createStar(id) {
-    const note = notes.find(note => note.id === id);
-    note.starred = Boolean(1);
-    return this.request('post', note);
+    const self = this;
+    return this.fetchNote(id).then(note => {
+      note = Object.assign({}, note, {
+        starred: true
+      });
+      return self.request('post', note);
+    });
   },
   // ８．特定のノートのお気に入りを外す
   deleteStar(id) {
-    const note = notes.find(note => note.id === id);
-    note.starred = Boolean(0);
-    return this.request('post', note);
+    const self = this;
+    return this.fetchNote(id).then(note => {
+      note = Object.assign({}, note, {
+        starred: false
+      });
+      return self.request('post', note);
+    });
   },
 };

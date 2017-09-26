@@ -29,6 +29,7 @@ class Note extends React.Component {
     else {
       StarAction.delete(note.id);
     }
+    console.log(starred);
   }
 
   handleChangeSearch(options) {

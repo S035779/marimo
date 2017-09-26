@@ -135,7 +135,7 @@ router.post('/api/note/search', function(request, response){
   log.info(`${pspid}> ===postHistory===`);
   var body = request.body;
   var appid = process.env.app_id;
-  var intvl = process.env.interval;
+  var intvl = process.env.interval || 12;
   async.waterfall([ 
     async.apply(
       dbs.findUser, { intvl, appid, body }, {})

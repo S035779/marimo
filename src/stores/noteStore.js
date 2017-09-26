@@ -7,23 +7,36 @@ class NoteStore extends ReduceStore {
   }
 
   reduce(state, action) {
+    console.log(`[noteStore] ActionType: ${action.type}`)
+    console.log(state);
+    console.log(action);
     switch (action.type) {
       case 'note/fetch/before':
-        return { note: null };
+        return {
+          note: null
+        };
       case 'note/fetch':
-        return { note: action.note };
+        return {
+          note: action.note
+        };
       case 'star/update':
-        if (state.id === action.id) {
+        if (state.note.id === action.id) {
           return {
-             note: Object.assign({}, state.note, action.starred )
+            note: Object.assign({}, state.note
+              , { starred: action.starred })
           };
-        } else { return state }
+        } else {
+          return state
+        }
       case 'note/update/options':
-        if (state.id === action.id) {
+        if (state.note.id === action.id) {
           return {
-             note: Object.assign({}
-             , state.note, action.options) };
-        } else { return state; }
+            note: Object.assign({}, state.note
+              , { options: action.options })
+          };
+        } else {
+          return state;
+        }
       default:
         return state;
     }
