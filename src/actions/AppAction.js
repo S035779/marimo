@@ -1,20 +1,16 @@
 import { dispatch } from '../dispatcher';
 import NoteApiClient from '../services/NoteApiClient';
-import app from '../../utils/webutils';
+import { log } from '../../utils/webutils';
+
+const pspid = `AppAction`;
 
 export default {
-  target(elm) {
-    return document.getElementById(elm);
-  },
   getusername() {
-    const spinner = app.spinner();
-    spinner.spin(this.target('app'));
     return NoteApiClient.fetchUser()
     .then(username => {
-      spinner.stop();
       dispatch({ type: 'app/fetch/username'
         , username: username});
-      console.log(`[AppAction] Response: app/fetch/username`);
+      log.info(`${pspid}> Response: app/fetch/username`);
     });
   }
 };

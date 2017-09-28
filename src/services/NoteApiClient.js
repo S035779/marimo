@@ -1,57 +1,71 @@
 import std from '../../utils/stdutils';
 import xhr from '../../utils/xhrutils';
-import app from '../../utils/webutils';
+import { str, log, spn } from '../../utils/webutils';
 
+log.config('console', 'basic', 'ALL', 'note-client');
+spn.config('app');
+
+const pspid = `NoteAPIClient`;
 let notes = [];
 
 export default {
   request(func, response) {
     const url="/api/note";
     const LATENCY = 200;
-    console.log(`[NoteAPIClient] Request: ${func}`);
+    spn.spin();
+    log.info(`${pspid}> Request: ${func}`);
     switch(func) {
       case 'get':
         return new Promise(resolve => {
           xhr.get(url, response, data => {
             notes = data;
+            spn.stop();
             resolve(notes); });
         });
       case 'post':
         return new Promise(resolve => {
-          xhr.postJSON(url, response
-            , function() { resolve(response); });
+          xhr.postJSON(url, response, () => {
+            spn.stop();
+            resolve(response);
+          });
         });
       case 'create':
       case 'delete':
       case 'search':
         return new Promise(resolve => {
           const uri = url + '/' + func;
-          xhr.postJSON(uri, response
-            , function() { resolve(response); });
+          xhr.postJSON(uri, response, () => {
+            spn.stop();
+            resolve(response);
+          });
         });
       case 'storage':
         return new Promise(resolve => {
           const memory = window.localStorage
             || (window.UserDataStorage
-            && new app.UserDataStorage()) ||
-            new app.CookieStorage();
+            && new str.UserDataStorage()) ||
+            new str.CookieStorage();
+          spn.stop();
           resolve(memory.getItem(response));
         });
       case 'cache/starred':
         return new Promise(resolve => {
           const starredNotes =
             notes.filter(note => note.starred === response)
+          spn.stop();
           resolve(starredNotes);
         });
       case 'cache':
         return new Promise(resolve => {
           const note =
             notes.find(note => note.id === response);
+          spn.stop();
           resolve(note);
         });
       default:
         return new Promise(resolve => {
           setTimeout(() => resolve(response), LATENCY);
+          spn.stop();
         });
     }
   },

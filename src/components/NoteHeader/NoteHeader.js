@@ -4,6 +4,9 @@ import Button from '../Button/Button';
 import Radio from '../Radio/Radio';
 import { browserHistory } from 'react-router';
 import std from '../../../utils/stdutils';
+import { log } from '../../../utils/webutils';
+
+const pspid = `NoteHeaderView`;
 
 export default class NoteHeader extends React.Component {
   constructor(props) {
@@ -17,13 +20,13 @@ export default class NoteHeader extends React.Component {
   }
 
   handleClickSearch(e) {
-    console.log(`[NoteHeaderView] Request: handleClickSearch`);
+    log.info(`${pspid}> Request: handleClickSearch`);
     e.preventDefault();
     this.props.onSearch(this.state);
   }
 
   handleClickReset() {
-    console.log(`[NoteHeaderView] Request: handleClickReset`);
+    log.info(`${pspid}> Request: handleClickReset`);
     this.setState({
       searchString:   ''
       , highestPrice: ''
@@ -38,13 +41,13 @@ export default class NoteHeader extends React.Component {
   }
 
   handleClickSave() {
-    console.log(`[NoteHeaderView] Request: handleClickSave`);
+    log.info(`${pspid}> Request: handleClickSave`);
     this.props.onChangeOptions();
     browserHistory.push(`/notes/${this.props.note.id}/edit`);
   }
 
   handleClickDelete() {
-    console.log(`[NoteHeaderView] Request: handleClickDelete`);
+    log.info(`${pspid}> Request: handleClickDelete`);
     if (window.confirm('Are you sure?')) {
       this.props.onDeleteNote();
     }

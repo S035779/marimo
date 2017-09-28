@@ -5,6 +5,9 @@ import NoteBody from '../../components/NoteBody/NoteBody';
 import NoteAction from '../../actions/NoteAction';
 import StarAction from '../../actions/StarAction';
 import noteStore from '../../stores/noteStore';
+import { log } from '../../../utils/webutils';
+
+const pspid = `NoteControleView`;
 
 class Note extends React.Component {
   static getStores() {
@@ -20,7 +23,7 @@ class Note extends React.Component {
   }
 
   handleChangeStar(starred) {
-    console.log(`[NoteControleView] Request: handleChangeStar`);
+    log.info(`${pspid}> Request: handleChangeStar`);
     const note = Object.assign({}, this.state.note, { starred });
     this.setState({ note });
     if (starred) {
@@ -29,21 +32,21 @@ class Note extends React.Component {
     else {
       StarAction.delete(note.id);
     }
-    console.log(starred);
+    log.trace(`${pspid}> starred:`, starred);
   }
 
   handleChangeSearch(options) {
-    console.log(`[NoteControleView] Request: handleChangeSearch`);
+    log.info(`${pspid}> Request: handleChangeSearch`);
     const note = Object.assign({}, this.state.note, { options });
     this.setState({ note });
-    console.log(options);
+    log.trace(`${pspid}> `, options);
   }
 
   handleChangeOptions() {
-    console.log(`[NoteControleView] Request: handleChangeOptions`);
+    log.info(`${pspid}> Request: handleChangeOptions`);
     const { id, options } = this.state.note;
     NoteAction.updateOptions(id, options);
-    console.log(options);
+    log.trace(`${pspid}> options:`, options);
   }
 
   render() {

@@ -1,5 +1,8 @@
 import { ReduceStore } from 'flux/utils';
 import dispatcher from '../dispatcher';
+import { log } from '../../utils/webutils';
+
+const pspid = `appStore`;
 
 class AppStore extends ReduceStore {
   getInitialState() {
@@ -7,6 +10,7 @@ class AppStore extends ReduceStore {
   }
 
   reduce(state, action) {
+    log.info(`${pspid}> Request: ${action.type}`);
     switch (action.type) {
       case 'app/fetch/username':
         return Object.assign({}, state, {

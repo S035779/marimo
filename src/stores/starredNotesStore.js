@@ -1,5 +1,8 @@
 import { ReduceStore } from 'flux/utils';
 import dispatcher from '../dispatcher';
+import { log } from '../../utils/webutils';
+
+const pspid = `starredStore`;
 
 class StarredNotesStore extends ReduceStore {
   getInitialState() {
@@ -7,6 +10,7 @@ class StarredNotesStore extends ReduceStore {
   }
 
   reduce(state, action) {
+    log.info(`${pspid}> Request: ${action.type}`);
     switch (action.type) {
       case 'note/fetch/starred':
         return { notes: action.notes };

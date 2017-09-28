@@ -14,11 +14,14 @@ class App extends React.Component {
     return appStore.getState();
   }
 
+  componentDidMount() {
+    AppAction.getusername();
+  }
+
   componentDidUpdate(prevProps) {
     const prevPath = prevProps.location.pathname;
     const curtPath = this.props.location.pathname;
     if (prevPath !== curtPath) announcePageTitle();
-    AppAction.getusername();
   }
 
   render() {

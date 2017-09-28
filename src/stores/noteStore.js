@@ -1,5 +1,8 @@
 import { ReduceStore } from 'flux/utils';
 import dispatcher from '../dispatcher';
+import { log } from '../../utils/webutils';
+
+const pspid = `noteStore`;
 
 class NoteStore extends ReduceStore {
   getInitialState() {
@@ -7,9 +10,7 @@ class NoteStore extends ReduceStore {
   }
 
   reduce(state, action) {
-    console.log(`[noteStore] ActionType: ${action.type}`)
-    console.log(state);
-    console.log(action);
+    log.info(`${pspid}> Request: ${action.type}`)
     switch (action.type) {
       case 'note/fetch/before':
         return {

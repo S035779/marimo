@@ -4268,91 +4268,133 @@ exports.makeRandInt = function (length) {
 "use strict";
 
 
-var Spinner = __webpack_require__(147);
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.str = exports.spn = exports.log = undefined;
 
-/**
- * spinner
- *
- * @returns {object} - スピナーオブジェクト
- */
-var spinner = function spinner() {
-    var opts = {
-        lines: 13 // The number of lines to draw
-        , length: 28 // The length of each line
-        , width: 14 // The line thickness
-        , radius: 42 // The radius of the inner circle
-        , scale: 1 // Scales overall size of the spinner
-        , corners: 1 // Corner roundness (0..1)
-        , color: '#000' // #rgb or #rrggbb or array of colors
-        , opacity: 0.25 // Opacity of the lines
-        , rotate: 0 // The rotation offset
-        , direction: 1 // 1: clockwise, -1: counterclockwise
-        , speed: 1 // Rounds per second
-        , trail: 60 // Afterglow percentage
-        , fps: 20 // Frames per second when using setTimeout() as
-        // a fallback for CSS
-        , zIndex: 2e9 // The z-index (defaults to 2000000000)
-        , className: 'spinner' // The CSS class to assign to the
-        //  spinner
-        , top: '49%' // Top position relative to parent
-        , left: '49%' // Left position relative to parent
-        , shadow: false // Whether to render a shadow
-        , hwaccel: false // Whether to use hardware acceleration
-        , position: 'absolute' // Element positioning
-    };
-    return new Spinner(opts);
-};
-module.exports.spinner = spinner;
+var _spin = __webpack_require__(147);
 
-/**
- * setCookies
- *
- * @param name
- * @param value
- * @param daysToLive
- */
-var setCookies = function setCookies(name, value, daysToLive) {
-    var cookie = name + "=" + encodeURIComponent(value);
-    if (typeof daysToLive === "number") cookie += "; max-age=" + daysToLive * 60 * 60 * 24;
-    document.cookie = cookie;
-};
-module.exports.setCookies = setCookies;
+var _spin2 = _interopRequireDefault(_spin);
 
-/**
- * getCookies
- * Return the document's cookies as an object of name/value
- * pairs.Assume that cookie values are encoded with
- * encodeURIComponent().
- *
- * @returns {object} - Store name and value in object.
- */
-var getCookies = function getCookies() {
-    var cookies = {};
-    var all = document.cookie;
-    if (all === "") return cookies;
-    var list = all.split("; ");
-    for (var i = 0; i < list.length; i++) {
-        var cookie = list[i];
-        var p = cookie.indexOf("=");
-        var name = cookie.substring(0, p);
-        var value = cookie.substring(p + 1);
-        value = decodeURIComponent(value);
-        cookies[name] = value;
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Logger = null;
+var Spiner = null;
+var target = null;
+
+var log = exports.log = {
+    Logger: Logger,
+    config: function config(apd, lyt, flv, nam) {
+        var apds = {
+            'alert': new Log4js.JSAlertAppender(),
+            'console': new Log4js.BrowserConsoleAppender()
+        };
+        var lyts = {
+            'basic': new Log4js.BasicLayout(),
+            'json': new Log4js.JSONLayout(),
+            'xml': new Log4js.XMLLayout()
+        };
+        var flvs = {
+            'OFF': Log4js.Level.OFF,
+            'FATAL': Log4js.Level.FATAL,
+            'ERROR': Log4js.Level.ERROR,
+            'WARN': Log4js.Level.WARN,
+            'INFO': Log4js.Level.INFO,
+            'DEBUG': Log4js.Level.DEBUG,
+            'TRACE': Log4js.Level.TRACE,
+            'ALL': Log4js.Level.ALL
+        };
+        var appender = apds[apd];
+        appender.setLayout(lyts[lyt]);
+        var logger = new Log4js.getLogger(nam);
+        logger.addAppender(appender);
+        this.Logger = logger;
+    },
+    fatal: function fatal(msg) {
+        this.Logger.log('FATAL', msg, null);
+    },
+    error: function error(msg) {
+        this.Logger.log('ERROR', msg, null);
+    },
+    warn: function warn(msg) {
+        this.Logger.log('WARN', msg, null);
+    },
+    info: function info(msg) {
+        this.Logger.log('INFO', msg, null);
+    },
+    debug: function debug(msg) {
+        this.Logger.log('DEBUG', msg, null);
+    },
+    trace: function trace(msg) {
+        this.Logger.log('TRACE', msg, null);
     }
-    return cookies;
 };
-module.exports.getCookies = getCookies;
 
-/**
- * CookieStorage
- * This class implements the Storage API that localStorage and
- * sessionStorage do, but implements it on top of HTTP Cookies.
- *
- * @param maxage {number} - lifetime
- * @param path {string} - scope
- */
-var CookieStorage = function CookieStorage(maxage, path) {
-    var cookies = function () {
+var spn = exports.spn = {
+    Spinner: _spin2.default,
+    target: target,
+    config: function config(target) {
+        var opts = {
+            lines: 13 // The number of lines to draw
+            , length: 28 // The length of each line
+            , width: 14 // The line thickness
+            , radius: 42 // The radius of the inner circle
+            , scale: 1 // Scales overall size of the spinner
+            , corners: 1 // Corner roundness (0..1)
+            , color: '#000' // #rgb or #rrggbb or array of colors
+            , opacity: 0.25 // Opacity of the lines
+            , rotate: 0 // The rotation offset
+            , direction: 1 // 1: clockwise, -1: counterclockwise
+            , speed: 1 // Rounds per second
+            , trail: 60 // Afterglow percentage
+            , fps: 20 // Frames per second when using
+            // setTimeout() as
+            // a fallback for CSS
+            , zIndex: 2e9 // The z-index (defaults to 2000000000)
+            , className: 'spinner' // The CSS class to assign to the
+            //  spinner
+            , top: '49%' // Top position relative to parent
+            , left: '49%' // Left position relative to parent
+            , shadow: false // Whether to render a shadow
+            , hwaccel: false // Whether to use hardware acceleration
+            , position: 'absolute' // Element positioning
+        };
+        this.Spinner = new _spin2.default(opts);
+        this.target = document.getElementById(target);
+    },
+    spin: function spin() {
+        this.Spinner.spin(this.target);
+    },
+    stop: function stop() {
+        this.Spinner.stop();
+    }
+};
+
+var str = exports.str = {
+    /**
+     * setCookies
+     *
+     * @param name
+     * @param value
+     * @param daysToLive
+     */
+    setCookies: function setCookies(name, value, daysToLive) {
+        var cookie = name + "=" + encodeURIComponent(value);
+        if (typeof daysToLive === "number") cookie += "; max-age=" + daysToLive * 60 * 60 * 24;
+        document.cookie = cookie;
+    },
+
+
+    /**
+     * getCookies
+     * Return the document's cookies as an object of name/value
+     * pairs.Assume that cookie values are encoded with
+     * encodeURIComponent().
+     *
+     * @returns {object} - Store name and value in object.
+     */
+    getCookies: function getCookies() {
         var cookies = {};
         var all = document.cookie;
         if (all === "") return cookies;
@@ -4366,83 +4408,109 @@ var CookieStorage = function CookieStorage(maxage, path) {
             cookies[name] = value;
         }
         return cookies;
-    }();
-    var keys = [];
-    for (var key in cookies) {
-        keys.push(key);
-    }this.length = keys.length;
-    this.key = function (n) {
-        if (n < 0 || n >= keys.length) return null;
-        return keys[n];
-    };
-    this.getItem = function (name) {
-        return cookies[name] || null;
-    };
-    this.setItem = function (key, value) {
-        if (!(key in cookies)) {
-            keys.push(key);
-            this.length++;
-        }
-        cookies[key] = value;
-        var cookie = key + "=" + encodeURIComponent(value);
-        if (maxage) cookie += "; max-age=" + maxage;
-        if (path) cookie += "; path=" + path;
-        document.cookie = cookie;
-    };
-    this.removeItem = function (key) {
-        if (!(key in cookies)) return;
-        delete cookies[key];
-        for (var i = 0; i < keys.length; i++) {
-            if (keys[i] === key) {
-                keys.splice(i, 1);
-                break;
-            }
-        }
-        this.length--;
-        document.cookie = key + "=; max-age=0";
-    };
-    this.clear = function () {
-        for (var i = 0; i < keys.length; i++) {
-            document.cookie = keys[i] + "=; max-age=0";
-        }cookies = {};
-        keys = [];
-        this.length = 0;
-    };
-};
-module.exports.CookieStorage = CookieStorage;
+    },
 
-/**
- * UserDataStorage
- * Create a document element and install the special userData
- * behavior on it so it gets save() and load() methods.
- *
- * @param {number} maxage - If maxage is specified, expire the
- *                  userData in maxage seconds
- */
-var UserDataStorage = function UserDataStorage(maxage) {
-    var memory = document.createElement("div");
-    memory.style.display = "none";
-    memory.style.behavior = "url('#default#userData')";
-    document.body.appendChild(memory);
-    if (maxage) {
-        var now = new Date().getTime();
-        var expires = now + maxage * 1000;
-        memory.expires = new Date(expires).toUTCString();
+
+    /**
+     * CookieStorage
+     * This class implements the Storage API that localStorage and
+     * sessionStorage do, but implements it on top of HTTP Cookies.
+     *
+     * @param maxage {number} - lifetime
+     * @param path {string} - scope
+     */
+    CookieStorage: function CookieStorage(maxage, path) {
+        var cookies = function () {
+            var cookies = {};
+            var all = document.cookie;
+            if (all === "") return cookies;
+            var list = all.split("; ");
+            for (var i = 0; i < list.length; i++) {
+                var cookie = list[i];
+                var p = cookie.indexOf("=");
+                var name = cookie.substring(0, p);
+                var value = cookie.substring(p + 1);
+                value = decodeURIComponent(value);
+                cookies[name] = value;
+            }
+            return cookies;
+        }();
+        var keys = [];
+        for (var key in cookies) {
+            keys.push(key);
+        }this.length = keys.length;
+        this.key = function (n) {
+            if (n < 0 || n >= keys.length) return null;
+            return keys[n];
+        };
+        this.getItem = function (name) {
+            return cookies[name] || null;
+        };
+        this.setItem = function (key, value) {
+            if (!(key in cookies)) {
+                keys.push(key);
+                this.length++;
+            }
+            cookies[key] = value;
+            var cookie = key + "=" + encodeURIComponent(value);
+            if (maxage) cookie += "; max-age=" + maxage;
+            if (path) cookie += "; path=" + path;
+            document.cookie = cookie;
+        };
+        this.removeItem = function (key) {
+            if (!(key in cookies)) return;
+            delete cookies[key];
+            for (var i = 0; i < keys.length; i++) {
+                if (keys[i] === key) {
+                    keys.splice(i, 1);
+                    break;
+                }
+            }
+            this.length--;
+            document.cookie = key + "=; max-age=0";
+        };
+        this.clear = function () {
+            for (var i = 0; i < keys.length; i++) {
+                document.cookie = keys[i] + "=; max-age=0";
+            }cookies = {};
+            keys = [];
+            this.length = 0;
+        };
+    },
+
+
+    /**
+     * UserDataStorage
+     * Create a document element and install the special userData
+     * behavior on it so it gets save() and load() methods.
+     *
+     * @param {number} maxage - If maxage is specified, expire the
+     *                  userData in maxage seconds
+     */
+    UserDataStorage: function UserDataStorage(maxage) {
+        var memory = document.createElement("div");
+        memory.style.display = "none";
+        memory.style.behavior = "url('#default#userData')";
+        document.body.appendChild(memory);
+        if (maxage) {
+            var now = new Date().getTime();
+            var expires = now + maxage * 1000;
+            memory.expires = new Date(expires).toUTCString();
+        }
+        memory.load("UserDataStorage");
+        this.getItem = function (key) {
+            return memory.getAttribute(key) || null;
+        };
+        this.setItem = function (key, value) {
+            memory.setAttribute(key, value);
+            memory.save("UserDataStorage");
+        };
+        this.removeItem = function (key) {
+            memory.removeAttribute(key);
+            memory.save("UserDataStorage");
+        };
     }
-    memory.load("UserDataStorage");
-    this.getItem = function (key) {
-        return memory.getAttribute(key) || null;
-    };
-    this.setItem = function (key, value) {
-        memory.setAttribute(key, value);
-        memory.save("UserDataStorage");
-    };
-    this.removeItem = function (key) {
-        memory.removeAttribute(key);
-        memory.save("UserDataStorage");
-    };
 };
-module.exports.UserDataStorage = UserDataStorage;
 
 /***/ }),
 /* 35 */
@@ -5031,57 +5099,42 @@ var _NoteApiClient2 = _interopRequireDefault(_NoteApiClient);
 
 var _webutils = __webpack_require__(34);
 
-var _webutils2 = _interopRequireDefault(_webutils);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var pspid = 'NoteAction';
+
 exports.default = {
-  target: function target(elm) {
-    return document.getElementById(elm);
-  },
   fetchMyNotes: function fetchMyNotes() {
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.fetchMyNotes().then(function (notes) {
       // -> dashboardStore.js
-      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/fetch/my', notes: notes });
-      console.log('[NoteAction] Response: note/fetch/my');
+      _webutils.log.info(pspid + '> Response: note/fetch/my');
     });
   },
   fetchStarred: function fetchStarred() {
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.fetchStarredNotes().then(function (notes) {
       // -> starredNoteStore.js
-      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/fetch/starred', notes: notes });
-      console.log('[NoteAction] Response: note/fetch/starred');
+      _webutils.log.info(pspid + '> Response: note/fetch/starred');
     });
   },
   fetch: function fetch(id) {
     // -> noteStore.js
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
     (0, _dispatcher.dispatch)({ type: 'note/fetch/before' });
-    console.log('[NoteAction] Response: note/fetch/before');
+    _webutils.log.info(pspid + '> Response: note/fetch/before');
     return _NoteApiClient2.default.fetchNote(id).then(function (note) {
       //  -> noteStore.js
-      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/fetch', note: note });
-      console.log('[NoteAction] Response: note/fetch');
+      _webutils.log.info(pspid + '> Response: note/fetch');
     });
   },
   create: function create() {
     var _this = this;
 
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.createNote().then(function (note) {
       // -> dashboardStore.js
-      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/create', note: note });
-      console.log('[NoteAction] Response: note/create');
+      _webutils.log.info(pspid + '> Response: note/create');
     }).then(function () {
       return _this.fetchMyNotes();
     });
@@ -5093,14 +5146,11 @@ exports.default = {
         body = _ref.body,
         category = _ref.category;
 
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.updateNote(id, { title: title, body: body, category: category }).then(function () {
       // -> dashboardStore.js
-      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/update', id: id,
         note: { title: title, body: body, category: category } });
-      console.log('[NoteAction] Response: note/update');
+      _webutils.log.info(pspid + '> Response: note/update');
     }).then(function () {
       return _this2.fetchMyNotes();
     });
@@ -5108,37 +5158,28 @@ exports.default = {
   updateOptions: function updateOptions(id, options) {
     var _this3 = this;
 
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.updateOptions(id, options).then(function () {
       // -> noteStore.js
-      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/update/options', id: id,
         options: options });
-      console.log('[NoteAction] Response: note/update/options');
+      _webutils.log.info(pspid + '> Response: note/update/options');
     }).then(function () {
       return _this3.fetchMyNotes();
     });
   },
   delete: function _delete(id) {
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.deleteNote(id).then(function () {
       // -> dashboardStore.js
-      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/delete', id: id });
-      console.log('[NoteAction] Response: note/delete');
+      _webutils.log.info(pspid + '> Response: note/delete');
     });
   },
   getusername: function getusername() {
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.fetchUser().then(function (username) {
       // -> dashboardStore.js
-      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/fetch/username',
         username: username });
-      console.log('[NoteAction] Response: note/fetch/username');
+      _webutils.log.info(pspid + '> Response: note/fetch/username');
     });
   }
 };
@@ -6567,17 +6608,20 @@ var _xhrutils2 = _interopRequireDefault(_xhrutils);
 
 var _webutils = __webpack_require__(34);
 
-var _webutils2 = _interopRequireDefault(_webutils);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+_webutils.log.config('console', 'basic', 'ALL', 'note-client');
+_webutils.spn.config('app');
+
+var pspid = 'NoteAPIClient';
 var notes = [];
 
 exports.default = {
   request: function request(func, response) {
     var url = "/api/note";
     var LATENCY = 200;
-    console.log('[NoteAPIClient] Request: ' + func);
+    _webutils.log.info(pspid + '> Request: ' + func);
+    _webutils.spn.spin();
     switch (func) {
       case 'get':
         return new Promise(function (resolve) {
@@ -6603,7 +6647,7 @@ exports.default = {
         });
       case 'storage':
         return new Promise(function (resolve) {
-          var memory = window.localStorage || window.UserDataStorage && new _webutils2.default.UserDataStorage() || new _webutils2.default.CookieStorage();
+          var memory = window.localStorage || window.UserDataStorage && new _webutils.str.UserDataStorage() || new _webutils.str.CookieStorage();
           resolve(memory.getItem(response));
         });
       case 'cache/starred':
@@ -6627,6 +6671,7 @@ exports.default = {
           }, LATENCY);
         });
     }
+    _webutils.spn.stop();
   },
   fetchUser: function fetchUser() {
     return this.request('storage', 'username');
@@ -15349,22 +15394,18 @@ var _NoteApiClient2 = _interopRequireDefault(_NoteApiClient);
 
 var _webutils = __webpack_require__(34);
 
-var _webutils2 = _interopRequireDefault(_webutils);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var pspid = 'AppAction';
+
 exports.default = {
-  target: function target(elm) {
-    return document.getElementById(elm);
-  },
   getusername: function getusername() {
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
+    spn.spin();
     return _NoteApiClient2.default.fetchUser().then(function (username) {
-      spinner.stop();
+      spn.stop();
       (0, _dispatcher.dispatch)({ type: 'app/fetch/username',
         username: username });
-      console.log('[AppAction] Response: app/fetch/username');
+      _webutils.log.info(pspid + '> Response: app/fetch/username');
     });
   }
 };
@@ -15388,35 +15429,26 @@ var _NoteApiClient2 = _interopRequireDefault(_NoteApiClient);
 
 var _webutils = __webpack_require__(34);
 
-var _webutils2 = _interopRequireDefault(_webutils);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var pspid = 'StarAction';
+
 exports.default = {
-  target: function target(elm) {
-    return document.getElementById(elm);
-  },
   fetchMyNotes: function fetchMyNotes() {
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.fetchMyNotes().then(function (notes) {
       // -> dashboardStore.js
-      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'note/fetch/my', notes: notes });
-      console.log('[StarredAction] Response: note/fetch/my');
+      _webutils.log.info(pspid + '> Response: note/fetch/my');
     });
   },
   create: function create(id) {
     var _this = this;
 
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.createStar(id).then(function (note) {
       // -> noteStore.js
-      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'star/update',
         id: note.id, starred: note.starred });
-      console.log('[StarredAction] Response: star/update');
+      _webutils.log.info(pspid + '> Response: star/update');
     }).then(function () {
       return _this.fetchMyNotes();
     });
@@ -15424,14 +15456,11 @@ exports.default = {
   delete: function _delete(id) {
     var _this2 = this;
 
-    var spinner = _webutils2.default.spinner();
-    spinner.spin(this.target('app'));
     return _NoteApiClient2.default.deleteStar(id).then(function (note) {
       // -> noteStore.js
-      spinner.stop();
       (0, _dispatcher.dispatch)({ type: 'star/update',
         id: note.id, starred: note.starred });
-      console.log('[StarredAction] Response: star/update');
+      _webutils.log.info(pspid + '> Response: star/update');
     }).then(function () {
       return _this2.fetchMyNotes();
     });
