@@ -8,38 +8,51 @@ export default class NoteBody extends React.Component {
       case 0:
         styles = { fontWeight:'bold', color: 'blue' };
         return <div style={styles}>Now available.</div>;
-        break;
       case 1:
         styles = { fontWeight:'bold', color: 'orange' };
         return <div style={styles}>New added.</div>;
-        break;
       case 2:
         styles = { fontWeight:'bold', color: 'red' };
         return <div style={styles}>Removed.</div>;
-        break;
     }
   };
 
   // 子要素のレンダリング
   renderItem(item) {
-    const isResult = item.item.body.hasOwnProperty('ResultSet');
-    if(!isResult) return(null);
+    const Itm = item.item.body;
+    const Bid = item.bids.body;
+
+    if(!Itm.hasOwnProperty('ResultSet')) return(null);
+
     const status       = this.renderStatus(item.status);
     const updated      = std.getLocalTimeStamp(item.updated);
-    const obj          = item.item.body.ResultSet.Result;
-    const Img          = obj.Img.Image1 
-                            ? obj.Img.Image1.sub : '';
-    const Url          = obj.AuctionItemUrl;
-    const Price        = parseInt(obj.Price,10).toLocaleString();
-    const AuctionID    = obj.AuctionID;
-    const CategoryPath = obj.CategoryPath;
-    const Title        = obj.Title;
-    const SellerId     = obj.Seller.Id;
-    const StartTime    = std.getLocalTimeStamp(obj.StartTime);
-    const EndTime      = std.getLocalTimeStamp(obj.EndTime);
-    const Bids         = obj.Bids;
-    const Condition    = obj.ItemStatus.Condition;
-    const Status       = obj.Status;
+
+    const itm          = item.item.body.ResultSet.Result;
+    const Img          = itm.Img.Image1 ? itm.Img.Image1.sub : '';
+    const Url          = itm.AuctionItemUrl;
+    const Price        = parseInt(itm.Price,10).toLocaleString();
+    const AuctionID    = itm.AuctionID;
+    const CategoryPath = itm.CategoryPath;
+    const Title        = itm.Title;
+    const SellerId     = itm.Seller.Id;
+    const StartTime    = std.getLocalTimeStamp(itm.StartTime);
+    const EndTime      = std.getLocalTimeStamp(itm.EndTime);
+    const Bids         = itm.Bids;
+    const Condition    = itm.ItemStatus.Condition;
+    const Status       = itm.Status;
+
+    let price = [];
+    if(Bid.hasOwnProperty('ResultSet')) {
+       if(Bid.ResultSet.hasOwnProperty('Result')) {
+         const root = Bid.ResultSet.root;
+         const bids = Bid.ResultSet.Result;
+         if(root.totalResultsAvailable === '1')
+           price[0] = parseInt(bids.Price.sub,10);
+         else
+           price = bids.map(obj => parseInt(obj.Price.sub,10));
+       }
+    }
+    if(price.length) console.log(price.reverse().join());
 
     return <li className='NoteBody-item' key={item.auctionID}>
       <table width="100%"><tbody>
@@ -74,7 +87,8 @@ export default class NoteBody extends React.Component {
   // itemsを親から受け取ってリストを返す
   render() {
     if(!this.props.items) return(null);
-    const items = this.props.items.map(item => { return this.renderItem(item)});
+    const items =
+      this.props.items.map(item => this.renderItem(item));
     return <div className="NoteBody">
         <ul>{items}</ul>
     </div>;

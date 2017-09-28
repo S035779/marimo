@@ -18,9 +18,10 @@ export default {
       case 'get':
         return new Promise(resolve => {
           xhr.get(url, response, data => {
-            notes = data;
             spn.stop();
-            resolve(notes); });
+            notes = data;
+            resolve(notes);
+          });
         });
       case 'post':
         return new Promise(resolve => {
@@ -50,22 +51,23 @@ export default {
         });
       case 'cache/starred':
         return new Promise(resolve => {
-          const starredNotes =
-            notes.filter(note => note.starred === response)
           spn.stop();
+          const starredNotes =
+            notes.filter(note => note.starred === response);
           resolve(starredNotes);
         });
       case 'cache':
         return new Promise(resolve => {
-          const note =
-            notes.find(note => note.id === response);
           spn.stop();
+          const note = notes.find(note => note.id === response);
           resolve(note);
         });
       default:
         return new Promise(resolve => {
-          setTimeout(() => resolve(response), LATENCY);
-          spn.stop();
+          setTimeout(() => {
+            spn.stop();
+            resolve(response)
+          }, LATENCY);
         });
     }
   },
