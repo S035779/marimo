@@ -60,8 +60,6 @@ export default class NoteBody extends React.Component {
                       ? this.renderExtension() : '';
     const updated   = std.getLocalTimeStamp(item.updated);
 
-    console.log(itm.IsAutomaticExtension);
-
     return <li className='NoteBody-item' key={item.auctionID}>
       <table width="100%"><tbody>
       <tr><td width="10%">

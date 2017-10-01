@@ -14377,8 +14377,6 @@ var NoteBody = function (_React$Component) {
       var extend = itm.IsAutomaticExtension === 'true' ? this.renderExtension() : '';
       var updated = _stdutils2.default.getLocalTimeStamp(item.updated);
 
-      console.log(itm.IsAutomaticExtension);
-
       return _react2.default.createElement(
         'li',
         { className: 'NoteBody-item', key: item.auctionID },
