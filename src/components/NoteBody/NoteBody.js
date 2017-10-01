@@ -1,4 +1,5 @@
 import React from 'react';
+import Sparkline from '../Sparkline/Sparkline';
 import std from '../../../utils/stdutils';
 
 export default class NoteBody extends React.Component {
@@ -17,15 +18,16 @@ export default class NoteBody extends React.Component {
     }
   };
 
+  renderExtension() {
+    return <div>with<br />Auto Extension</div>;
+  }
+
   // 子要素のレンダリング
   renderItem(item) {
     const Itm = item.item.body;
     const Bid = item.bids.body;
 
     if(!Itm.hasOwnProperty('ResultSet')) return(null);
-
-    const status       = this.renderStatus(item.status);
-    const updated      = std.getLocalTimeStamp(item.updated);
 
     const itm          = item.item.body.ResultSet.Result;
     const Img          = itm.Img.Image1 ? itm.Img.Image1.sub : '';
@@ -41,18 +43,24 @@ export default class NoteBody extends React.Component {
     const Condition    = itm.ItemStatus.Condition;
     const Status       = itm.Status;
 
-    let price = [];
+    let prices = [];
     if(Bid.hasOwnProperty('ResultSet')) {
        if(Bid.ResultSet.hasOwnProperty('Result')) {
          const root = Bid.ResultSet.root;
          const bids = Bid.ResultSet.Result;
          if(root.totalResultsAvailable === '1')
-           price[0] = parseInt(bids.Price.sub,10);
+           prices[0] = parseInt(bids.Price.sub,10);
          else
-           price = bids.map(obj => parseInt(obj.Price.sub,10));
+           prices = bids.map(obj => parseInt(obj.Price.sub,10));
        }
     }
-    if(price.length) console.log(price.reverse().join());
+
+    const status    = this.renderStatus(item.status);
+    const extend    = itm.IsAutomaticExtension === 'true'
+                      ? this.renderExtension() : '';
+    const updated   = std.getLocalTimeStamp(item.updated);
+
+    console.log(itm.IsAutomaticExtension);
 
     return <li className='NoteBody-item' key={item.auctionID}>
       <table width="100%"><tbody>
@@ -72,11 +80,13 @@ export default class NoteBody extends React.Component {
         Category : {CategoryPath}<br />
       </span>
       </td><td width="10%">
-      <span className='NoteBody-text'>{Price} yen</span>
+      <Sparkline points={prices}/>
       </td><td width="10%">
-      <span className='NoteBody-text'>{Bids} bids</span>
+      <span className='NoteBody-text'>{Price} yen</span>
+      <span className='NoteBody-text'>({Bids} bids)</span>
       </td><td width="10%">
       <span className='NoteBody-text'>{Status}</span>
+      <span className='NoteBody-text'>{extend}</span>
       </td><td width="10%">
       <span className='NoteBody-text'>{status}</span>
       <span className='NoteBody-text'>{updated}</span>
