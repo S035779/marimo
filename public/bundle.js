@@ -6732,6 +6732,7 @@ exports.default = {
       // -> dashboardStore.js
       (0, _dispatcher.dispatch)({ type: 'note/fetch/my', notes: notes });
       _webutils.log.info(pspid + '> Response: note/fetch/my');
+      _webutils.spn.stop();
     });
   },
   fetchStarred: function fetchStarred() {
@@ -6783,8 +6784,7 @@ exports.default = {
 
     return _NoteApiClient2.default.updateOptions(id, options).then(function () {
       // -> noteStore.js
-      (0, _dispatcher.dispatch)({ type: 'note/update/options', id: id,
-        options: options });
+      (0, _dispatcher.dispatch)({ type: 'note/update/options', id: id, options: options });
       _webutils.log.info(pspid + '> Response: note/update/options');
     }).then(function () {
       return _this3.fetchMyNotes();
@@ -6795,13 +6795,13 @@ exports.default = {
       // -> dashboardStore.js
       (0, _dispatcher.dispatch)({ type: 'note/delete', id: id });
       _webutils.log.info(pspid + '> Response: note/delete');
+      _webutils.spn.stop();
     });
   },
   getusername: function getusername() {
     return _NoteApiClient2.default.fetchUser().then(function (username) {
       // -> dashboardStore.js
-      (0, _dispatcher.dispatch)({ type: 'note/fetch/username',
-        username: username });
+      (0, _dispatcher.dispatch)({ type: 'note/fetch/username', username: username });
       _webutils.log.info(pspid + '> Response: note/fetch/username');
     });
   }
@@ -8952,22 +8952,20 @@ var notes = [];
 exports.default = {
   request: function request(func, response) {
     var url = "/api/note";
-    var LATENCY = 200;
-    _webutils.spn.spin();
     _webutils.log.info(pspid + '> Request: ' + func);
     switch (func) {
       case 'get':
         return new Promise(function (resolve) {
+          _webutils.spn.spin();
           _xhrutils2.default.get(url, response, function (data) {
-            _webutils.spn.stop();
             notes = data;
             resolve(notes);
           });
         });
       case 'post':
         return new Promise(function (resolve) {
+          _webutils.spn.spin();
           _xhrutils2.default.postJSON(url, response, function () {
-            _webutils.spn.stop();
             resolve(response);
           });
         });
@@ -8975,21 +8973,19 @@ exports.default = {
       case 'delete':
       case 'search':
         return new Promise(function (resolve) {
+          _webutils.spn.spin();
           var uri = url + '/' + func;
           _xhrutils2.default.postJSON(uri, response, function () {
-            _webutils.spn.stop();
             resolve(response);
           });
         });
       case 'storage':
         return new Promise(function (resolve) {
           var memory = window.localStorage || window.UserDataStorage && new _webutils.str.UserDataStorage() || new _webutils.str.CookieStorage();
-          _webutils.spn.stop();
           resolve(memory.getItem(response));
         });
       case 'cache/starred':
         return new Promise(function (resolve) {
-          _webutils.spn.stop();
           var starredNotes = notes.filter(function (note) {
             return note.starred === response;
           });
@@ -8997,7 +8993,6 @@ exports.default = {
         });
       case 'cache':
         return new Promise(function (resolve) {
-          _webutils.spn.stop();
           var note = notes.find(function (note) {
             return note.id === response;
           });
@@ -9005,10 +9000,7 @@ exports.default = {
         });
       default:
         return new Promise(function (resolve) {
-          setTimeout(function () {
-            _webutils.spn.stop();
-            resolve(response);
-          }, LATENCY);
+          resolve(response);
         });
     }
   },
@@ -24406,8 +24398,7 @@ var pspid = 'AppAction';
 exports.default = {
   getusername: function getusername() {
     return _NoteApiClient2.default.fetchUser().then(function (username) {
-      (0, _dispatcher.dispatch)({ type: 'app/fetch/username',
-        username: username });
+      (0, _dispatcher.dispatch)({ type: 'app/fetch/username', username: username });
       _webutils.log.info(pspid + '> Response: app/fetch/username');
     });
   }
@@ -24442,6 +24433,7 @@ exports.default = {
       // -> dashboardStore.js
       (0, _dispatcher.dispatch)({ type: 'note/fetch/my', notes: notes });
       _webutils.log.info(pspid + '> Response: note/fetch/my');
+      _webutils.spn.stop();
     });
   },
   create: function create(id) {

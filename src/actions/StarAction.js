@@ -1,6 +1,6 @@
 import { dispatch } from '../dispatcher';
 import NoteApiClient from '../services/NoteApiClient';
-import { log } from '../../utils/webutils';
+import { log, spn } from '../../utils/webutils';
 
 const pspid = `StarAction`;
 
@@ -10,6 +10,7 @@ export default {
     .then(notes => { // -> dashboardStore.js
       dispatch({ type: 'note/fetch/my', notes });
       log.info(`${pspid}> Response: note/fetch/my`);
+      spn.stop();
     });
   },
   create(id) {

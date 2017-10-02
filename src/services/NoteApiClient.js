@@ -11,22 +11,20 @@ let notes = [];
 export default {
   request(func, response) {
     const url="/api/note";
-    const LATENCY = 200;
-    spn.spin();
     log.info(`${pspid}> Request: ${func}`);
     switch(func) {
       case 'get':
         return new Promise(resolve => {
+          spn.spin();
           xhr.get(url, response, data => {
-            spn.stop();
             notes = data;
             resolve(notes);
           });
         });
       case 'post':
         return new Promise(resolve => {
+          spn.spin();
           xhr.postJSON(url, response, () => {
-            spn.stop();
             resolve(response);
           });
         });
@@ -34,9 +32,9 @@ export default {
       case 'delete':
       case 'search':
         return new Promise(resolve => {
+          spn.spin();
           const uri = url + '/' + func;
           xhr.postJSON(uri, response, () => {
-            spn.stop();
             resolve(response);
           });
         });
@@ -46,28 +44,22 @@ export default {
             || (window.UserDataStorage
             && new str.UserDataStorage()) ||
             new str.CookieStorage();
-          spn.stop();
           resolve(memory.getItem(response));
         });
       case 'cache/starred':
         return new Promise(resolve => {
-          spn.stop();
           const starredNotes =
             notes.filter(note => note.starred === response);
           resolve(starredNotes);
         });
       case 'cache':
         return new Promise(resolve => {
-          spn.stop();
           const note = notes.find(note => note.id === response);
           resolve(note);
         });
       default:
         return new Promise(resolve => {
-          setTimeout(() => {
-            spn.stop();
-            resolve(response)
-          }, LATENCY);
+          resolve(response)
         });
     }
   },

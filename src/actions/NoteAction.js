@@ -1,6 +1,6 @@
 import { dispatch } from '../dispatcher';
 import NoteApiClient from '../services/NoteApiClient';
-import { log } from '../../utils/webutils';
+import { log, spn } from '../../utils/webutils';
 
 const pspid = `NoteAction`;
 
@@ -10,6 +10,7 @@ export default {
     .then(notes => { // -> dashboardStore.js
       dispatch({ type: 'note/fetch/my', notes });
       log.info(`${pspid}> Response: note/fetch/my`);
+      spn.stop();
     });
   },
   fetchStarred() {
@@ -36,8 +37,7 @@ export default {
     }).then(() => this.fetchMyNotes());
   },
   update(id, { title, body, category }) {
-    return NoteApiClient.updateNote(id
-      , { title, body, category })
+    return NoteApiClient.updateNote(id, { title, body, category })
     .then(() => { // -> dashboardStore.js
       dispatch({ type: 'note/update', id
         , note: { title, body, category } });
@@ -47,8 +47,7 @@ export default {
   updateOptions(id, options) {
     return NoteApiClient.updateOptions(id, options)
     .then(() => { // -> noteStore.js
-      dispatch({ type: 'note/update/options', id
-        , options });
+      dispatch({ type: 'note/update/options', id, options });
       log.info(`${pspid}> Response: note/update/options`);
     }).then(() => this.fetchMyNotes());
   },
@@ -57,13 +56,13 @@ export default {
     .then(() => { // -> dashboardStore.js
       dispatch({ type: 'note/delete', id });
       log.info(`${pspid}> Response: note/delete`);
+      spn.stop();
     });
   },
   getusername() {
     return NoteApiClient.fetchUser()
     .then(username => { // -> dashboardStore.js
-      dispatch({ type: 'note/fetch/username'
-        , username: username });
+      dispatch({ type: 'note/fetch/username', username });
       log.info(`${pspid}> Response: note/fetch/username`);
     });
   }
