@@ -421,8 +421,8 @@ var helperOptions = function(o, p) {
     options['query']       = _o.query;
   }
 
-  if(_p.hightPrice)
-    options['aucmaxprice'] = Number(_p.hightPrice);
+  if(_p.highestPrice)
+    options['aucmaxprice'] = Number(_p.highestPrice);
   
   if(_p.lowestPrice)
     options['aucminprice'] = Number(_p.lowestPrice);

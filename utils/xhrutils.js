@@ -1,83 +1,134 @@
 /**
- * Encode the properties of an object as if they were name/value pairs from
- * an HTML form, using application/x-www-form-urlencoded format
+ * encodeFormData
+ *
+ * @param data {object}
+ * @returns {string}
  */
 var encodeFormData = function(data) {
-    if (!data) return "";    // Always return a string
-    var pairs = [];          // To hold name=value pairs
-    for(var name in data) {                                  // For each name
-        if (!data.hasOwnProperty(name)) continue;            // Skip inherited
-        if (typeof data[name] === "function") continue;      // Skip methods
-        var value = data[name].toString();                   // Value as string
-        name = encodeURIComponent(name.replace(" ", "+"));   // Encode name
-        value = encodeURIComponent(value.replace(" ", "+")); // Encode value
-        pairs.push(name + "=" + value);   // Remember name=value pair
+    if (!data) return ""
+    var pairs = [];
+    for(var name in data) {
+        if (!data.hasOwnProperty(name)) continue;
+        if (typeof data[name] === "function") continue;
+        var value = data[name].toString();
+        name = encodeURIComponent(name.replace(" ", "+"));
+        value = encodeURIComponent(value.replace(" ", "+"));
+        pairs.push(name + "=" + value);
     }
-    return pairs.join('&'); // Return joined pairs separated with &
-}
+    return pairs.join('&');
+};
 
 /**
  * get
  *
- * @param url
- * @param data
- * @param callback
- * @returns {undefined}
+ * @param url {string}
+ * @param data {object}
+ * @param callback {function}
  */
-exports.get = function(url, data, callback) {
-    var request = new XMLHttpRequest();         // Create new request
-    request.open("GET", url +                     // GET the specified url
-                 "?" + encodeFormData(data));     // with encoded data added
-    request.onreadystatechange = function() {   // Define event listener
-        // If the request is compete and was successful
+var get = function(url, data, callback) {
+    var request = new XMLHttpRequest();
+    request.open("GET", url +
+                 "?" + encodeFormData(data));
+    request.onreadystatechange = function() {
         if (request.readyState === 4 && request.status === 200) {
-            // Get the type of the response
             var type = request.getResponseHeader("Content-Type");
-            // Check type so we don't get HTML documents in the future
-            if (type.indexOf("xml") !== -1 && request.responseXML) {
-                //console.log(type);
-                callback(request.responseXML);              // Document response
-            } else if (type === "application/json; charset=utf-8") {
-                //console.log(type);
-                callback(JSON.parse(request.responseText)); // JSON response
+            if (type.indexOf("xml") !== -1
+              && request.responseXML) {
+                callback(request.responseXML);
+            } else
+            if (type === "application/json; charset=utf-8") {
+                callback(JSON.parse(request.responseText));
             } else {
-                //console.log(type);
-                callback(request.responseText);             // String response
+                callback(request.responseText);
             }
         }
     };
-    request.send(null);                         // Send the request now
-}
-
-exports.getData = function(url, data, callback) {
-    var request = new XMLHttpRequest();
-    request.open("GET", url +                     // GET the specified url
-                 "?" + encodeFormData(data));     // with encoded data added
-    request.onreadystatechange = function() {     // Simple event handler
-        if (request.readyState === 4 && callback) callback(request);
-    };
-    request.send(null);                           // Send the request
+    request.send(null);
 };
+module.exports.get = get;
 
-exports.postData = function(url, data, callback) {
+/**
+ * getData
+ *
+ * @param url {string}
+ * @param data {object}
+ * @param callback {function}
+ */
+var getData = function(url, data, callback) {
     var request = new XMLHttpRequest();
-    request.open("POST", url);                    // POST to the specified url
-    request.onreadystatechange = function() {     // Simple event handler
-        if (request.readyState === 4 && callback) // When response is complete
-            callback(request);                    // call the callback.
+    request.open("GET", url +
+                 "?" + encodeFormData(data));
+    request.onreadystatechange = function() {
+        if (request.readyState === 4
+          && callback) callback(request);
     };
-    request.setRequestHeader("Content-Type",      // Set Content-Type
-                             "application/x-www-form-urlencoded");
-    request.send(encodeFormData(data));           // Send form-encoded data
+    request.send(null);
 };
+module.exports.getData = getData;
 
-exports.postJSON = function(url, data, callback) {
+/**
+ * postData
+ *
+ * @param url {string}
+ * @param data {object}
+ * @param callback {function}
+ */
+var postData = function(url, data, callback) {
     var request = new XMLHttpRequest();
-    request.open("POST", url);                    // POST to the specified url
-    request.onreadystatechange = function() {     // Simple event handler
-        if (request.readyState === 4 && callback) // When response is complete
-            callback(request);                    // call the callback.
+    request.open("POST", url);
+    request.onreadystatechange = function() {
+        if (request.readyState === 4 && callback)
+            callback(request);
+    };
+    request.setRequestHeader("Content-Type",
+                            "application/x-www-form-urlencoded");
+    request.send(encodeFormData(data));
+};
+module.exports.postData = postData;
+
+/**
+ * postJSON
+ *
+ * @param url {string}
+ * @param data {object}
+ * @param callback {function}
+ */
+var postJSON = function(url, data, callback) {
+    var request = new XMLHttpRequest();
+    request.open("POST", url);
+    request.onreadystatechange = function() {
+        if (request.readyState === 4 && callback)
+            callback(request);
     };
     request.setRequestHeader("Content-Type", "application/json");
     request.send(JSON.stringify(data));
 };
+module.exports.postJSON = postJSON;
+
+/**
+ * JSONP.request
+ *
+ * @param url {string}
+ * @param data {object}
+ * @param callback {string}
+ */
+var JSONP = {
+  index: 0,
+  callbacks: {},
+  request: function(url, data, callback) {
+    var idx = '_' + JSONP.index++;
+    var elm = document.createElement('script');
+    elm.type = 'text/javascript';
+    elm.charset = 'utf-8';
+    elm.src = url
+      + "?" + encodeFormData(data)
+      + '&' + 'callback=JSONP.callbacks.' + idx;
+    JSONP.callbacks[idx] = function(res) {
+      elm.parentNode.removeChild(elm);
+      delete JSONP.callbacks[idx];
+      callback(res);
+    };
+    document.getElementsByTagName('head')[0].appendChild(elm);
+  }
+};
+module.exports.JSONP = JSONP;
